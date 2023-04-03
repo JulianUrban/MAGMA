@@ -19,7 +19,7 @@ library(MAGMA)
 
 ## Introduction
 
-The MAGMA-package offers nearest neighbor matching for two to four groups. It also includes the option to match data of a 2x2 Design. In addition, MAGMA contains a framework to evaluate post matching balance. This vignette is a tutorial of MAGMA. It shows the main MAGMA function on an included simulated dataset. Overall, this vignette includes a two-group, a three-group, and a 2x2-design which is also approximately equivalent to a four-group example. This three examples are conducted in a standard matching process as well as with exact matching. Parts of this tutorial are also included on the respective help pages of the functions. For details of the algorithm and a more extensive introduction of MAGMA, see Feuchter et al. (2022).
+The MAGMA-package offers nearest neighbor matching for two to four groups. It also includes the option to match data of a 2x2 Design. In addition, MAGMA contains a framework to evaluate post matching balance. This vignette is a tutorial of MAGMA. It shows the main MAGMA function on an included simulated dataset. Overall, this vignette includes a two-group, a three-group, and a 2x2-design which is also approximately equivalent to a four-group example. These three examples are conducted in a standard matching process as well as with exact matching. Parts of this tutorial are also included on the respective help pages of the functions. For details of the algorithm and a more extensive introduction of MAGMA, see Feuchter et al. (2022).
 
 ## The MAGMA Simulated Dataset
 
