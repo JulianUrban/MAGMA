@@ -1,5 +1,5 @@
-Package: MAGMA
-Title: MAny-Group MAtching 
+Package:MAGMA
+Title: MAny-Group MAtching
 Version: 0.1
 Authors@R: c(person("Julian", "Urban", email = "julian.urban@gesis.org", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-8886-4724")), person("Markus", "Feuchter", role = c("aut")),person("Vsevolod", "Scherrer", role = c("aut")), person("Moritz", "Breit", role = c("aut")), person("Franzis", "Preckel", role = c("aut")))
 Description: This package provides function to conduct nearest neighbor matching for multiple groups. It also includes functions for model selection and balance estimation.
