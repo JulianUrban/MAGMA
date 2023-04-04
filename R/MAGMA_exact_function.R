@@ -2,7 +2,7 @@
 #'
 #' This function conducts exact many group matching for 2 to 4 groups. Exact
 #' means, that only cases with the same value on the exact variable can be
-#' matched. It #' augments the original data set by relevant MAGMA variables.
+#' matched. It augments the original data set by relevant MAGMA variables.
 #' For details, see below.
 #'
 #' This function conducts nearest neighbor exact many group matching. It is

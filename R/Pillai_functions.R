@@ -11,7 +11,7 @@
 #'
 #' @import tidyverse psych
 #' @return A matrix of the covariates
-#'
+#' @noRd
 #'
 Pillai_DV <- function(data, input) {
   suppressMessages(attach(data))
