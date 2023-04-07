@@ -1,5 +1,5 @@
 ---
-title: "Turn ab the Heat! A Tutorial for the MAGMA R-package."
+title: "Turn up the Heat! A Tutorial for the MAGMA R-package."
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{MAGMA - MAny Group MAtching}
