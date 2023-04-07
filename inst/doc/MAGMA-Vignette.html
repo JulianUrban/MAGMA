@@ -12,7 +12,7 @@
 
 
 
-<title>MAGMA - MAny Group MAtching</title>
+<title>Turn ab the Heat! A Tutorial for the MAGMA R-package.</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -337,34 +337,34 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 
-<h1 class="title toc-ignore">MAGMA - MAny Group MAtching</h1>
+<h1 class="title toc-ignore">Turn ab the Heat! A Tutorial for the MAGMA
+R-package.</h1>
 
 
 
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>The MAGMA-package offers nearest neighbor matching for two to four
-groups. It also includes the possibility to match data of a 2x2 Design.
-Besides this possibility to match many groups, MAGMA introduces a
-framework to evaluate post matching balance. This vignette is a tutorial
-of MAGMA. It shows the main MAGMA function on an included simulated data
-set. Overall, this vignette includes a two-group, a three-group, and a
-2x2-design which is also approximately equivalent to a four-group
-example. This three examples are conducted in a standard matching
-process as well as with exact matching. Parts of this tutorial are also
-included on the respective help pages of the functions. For details of
-the algorithm and the theoretical background of MAGMA, see Feuchter et
-al. (2022).</p>
+groups. It also includes the option to match data of a 2x2 Design. In
+addition, MAGMA includes a framework for evaluating the post-matching
+balance. This vignette is a tutorial on MAGMA. It demonstrates the main
+MAGMA function on an included simulated dataset. In total, this vignette
+includes a two-group, a three-group, and a 2x2-design which is
+approximately equivalent to a four-group example. This three examples
+are conducted in a standard matching process, as well as with exact
+matching. Parts of this tutorial are also included in the respective
+help pages of the functions. For details of the algorithm and a more
+extensive introduction of MAGMA, see Feuchter et al. (2022).</p>
 </div>
-<div id="the-magma-simulated-data-set" class="section level2">
-<h2>The MAGMA Simulated Data Set</h2>
-<p>This simulated data set contains 800 cases and 14 variables. It is
+<div id="the-magma-simulated-dataset" class="section level2">
+<h2>The MAGMA Simulated Dataset</h2>
+<p>This simulated dataset contains 800 cases and 14 variables. It is
 available after loading the MAGMA package. Associations between the
-variables were modeled to increase usability and comprehensibility of
-this tutorial. Any associations are, therefore, not interpretable. For
-information regarding this simulated data set use
-<code>?MAGMA_sim_data</code>. Below, you find a short glimpse on the
-data and its structure</p>
+variables were modeled to increase the usability and comprehensibility
+of this tutorial, and are, therefore, not representative of real-life
+phenomena. For information about this simulated dataset use
+<code>?MAGMA_sim_data</code>. Below, is a brief look at the data and its
+structure</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(MAGMA_sim_data)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; &#39;data.frame&#39;:    800 obs. of  14 variables:</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ ID                    : int  1 2 3 4 5 6 7 8 9 10 ...</span></span>
@@ -404,13 +404,14 @@ data and its structure</p>
 <span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 0.2374553 0.3526674</span></span>
 <span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 0.5707750 0.1874763</span></span>
 <span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 0.2405261 0.5769070</span></span></code></pre></div>
-<p>One important note refers to the last the variables of this simulated
-data set. These are propensity scores estimated with the
-<code>twang</code> package (Ridgeway et al., 2015). They serve as
-distance indicators for the three examples. We recommend to use
-propensity as distance input for MAGMA.</p>
-<p>Before we start with the first example, we investigate the
-descriptive statistics of the simulated data set.</p>
+<p>Note that the last three variables are propensity scores estimated
+using the <code>twang</code> package (Ridgeway et al., 2015). For a
+detailed overview and tutorial on <code>twang</code>, see Ridgeway et
+al. (2015). The propensity scores serve as distance indicators for the
+three examples. We recommend to using a single propensity score as
+distance input for MAGMA because it encapsulated information of multiple
+covariates in one score. Before starting with the first example, we
+examine the descriptive statistics of the simulated dataset.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>MAGMA_sim_data <span class="sc">%&gt;%</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(sex, gifted_support, teacher_ability_rating, enrichment,</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>         parents_academic, GPA_school, IQ_score, Motivation, college_GPA) <span class="sc">%&gt;%</span></span>
@@ -473,25 +474,30 @@ descriptive statistics of the simulated data set.</p>
 </div>
 <div id="two-group-example" class="section level2">
 <h2>Two-Group Example</h2>
-<p>In this fictional two-group example the variable
-<code>gifted_support</code> is the independent (i.e., the treatment)
-variable. We are interested in how the receiving of giftedness support
-affects the college GPA. However, other variables, such as intelligence
-are associated with both, giftedness support and the college GPA.
-Therefore, we aim to reduce the effect of these covariates through the
-matching. For this example, the covariates are the <em>high school
-GPA</em>, <em>intelligence</em>, <em>motivation</em>, <em>sex</em>, and
-whether at least one parent has an <em>academic background</em>. Note
-that MAGMA can only consider metric and binary variables for balance
-estimation.</p>
+<p>This is a fictitious two-group example. The independent variable
+(i.e., the treatment) is <code>gifted_support</code>. We are interested
+in how receiving giftedness support affects the college GPA. However,
+other variables, such as intelligence are associated with both
+giftedness support and college GPA. This is because gifted students were
+chosen to participate in this support program based on their previous
+achievement or intelligence test results. Therefore, we aim to reduce
+the effects of these covariates by matching. For this example, the
+covariates are <em>high school GPA</em>, <em>intelligence</em>,
+<em>motivation</em>, <em>sex</em>, and whether at least one parent has
+an <em>academic background</em>. Note that MAGMA can only consider
+metric and binary variables for balance estimation.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>covariates_gifted <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;GPA_school&quot;</span>, <span class="st">&quot;IQ_score&quot;</span>, <span class="st">&quot;Motivation&quot;</span>, <span class="st">&quot;parents_academic&quot;</span>, <span class="st">&quot;sex&quot;</span>)</span></code></pre></div>
-<p>After this definition we can estimate the initial unbalance over all
-cases in our data set. Here, the function <code>initial_unbalnce</code>
-estimates the four balance criteria pre-matching. Therefore, it is
-necessary to define the data set (<code>MAGMA_sim_data</code>), the
-grouping variable (<code>gifted_support</code>), and all binary and
-metric covariates of interest (<code>covariates_gifted</code>). This
-result in a vector with the length four - the four balance criteria.</p>
+<p>With this definition, we can estimate the initial unbalance over all
+cases in our dataset. Here, the function <code>initial_unbalance</code>
+estimates the four balance criteria based on the whole sample. These
+criteria are <em>Pillai’s Trace</em>, <em>d-ratio</em>, <em>mean g</em>,
+and <em>adjusted d-ratio</em>. For more information, see Feuchter et
+al. (2023). The function <code>initial_unbalance</code> indicates the
+unbalance in the sample before matching. Therefore, it is necessary to
+define the dataset (<code>MAGMA_sim_data</code>), the grouping variable
+(<code>gifted_support</code>), and all binary and metric covariates of
+interest (<code>covariates_gifted</code>). This results in a vector of
+length four - the four balance criteria.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>unbalance_gifted <span class="ot">&lt;-</span> <span class="fu">initial_unbalance</span>(<span class="at">data =</span> MAGMA_sim_data,</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">group =</span> <span class="st">&quot;gifted_support&quot;</span>,</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">covariates =</span> covariates_gifted)</span>
@@ -500,34 +506,38 @@ result in a vector with the length four - the four balance criteria.</p>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           Pillai&#39;s Trace d-ratio Mean g adj. d-ratio</span></span>
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Unbalance           0.13     0.4   0.31          0.4</span></span></code></pre></div>
 <p>As may be expected from the descriptive statistics, the cases that
-received giftedness support differed at least on some variables
-substantially from the cases that did not receive giftedness support. In
-the next step, we compute the matching. This process is based on the
-respective propensity score, namely <code>ps_gifted</code>. We first
-address standard matching and deal after that with exact matching.</p>
+received giftedness support differed substantially from the cases that
+did not receive giftedness support on at least some variables. In the
+next step, we conduct the matching. This process is based on the
+respective propensity score, <code>ps_gifted</code>. We first address
+standard matching and then with exact matching.</p>
 <div id="standard-matching" class="section level3">
 <h3>Standard Matching</h3>
 <p>For standard nearest neighbor matching we use the function
-<code>MAGMA</code>. This function has four arguments. The first
-specifies the data set (<code>MAGMA_sim_data</code>), the second the
-name of the grouping variable as a character
-(<code>&quot;gifted_support&quot;</code>), and the third the name of the distance
-variable/propensity score as a character (<code>&quot;ps_gifted&quot;</code>). The
-fourth argument is optional. Since MAGMA matching has some computational
-load it includes the possibility of parallel computation. Per default,
-only one core is used. If parallel computation is desired, a larger than
-one integer can be defined for the <code>cores</code> argument. If the
-specified value exceeds the number of available cores, MAGMA sets this
-argument to the maximum available cores.</p>
-<p>Applying this function results in a data set, that augments the
-original data set for three variables. The first, <code>weight</code>,
-indicates whether this case was matched or not. The second,
-<code>step</code>, names the iterative step in which a case was matched.
-More specifically, the cases with the smallest distance are matched
-first and, thus, receive <code>1</code> in the step variable. The
-matched cases with the second smallest distance receive the
-<code>2</code> and so on. The third variable, <code>distance</code>
-specifies this distance of the matched cases.</p>
+<code>MAGMA</code>. This function has four arguments. The first argument
+specifies the dataset (<code>MAGMA_sim_data</code>). The second argument
+specifies the name of the grouping variable as a character
+(<code>&quot;gifted_support&quot;</code>). The third argument specifies the name
+of the distance variable/propensity score as a character
+(<code>&quot;ps_gifted&quot;</code>). The fourth argument is optional. Since MAGMA
+matching has some computational load, it includes the option of parallel
+computation. By default, only one CPU core is used. The usage of more
+cores may reduce the computation time of matching. While this reduction
+is of only restricted usage in two-group matching, it becomes more
+helpful for more group matching. If parallel computation is desired, an
+integer larger than one can be specified for the <code>cores</code>
+argument. If the specified value exceeds the number of available cores,
+MAGMA will set this argument to the maximum number of available
+cores.</p>
+<p>Applying this function results in a dataset that extends the original
+dataset by three variables. The first, <code>weight</code>, indicates
+whether this case was matched or not. The second, <code>step</code>,
+indicates the iterative step in which a case was matched. More
+specifically, the cases with the smallest distance are matched first
+and, thus, receive <code>1</code> in the step variable. The matched
+cases with the second smallest distance receive the <code>2</code> and
+so on. The third variable, <code>distance</code> indicates the distance
+of the matched cases.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>MAGMA_sim_data_gifted <span class="ot">&lt;-</span> <span class="fu">MAGMA</span>(<span class="at">Data =</span> MAGMA_sim_data,</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>                                <span class="at">group =</span> <span class="st">&quot;gifted_support&quot;</span>,</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                                <span class="at">dist =</span> <span class="st">&quot;ps_gifted&quot;</span>,</span>
@@ -556,33 +566,30 @@ specifies this distance of the matched cases.</p>
 <span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ distance              : num  4.55e-08 3.88e-06 5.06e-01 1.43e-06 3.27e-08 ...</span></span></code></pre></div>
 <div id="balance-estimation" class="section level4">
 <h4>Balance estimation</h4>
-<p>MAGMA matches cases iteratively until all cases of the samllest group
+<p>MAGMA matches cases iteratively until all cases of the smallest group
 are matched. Thus, it is necessary to find the optimal sample size after
 matching. To do so, <code>Balance_MAGMA</code> estimates the four
 balance criteria for each possible sample size. Note that MAGMA uses a
-lower limit of at least <em>n</em> = 20 per group. To apply the function
-you need at least to specify your data set
+lower limit of at least <em>n</em> = 20 per group. To use the function,
+you need to specify at least your dataset
 (<code>MAGMA_sim_data_gifted</code>), the name of the grouping variable
 as a character (<code>&quot;gifted_support&quot;</code>), and your covariates as a
 character vector (<code>covariates_gifted</code>). Moreover,
-<code>Balance_MAGMA</code> needs the name of the variable, that
-indicates the iterative <code>step</code> in that a case was matched.
-Since the <code>MAGMA</code> function names this variable
-<code>&quot;step&quot;</code> this name is the default of the <code>step</code>
-argument. If you want to use <code>Balance_MAGMA</code> on a data set
-with various MAGMA-matchings or to evaluate balance of another matching
-algorithm, you need to define the respective name as a character.</p>
-<p><code>Balance_MAGMA</code> returns a list length four. In the case of
-a univariate grouping variable (compare 2x2 matching), this list
-contains three numeric vectors and one list length two. The three
-vectors form Pillai’s Trace, mean <em>g</em>, and adjusted
-<em>d</em>-ratio over the iteratively increased sample size. The list
-length two includes one numeric vector, <em>d</em>-ratio, and one
-matrix. The matrix specifies all pairwise <em>d</em>’s for all
-covariates. Both, <em>d</em>-ratio and pairwise <em>d</em>’s, are also
-estimated teratively over the increased sample size. The example below
-estimates the Balance for the matching and shows the balance criteria
-and pairwise effects for a group sample size of <em>n</em> = 100.</p>
+<code>Balance_MAGMA</code> needs the name of the variable that indicates
+the iterative <code>step</code> in which a case was matched. Since the
+<code>MAGMA</code> function names this variable <code>&quot;step&quot;</code> this
+name is the default of the <code>step</code> argument.</p>
+<p><code>Balance_MAGMA</code> returns a list of length four. In the case
+of a univariate grouping variable, this list contains three numeric
+vectors and one list of length two. The three vectors comprise Pillai’s
+Trace, mean <em>g</em>, and adjusted <em>d</em>-ratio over the
+iteratively increased sample size. The list of length two includes one
+numeric vector, <em>d</em>-ratio, and one matrix. The matrix gices all
+pairwise <em>d</em>’s for all covariates. Both <em>d</em>-ratio and
+pairwise <em>d</em>’s are also estimated iteratively over the increased
+sample size. The example below estimates the balance for the matching
+and shows the balance criteria and pairwise effects for a group sample
+size of <em>n</em> = 100.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>Balance_gifted <span class="ot">&lt;-</span> <span class="fu">Balance_MAGMA</span>(<span class="at">data =</span> MAGMA_sim_data_gifted,</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>                                <span class="at">group =</span> <span class="st">&quot;gifted_support&quot;</span>,</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                                <span class="at">covariates =</span> covariates_gifted,</span>
@@ -616,37 +623,36 @@ and pairwise effects for a group sample size of <em>n</em> = 100.</p>
 </div>
 <div id="balance-plotting" class="section level4">
 <h4>Balance plotting</h4>
-<p>With this information regarding the balance with respect to sample
-size, the desired sample size can be selected. Which sample size is
-“optimal” does strongly depend on the specific research aim. As example,
+<p>With this information directly relating the balance to sample size,
+the desired sample size can be selected manually. The “optimal” sample
+size depends strongly on the specific research aim. For example, the
 sample size requirements of some statistical procedures may narrow the
-selection, or the need to eliminate a specific pairwise effect. We,
-therefore, want to encourage to adapt the selection of optimal sample
-size to the specific research aim.</p>
-<p>A first indicator on such an optimal model is the trend of the
+selection, or as may the need to eliminate a specific pairwise effect.
+We therefore encourage to adapt the selection of optimal sample size to
+the specific research aim.</p>
+<p>A first indicator of such an optimal model is the trend of the
 balance criteria across the iteratively increased sample size. The
-function <code>Plot_MAGMA</code> visualize this trend. The one mandatory
-argument, <code>Balance</code>, is specifying the object of the balance
-estimation results. Note that this object needs to be the result of a
-<code>Balance_MAGMA</code> function. Per default,
+function <code>Plot_MAGMA</code> visualizes this trend. The one
+mandatory argument, <code>Balance</code>, specifies the object of the
+balance estimation results. Note that this object must be the result of
+a <code>Balance_MAGMA</code> function. Per default,
 <code>Plot_MAGMA</code> creates plots for all four balance criteria.
 However, the <code>criterion</code> argument enables the plotting of
-specific balance criteria. Note that running this code leads to a
+specific balance criteria. Note that running this code will result in a
 warning. This warning is a result of the specified minimum sample size
 for balance estimation and can be ignored.</p>
-<p>The trend of this plots strongly depends on your data. Nonetheless,
-they can be a good indicator, where breakpoints in the sample
-size-balance associations may be. <code>Plot_MAGMA</code> uses fixed
-limits for the y-axis.This ensures comparability of this plots and
-prevents misinterpretation due to a restricted y-axis range. Both,
-<em>d</em>-ratio and adjusted <em>d</em>-ratio, vary between 0 and 1,
-wherefore those form the limits for these criteria. Although Pillai’s
-Trace has theoretically the same range, we set the limits to 0 and 0.5.
-Larger values are unlikely and indicate a bad balance. A stricter
-limitation could restrict a comprehensive trend evaluation. For mean
-<em>g</em> we set the limits to 0 and 1. The lower limit 0 corresponds
-to the theoretical lower limit. The rationality for the upper limit is
-comparable to the one of Pillai’s Trace.</p>
+<p>The trend of these plots depends strongly on the data. Nonetheless,
+they can be a good indicator of breakpointlocations in the sample
+size-balance associations. <code>Plot_MAGMA</code> uses fixed limits for
+the y-axis. This ensures comparability of these plots and prevents
+misinterpretation due to a restricted y-axis range. Both
+<em>d</em>-ratio and adjusted <em>d</em>-ratio vary between 0 and 1.
+Although Pillai’s Trace has theoretically the same range, we set the
+limits to 0 and 0.5. Larger values are unlikely and indicate a poor
+balance. A stricter limit might restrict a comprehensive trend
+evaluation. For mean <em>g</em> we set the limits to 0 and 1. The lower
+limit 0 corresponds to the theoretical lower limit. The rationale for
+the upper limit is comparable to that of Pillai’s Trace.</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Plot_MAGMA</span>(<span class="at">Balance =</span> Balance_gifted,</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">criterion =</span> <span class="fu">c</span>(<span class="st">&quot;Pillai&quot;</span>, <span class="st">&quot;d_ratio&quot;</span>, <span class="st">&quot;mean_g&quot;</span>, <span class="st">&quot;Adj_d_ratio&quot;</span>)) <span class="co">#Could be omitted</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: Removed 24 rows containing missing values (`geom_point()`).</span></span></code></pre></div>
@@ -660,20 +666,20 @@ comparable to the one of Pillai’s Trace.</p>
 </div>
 <div id="balance-table" class="section level4">
 <h4>Balance table</h4>
-<p>Besides the trend over sample size the absolutely best values for
+<p>Besides the trend over sample size, the absolutely best values for
 each criterion are of interest. The function <code>Table_MAGMA</code>
-extracts these values and returns them in an APA table in an extra file.
-More specific it returns a 4x5 table. In each of the four rows one
-balance criterion has its optimal value. The five columns represent the
-sample size per group, where the respective criterion is optimal, and
-the four balance criteria with this sample size per group. Besides
-creating a file with an APA table, the table is printed to the console,
-too.</p>
+extracts these values and returns them in a table in an extra file. More
+specifically it returns a 4x5 table. In each of the four rows one
+balance criterion has its optimal value. The five columns present the
+sample size per group for the matching solution where the respective
+criterion is optimal, and the four balance criteria values for this
+sample size per group. In addition to creating a file with a table, the
+table is printed to the console, too.</p>
 <p>Similar to <code>Plot_MAGMA</code> the first argument
 <code>Balance</code> of <code>Table-MAGMA</code> specifies the object of
 the balance estimation results. The second argument
-<code>filename</code> indicates the desired name of the extra file with
-the APA table. This argument is a character.</p>
+<code>filename</code> specifies the desired name of the extra file
+containing the table. This argument is a character.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Table_MAGMA</span>(<span class="at">Balance =</span> Balance_gifted,</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">filename =</span> <span class="st">&quot;Balance_gifted.docx&quot;</span>)</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 6</span></span>
@@ -688,17 +694,18 @@ the APA table. This argument is a character.</p>
 </div>
 <div id="exact-matching" class="section level3">
 <h3>Exact Matching</h3>
-<p>In comparison to standard matching, only cases sharing the same value
-on a defined variable can be matched in exact matching. In this example,
-the variable for exact matching is <code>enrichment</code>. This means,
-that cases that participated in afternoon enrichment can only be matched
-with other cases that participated, and vice versa. Reasons to select
-exact matching instead of standard matching may be, for example, a
-nested data structure. Besides this preselection of possible matches the
-process of matching stays the same. The main differene is that we need
-to us <code>MAGMA_exact</code> instead of <code>MAGMA</code> to match
-the data. This function has a further argument, where the name of the
-exact variable needs to be defined as a character
+<p>Unlike in standard matching, only cases sharing the same value on a
+defined variable can be matched in exact matching. In this example, the
+variable for exact matching is <code>enrichment</code>. This means that
+cases that participated in afternoon enrichment can only be matched with
+other cases that participated, and non-participants can only be matched
+with other non-participants. Reasons for choosing exact matching instead
+of standard matching may be, for example, a nested data structure.
+Except for this preselection of possible matches, the process of
+matching stays the same. The main difference is that we need to use
+<code>MAGMA_exact</code> instead of <code>MAGMA</code> to match the
+data. This function has an additional argument, where the name of the
+exact variable must be defined as a character
 (<code>&quot;enrichment&quot;</code>). Note that the initial unbalance is the same
 as for standard matching.</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>MAGMA_sim_data_gifted_exact <span class="ot">&lt;-</span> <span class="fu">MAGMA_exact</span>(<span class="at">Data =</span> MAGMA_sim_data,</span>
@@ -732,7 +739,7 @@ as for standard matching.</p>
 <p>The steps of balance estimation and visualization are the same as for
 standard matching. Therefore, we summarize these steps. The only change
 we need to consider is the different data frame that contains the result
-of the exact matching</p>
+of the exact matching.</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>Balance_gifted_exact <span class="ot">&lt;-</span> <span class="fu">Balance_MAGMA</span>(<span class="at">data =</span> MAGMA_sim_data_gifted_exact,</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">group =</span> <span class="st">&quot;gifted_support&quot;</span>,</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">covariates =</span> covariates_gifted,</span>
@@ -764,7 +771,7 @@ of the exact matching</p>
 <span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>Balance_gifted_exact<span class="sc">$</span>d_ratio<span class="sc">$</span>effects[, <span class="dv">100</span>]</span>
 <span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.15863343 0.16505200 0.04735660 0.16455067 0.05987313</span></span>
 <span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a><span class="co">#Ploting trend over increasing samle size</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a><span class="co">#Ploting trend over increasing sample size</span></span>
 <span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a><span class="fu">Plot_MAGMA</span>(<span class="at">Balance =</span> Balance_gifted_exact,</span>
 <span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>           <span class="at">criterion =</span> <span class="fu">c</span>(<span class="st">&quot;Pillai&quot;</span>, <span class="st">&quot;d_ratio&quot;</span>, <span class="st">&quot;mean_g&quot;</span>, <span class="st">&quot;Adj_d_ratio&quot;</span>)) <span class="co">#Could be omitted</span></span>
 <span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: Removed 24 rows containing missing values (`geom_point()`).</span></span></code></pre></div>
@@ -776,7 +783,7 @@ of the exact matching</p>
 <pre><code>#&gt; Warning: Removed 19 rows containing missing values (`geom_point()`).</code></pre>
 <p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAtAAAAHgCAMAAAC7G6qeAAABKVBMVEUAAAAAADoAAGYAOjoAOmYAOpAAZrYzMzM6AAA6ADo6AGY6OgA6Ojo6OmY6OpA6ZmY6ZpA6ZrY6kLY6kNtNTU1NTW5NTY5NbqtNjshmAABmADpmOgBmOmZmZgBmkJBmkNtmtrZmtttmtv9uTU1uTW5uTY5ubo5ubqtuq+SOTU2OTW6OTY6Obk2ObquOyP+QOgCQOjqQZgCQZjqQZmaQkDqQkGaQkLaQtpCQttuQ2/+rbk2rbm6rjk2ryKur5OSr5P+2ZgC2Zjq2Zma2kDq2tpC2ttu225C229u22/+2/9u2///Ijk3I///bkDrbkGbbtmbbtpDb27bb29vb/7bb/9vb///kq27k////tmb/trb/yI7/25D/27b/5Kv//7b//8j//9v//+T///8rrXc2AAAACXBIWXMAAA7DAAAOwwHHb6hkAAAVZElEQVR4nO2dC3vbyHVAIa8ls06TbCp6Za3bpEuva9lupb62idSmUpu02dpiN+2uJFZaihL+/48oZvAGByAA4jUX53yfbYCcGdzhHA0vBjDkuACCcPoOAKBJEBpEgdAgCoQGUSA0iAKhQRQIDaJAaBBFPaEXzizeeTjZc+8P94wF7/7849prqnz+brb2w8nu1dob/+Y4e+uvJlv0q+lyxYWLY92EMboS70Fb1BP6wklIWCT0/Mk2QqvaJi0WjuPkVkoIrcttKFwc6yYQemjUEvpu8qc7p9FegZENCG0i9QWxTtSiLreh8OajFR8KaYdFLaHnT/5zsq+3vps4T/8QzND+4GqbHv7ecXa+8ra92dEr+OMrx/npt8nyAeldr+rcefKt+91PvNq/Cmr7raoWnn4blLvwXvfkC18Lq6VaVNV0ub+IC/80UTje3/39T+KjBYH44avm/FC8H+H97ybexmLifH7l9Xbf23h6Ggod9y9ZW72nvh48ZokycePQAnWE9uwNZqa5Gq2nr7JCazm8YQwkuZuoPTWnR+V9MrsPJ59NnN2ruZOs7ecOUQsKX+jotaBausWM0HeZwon91NGCOEILw1C8Lvzcq7Hz64nOX+4P1Z5f3TvwXSq6qHZK6OwBZzU+dyhBHaHVl7j+Ir8/3PmN++OJkxX6bvILNcx7YRasJqQ/TvYS5TWZXTXW++pvNdsmau9eeW98pewKv97VwePX/GqZFoMcehYWDkMIj5HY984Y585eIuWIwo9D8Xz8yv3O/+ncvbo/9Co9/C44TNxYtrYf78JJlok/G2iDOkJfeCOvzwLvdOJxN1kX+rNf/kEXVZL4pdRmXF6T2VX++Er97+//YeIkhA6KXISToHI0fi2qlmwxLXQcgl84u697kxA6DD8KRR/t/tBrUzWsN/Tn4EcXNpauHQh9N8l8BnHj0Dw1hPa/PVVi6p9vPazn0OrL3vn8W3+Ug69d7/s2Lq+Jd/VX+35kgC6eEnqmy6eFDl9LnJjFLaaFjkPwC2f3dUjxSWEUfhSKFtJfyrlQQusezP3qcWPp2n7T3pfGafKAcePQBjWEDhJL7+s3V2j3j6985WsI7X2f//yf/uP7wx6FDsOPQ6kidFjbb/pCh5QsE3420AbVhQ78UV+7/hepGl49xBfRt7fif/7OmQUpxyyoGpc37QYt+8VTOfSmlCMSOm4xm3LMDMeI97NCB+HHoWSF9iuFKcfMzaJq66bnfn6fKaM/G2iD6kIvglMwTyXv61SvzYVCO7/y9xbOn3nJ5u88/+b6vN47U/NO1dSMF5bXZHYj2byztB9fqTPAebCOsOmkMBI6bnHtpDAIIRQ4u7+nJ9yw+SD8OJSs0F6J5Elh0Fi6tj977wVdC8vEnw20QXWhw3lyoc114mW7eC9YmtITlM5MghQlLuEGTTjpZTtfLidZ27BsF4gaL4TFFzcSISSFjkMICmf2faEzy3b6BynYygr92cRPG6ILkk68iB3X3v0haMCZJQ4Y9g7aoLLQ0aKEXh/w8sGn/xVd+v7vifP5D9GFlV+ohPiVWhW787LGz/S1hLB8QHo3kE1fMPmNXkrxav/gT9vJCytBqnwXXVhJ2BG2mBE6CiEsnN7XQvux6kDC8KNQ1nJodYUlOnbcv2TtlNBxmahxaIOG7rbLu5dDJuPqrV00JPS4rhQg9HBpRugo/RwHCD1cGhH64ULdsjMeEHq48D9WQBQIDaJAaBAFQoMoEBpEgdAgCoQGUSA0iAKhQRQIDaJAaBAFQoMoEBpEgdAgCoQGUSA0iAKhQRQIDaJAaBAFQoMoEBpEUSj08s2l/nf1bnpw00k4ANtRJPTt9Ast9OPZsXv9sqOAALahQOhPL37rz9CrD5fRZA0waMqkHMu3N+7q/bm39cyjk7AA6lFG6NuDUGiAgVNthgYYOGWEJocGaygj9OPZEascYAcbhVZ/WIcGW+BKIYgCoaEz9K+b8f9uzTuEhk5w1mjpOO00C5BkXee2tEZoaJl8mdtQGqGhVTbp3LTRCA2tYVI3ELg1oxEaWmLDPNyS0QgNrVAyr2jcaYSGNki5XORr00YjNLRB+XSiYaMRGlqgiqPNptIIDc1Tzc9GjUZoaJzqdjZnNEJDo9ScbhszGqGhSeqnDwgNw2ObdLgZoxEammO707tGjEZoaIxtVyuaMBqhoSG2P69r4sQQoaEZmlinQGgYDI2suyE0DISG1pG3n+S3jQCg0UvXW7aD0LAtTfqM0NA32y0+m1vbon4TQcCIadbnrY1GaNiKhnV2t006EBq2oHGbXYSG/mjD5y2NRmioTys+b2c0QkNtWvIZoaEXWtIZoaEf2vJ5q5YRGmrS2gTtbmM0QkM92vQZoaFb2lmvy7Rfr2bDkcAYaP7yoPEItSo2HQmMgNZ9rm80QkN12vcZoaE7Opiga59zIjRUpQufaxuN0FCVDmyufxiEhop0MT3XPw5CQyU6STeSh6paqZVQQCod+lwv6UBoqEL3Qlc8FkJDBTr1uZbRCA2lcGK6Pmq1Gi1FArLox2eEhnZwehK6utEIDRtw0vRx9CrlW4sERNCvzggNzdKny3EAVcq3FglIoG+fKxuN0FBA/z5XNRqhwYCvUOhyrz4jNGxLz+eBpmjKl24xEmifNoTre2HDGE/pwm1GAm3TinID87laL4cQL2zCNKBBclthsEuWHJrO1W6JKii1ejc9uNFby9fTLy6biAxqkbFLb1XMC8oXjk8EB6JzU0I/nh271y/V1ur9uXsduA212E6OlIlJ4cySJveyxTarMSSTQyoYnV9o9eHSXb5RE/Py7Y3eg7qUGY6CEgkRzYLGzZv3bBe6QhqdX0Zr7M3NyRn6mUdTIY6IMqNRWCRf43i52JBWbJC/ehw9sr3Qtweh0IlsGqpRWSRToaS2xgZzrM2XPz+QofrcgNDxDL38+ty95aywBhVmx6SDpncMjRUfZ0PholC373gLlIyrTA6dmKuhEpvcypQ1P5QoK7RrmK7KiGwqa25g6373SNEqx1GwysEMXZdcycqblphQi38akhUL3TS6K8XnzevQapK+nU5fMEHXIWlw8dxpfLe0Y2uliuoZohDjM1cKy+KPdf0Rj2obzDHYnv4pKNe8Id6iziTaluMzQpfBOHuWq1fclqn5RLK8lWTF1Yw/QBIQ0o1WMYx92Vlzk9GG5WLDAZvuUH4o9iOkG61imM1KCVBG6HRiEZbvSjR5PiN0MWnjygpdWCqrsblgR5qJ8xmhC0nJl7r2UaTAButN03BuIw11JBdpPiN0IdFwx16XvHpcypNN3gvyrDP4yArICuekT+I21CkhpLj5sX/4LPPJE3PjvFpR6MYCBoQuIlfMzUIHm2UO0USkEMHnmU/RRJvzDilE3/DZF+AUXEIpSEa6CA1y4NOvi0FofO4fPv5cNri5fu5HvjEA+Pjz2CTn2moGPg8BPn8jZZbdMkLj8yBgAEwULG/klsPnQcAImCjp86Y7jKB7GAITpfV00jfOtR8ZbIAxMFLJT3weEAyCs371xPDShhYQeiiMfhAMNlaWE5+Hw+hHoQmhYTiMfuAMZ3QIbTEMXNJop/yNnzBMxj5yztrzX/qOCLZi3OOXucyXnqfBRkY9dIk5mUt+QhjryK3Ji9AyGOnIrbuL0DIY6citm+vv4LPtjHToDDNx4uywt7Bga8Y5eGQWYhnlkOKyXEY5rggtl1GOK0LLZZzjis9iYWBBFAgNopAudOJqSd+hQBcIH2YuZ48N4aOM0GND+Cgj9NiQPsr4PDLkDzMqj4oBDjYGQn16dceobvYu5YKiAFl61CQns02+Gm03kgQ78f+22rYpGCr9DW3eqdq2QucVjA7HGaJkehfaaHSqTGqjXLMFh2PJQzbpkZ2rsd5v/6CppypvLJnaKNG2IQVH6LGQGtn5k4+ue3/YttE5bhVo5pR/vm06s8hkL/gsnuTQ3h/O1D8LpXWrx4y0StpV4FolD1NNZ35e8Fk8/QptfHZRYYWyzRvr4LN8+kg5kmKtbZmS5m2EXn8HJNPLSaE+8Npvq0wpmHbPKZ1DxyUN9iK0fHof36zEJrsrtlb4dt04wQ56GuDs9BtuhBY7Tj2j4+oNBgsWEQ28d0Z4f+g71PZJYd5EGkvsJKn8C6lILUZMP+OeY5yzJnLliToxvzcZMNhCH8t2hamuY6Z68xg9SgqEXr2bHtzorcez6YvzZg+bXR/OvGkUerOjTur0stGIwQ7iUZ9H8uzp/cezY/f6pd78dOzeBm63EkPGvmQinPZ5g6RxCYQeK4YZOmD14dJdvrkMtlqNIWtfnAi7iXm5OE/JlMDnkZI/7Mu3N+7q/bne+pcg5Xjm0UIMZlOzL+YLnXAfj0dOavzvJloJP4dWSUYg9OtjrXd7QZS+7cg1XUNM3TbdToRgC0kBHk72H05mYeKRnKHDrf7JLHukThvRGdZy6It9d7F7pfYSOfTfDEbozLrH+oJIz/FB32SFnu+Fy3aPZ0eJVY5WU47yIDQUkzLgQts892foYB1aTdLe1hftLnSUZF1dhIYUKQO8JNq9cHZO+wpmE5GzCXPxGZJYpYDJ2fiEEJ0hu8ox6y2MUj4WCA2gyb9S2GkUJRMGJ7sC7bJYBynS/6cwOB3sPorKGTBZMxhJz9C+I+3fProWRVU5OQ8EMwPxofYEjdCQwlIfEBrMZH3oLY2uCD6DEVuFdlmwAxMWC82CHaxjs9AAazDHgSgSD5qJzrO6X4cGaAjT00dnPcUCsDX9PGgGoCUQGkRhSjm6eUA0QAukVzkW6pxw1ksgAE3Ash2IAqFBFAgNokBoEAVCgygQGkTBvRwgCu7lAFFw6RtEgdAgCu7lAFFwLweIgmU7EAVCgyjSQs+9hIP/9w0Wk/6VFLvfH84eTvb6CgZgWzLLdmrljmU7sBeEBlFkHnj+vXKadWiwFsM6ND6DvbBsB6LgXg4QBUKDKGKh59EN/qxDg7UM4/cUAjQEJ4UgipTQ+soK/6UQLCZ9L8eeusd/Tg4N1pLJodWdSaxygL2s3cuxj9BgMUmhH072FzunKvEAsJRUDn03cfbcC27wB3th2Q5EgdAgivRJIc+2A8tZn6HvvzztIQ6ARjCkHAvOCsFaTEKTcoC1GIRm3Q7sxXBSuEMODdbCsh2IAqFBFInfsTJL/JoVHmUAdmKeofVCx+rd9OAmeOHx7Li7mABqYxb67mdX2uHrl8EL11OEBhvI/7Vuqw+X7vLNpX5z+Vd/jdBgA/m/1m359sZdvT9Xm4///K9+yvHMo+sIASqQ/6CZ24NI6Osjcmiwg3yh4xna20JosIP8X+sW59DXU8VRH+EBVCP/17o9nh3FqxzM0GAHBVcK/XVof5JGaLADk9D/zu2jYCtrQvMsMLCZjNBzfjUyWM3a/dA8ZQZsJvXAcx6bBLaTvH1U/YPQYDXxDL3Q6TNCg9WkH9ZIDg2Wk1nlWLDKAVaztg7tTdOsQ4O1mK4U/h9Cg63wv75BFAgNokBoEAVCgygQGkSB0CAKhAZRIDSIAqFBFAgNokBoEAVCgygQGkSB0CAKhAZRIDSIAqFBFAgNokBoEAVCgygQGkSB0CAKhAZRIDSIAqFBFAgNokBoEAVCgygQGkSB0CAKhAZRIDSIAqFBFAgNokBoEAVCgygQGkSB0CAKhAZRIDSIAqFBFAgNokBoEAVCgygQGkSB0CAKhAZRIDSIAqFBFAgNoigQevVuenCjt5avp9PjjgIC2IZ8oR/Pjt3rl2pr9f7cXX593llMALXJF3r14dJdvrn0tm6V1p+YosEC8oVevr3Rc7OPv/XMo5OwAOqRL/TtQULox7OjjgIC2IZyM/TqHT6DFZTJod3laxJosIOiVY6jYJUDn8EaNq5De5P09VSB1GABXCkEUSA0iAKhQRQIDaJAaBAFQoMoEBpEgdAgCoQGUSA0iAKhQRQIDaJAaBAFQoMoEBpEgdAgCoQGUSA0iAKhQRQIDaJAaBAFQoMoEBpEgdAgCoQGUSA0iAKhQRQIDaJAaBAFQoMoEBpEgdAgCoQGUSA0iAKhQRQIDaJAaBAFQoMoEBpEgdAgCoQGUSA0iAKhQRQIDaJAaBAFQoMoEBpEgdAgCoQGUSA0iAKhQRQIDaJAaBAFQoMoEBpEgdAgCoQGUSA0iAKhQRQIDaJAaBAFQoMoCoRevZse3GS2AIZNvtCPZ8fu9cv0FsDAyRd69eHSXb65TG0BDJx8oZdvb9zV+/PU1jOPzkIDqE6+0LcHocbxFsDAqTZDAwwccmgQRdEqx1G0ynHEKgfYwcZ1aDU1sw4NtsCVQhAFQoMoEBpEgdAgCoQGUSA0iAKhQRQIDaJAaBAFQoMoEBpE0azQQu7+l9GNcfYCoQ3I6MY4e4HQBmR0Y5y9QGgDMroxzl5wUgiiQGgQBUKDKBAaRIHQIIoGhbb/v9LqZzUE3bC1N8vX0+mx9b24nU6/qDcWzQlt/yMdb9WHGHTD1t6oBwItvz63vBdqZonDr9SL5oS2/nE0n178Vj2ywe+Grb25VQP/6djyXiji8Cv1ojmhBTwwTH1qQTds7k0cvs298ObkOr1oTmgBj3RUQgfdsLg36kFX1vdi+frFea1eMEMnEDFDr94dufb3ovb3DDl0gqX9ObQ3tR27rvW9UNQ7E2hylcP6RzqqTy3ohq298X22vRdBklGnF6xDJxCwDn09VRxb3gvVDS+H7ncdGmAAIDSIAqFBFAgNokBoEAVCgygQGkSB0CAKhAZRIDSIAqFBFAgNokBoEAVCgygQGkSB0CAKhAZRIDSIAqFBFAgNokBoEAVCgygQuh3uD/fUP4snH/uOZGQgdDvcHzozF6G7B6Hb4f7wlz+7QujuQeh2uD+cXexHQt/9yTeOs+sJ/nDiON5Ld8//0fHf8WbynV8//+i/oN7dU6VP9V9RLSgPQreDJ/Td84+R0BNl656r/rjz3au7yV5YbN/78+SjfiEsEQkd1IIKIHQ7eEK78/1Y6JlWVO8q19W+Qr8wV0LPgh3vr1joWTBdQ2kQuh2U0PdfnkYpx6l+ae5o9iNL5yqj8KZy/cJC76hU4zT+VzUE5UHodtAezveyQgcZMUK3BkK3g/bw4W+/SaYczz8udnyRI6FTWYZ+dy3leM46SRUQuh38iXXhZE8KvUnY8zYSOjopVC+EJ4XqxYeTHU4K64DQ7RBkCheJZTtlplqY8+bh+ExPLdt9EwjtBst2nv+O85dfnka1oDwI3QXFSxWLnLVmFjhqgNBdkKumSptzswqErgFCd0G+mmohLy+rQOgaIDSIAqFBFAgNokBoEAVCgygQGkSB0CCK/wcVjzzHwxUqVQAAAABJRU5ErkJggg==" /><!-- --></p>
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co">#Creating APA table</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co">#Creating table</span></span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">Table_MAGMA</span>(<span class="at">Balance =</span> Balance_gifted_exact,</span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">filename =</span> <span class="st">&quot;Balance_gifted_exact.docx&quot;</span>)</span>
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 6</span></span>
@@ -792,25 +799,25 @@ of the exact matching</p>
 </div>
 <div id="three-group-example" class="section level2">
 <h2>Three-Group Example</h2>
-<p>In this fictional three-group example the variable
-<code>teacher_ability_rating</code> is the independent (i.e., the
-treatment) variable. We are interested in how the teacher rated ability
-ranging from below average to average and above average affects the
-college GPA. While the process of matching and balance evaluation is the
-same as in the two-group example, the grouping variable
-(<code>teacher_ability_rating</code>) and consequently the distance
+<p>This is a fictitious three-group example. The independent variable
+(i.e., the treatment) is <code>teacher_ability_rating</code>. We are
+interested in how teacher-rated student ability, which ranged from below
+average to average and above average, affects the college GPA. While the
+process of matching and balance evaluation is the same as in the
+two-group example, the grouping variable
+(<code>teacher_ability_rating</code>), and consequently the distance
 variable/propensity score changes (<code>ps_tar</code>). Moreover, we
 slightly change the covariates by substituting <code>sex</code> through
 <code>gifted_support</code>.</p>
 <div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>covariates_tar <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;GPA_school&quot;</span>, <span class="st">&quot;IQ_score&quot;</span>, <span class="st">&quot;Motivation&quot;</span>, <span class="st">&quot;parents_academic&quot;</span>, <span class="st">&quot;gifted_support&quot;</span>)</span></code></pre></div>
 <div id="standard-matching-1" class="section level3">
 <h3>Standard Matching</h3>
-<p>Due to this changes in grouping variable and covariates, we need to
-estimate the initial unbalance for teacher rated ability. Note that due
-to having three groups the estimation of mean <em>g</em> slightly
-changes. However, this does only affect the backend computation, while
-the code and the display of results are not affected. For more details,
-see Feuchter et al. (2022).</p>
+<p>Due to these changes in grouping variable and covariates, we need to
+estimate the initial unbalance for teache- rated ability. Note that due
+to having three groups, the estimation of mean <em>g</em> slightly
+changes. However, this only affects the backend computation, while the
+code and the display of results are not affected. For more details, see
+Feuchter et al. (2022).</p>
 <div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>unbalance_tar <span class="ot">&lt;-</span> <span class="fu">initial_unbalance</span>(<span class="at">data =</span> MAGMA_sim_data,</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">group =</span> <span class="st">&quot;teacher_ability_rating&quot;</span>,</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">covariates =</span> covariates_tar)</span>
@@ -818,9 +825,9 @@ see Feuchter et al. (2022).</p>
 <span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>unbalance_tar</span>
 <span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           Pillai&#39;s Trace d-ratio Mean g adj. d-ratio</span></span>
 <span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Unbalance           0.23    0.47   0.35         0.47</span></span></code></pre></div>
-<p>After this check of initial unbalance we can conduct the matching. As
-mentioned, we need to adapt the grouping variable and the distance
-variable/propensity score to this example.</p>
+<p>After this check of initial unbalance, we can conduct the matching.
+As mentioned above, we need to adapt the grouping variable and the
+distance variable/propensity score for this example.</p>
 <div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>MAGMA_sim_data_tar <span class="ot">&lt;-</span> <span class="fu">MAGMA</span>(<span class="at">Data =</span> MAGMA_sim_data,</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>                            <span class="at">group =</span> <span class="st">&quot;teacher_ability_rating&quot;</span>,</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>                            <span class="at">dist =</span> <span class="st">&quot;ps_tar&quot;</span>,</span>
@@ -850,7 +857,7 @@ variable/propensity score to this example.</p>
 <div id="balance-estimation-and-visualization-1" class="section level4">
 <h4>Balance Estimation and Visualization</h4>
 <p>We only need to change the specific object names, covariates,
-grouping variable, and the filename for the APA table. Besides this, the
+grouping variable, and the filename for the table. Otherwise, the
 process of balance estimation and visualization remains the same.</p>
 <div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>Balance_tar <span class="ot">&lt;-</span> <span class="fu">Balance_MAGMA</span>(<span class="at">data =</span> MAGMA_sim_data_tar,</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">group =</span> <span class="st">&quot;teacher_ability_rating&quot;</span>,</span>
@@ -897,25 +904,26 @@ process of balance estimation and visualization remains the same.</p>
 <pre><code>#&gt; Warning: Removed 19 rows containing missing values (`geom_point()`).</code></pre>
 <p><img src="data:image/png;base64,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" /><!-- --></p>
 <div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="co">#Creating APA table</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="co">#Creating table</span></span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">Table_MAGMA</span>(<span class="at">Balance =</span> Balance_tar,</span>
 <span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">filename =</span> <span class="st">&quot;Balance_tar.docx&quot;</span>)</span>
 <span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 6</span></span>
 <span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Criterion_optimized Pillai_Trace d_ratio mean_g adjusted_d_ratio n_per_group</span></span>
 <span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                      &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;            &lt;dbl&gt;       &lt;int&gt;</span></span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Best mean g                 0.01   0.8     0.1              0.75         116</span></span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 adjusted d-ratio            0.01   0.867   0.1              0.75         117</span></span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 Best Pillai                 0.01   0.933   0.11             0.74         121</span></span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 Best d-ratio                0.01   0.933   0.12             0.72         123</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Best mean g                 0.01    0.8    0.1              0.75         116</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 adjusted d-ratio            0.01    0.87   0.1              0.75         117</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 Best Pillai                 0.01    0.93   0.11             0.74         121</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 Best d-ratio                0.01    0.93   0.12             0.72         123</span></span>
 <span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Balance Table successfully created!</span></span></code></pre></div>
 </div>
 </div>
 <div id="exact-matching-1" class="section level3">
 <h3>Exact Matching</h3>
 <p>We use the same covariates as we used for the standard three-group
-matching. The only change constitutes using <code>sex</code> as exact
-variable. Attached you find the whole matching, balance estimataion, and
-visualization process.</p>
+matching. The only change is the use of <code>sex</code> as exact
+variable. Thus, girls will only be matched to girls, and boys will only
+be matched to other boys across the three groups. Attached you find the
+whole matching, balance estimataion, and visualization process.</p>
 <div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>MAGMA_sim_data_tar_exact <span class="ot">&lt;-</span> <span class="fu">MAGMA_exact</span>(<span class="at">Data =</span> MAGMA_sim_data,</span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">group =</span> <span class="st">&quot;teacher_ability_rating&quot;</span>,</span>
 <span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">dist =</span> <span class="st">&quot;ps_tar&quot;</span>,</span>
@@ -988,50 +996,50 @@ visualization process.</p>
 <pre><code>#&gt; Warning: Removed 19 rows containing missing values (`geom_point()`).</code></pre>
 <p><img src="data:image/png;base64,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" /><!-- --></p>
 <div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co">#Creating APA table</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co">#Creating table</span></span>
 <span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="fu">Table_MAGMA</span>(<span class="at">Balance =</span> Balance_tar_exact,</span>
 <span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">filename =</span> <span class="st">&quot;Balance_tar_exact.docx&quot;</span>)</span>
 <span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 6</span></span>
 <span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Criterion_optimized Pillai_Trace d_ratio mean_g adjusted_d_ratio n_per_group</span></span>
 <span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                      &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;            &lt;dbl&gt;       &lt;int&gt;</span></span>
-<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Best mean g                 0.01   0.8     0.12             0.7          113</span></span>
-<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 adjusted d-ratio            0.01   0.8     0.12             0.7          114</span></span>
-<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 Best Pillai                 0.01   0.733   0.12             0.69         116</span></span>
-<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 Best d-ratio                0.01   0.8     0.14             0.65         127</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Best mean g                 0.01    0.8    0.12             0.7          113</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 adjusted d-ratio            0.01    0.8    0.12             0.7          114</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 Best Pillai                 0.01    0.73   0.12             0.69         116</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 Best d-ratio                0.01    0.8    0.14             0.65         127</span></span>
 <span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Balance Table successfully created!</span></span></code></pre></div>
 </div>
 </div>
 <div id="x2four-group-example" class="section level2">
 <h2>2x2/four-group Example</h2>
-<p>In this fictional 2x2-design example the variables
+<p>In this fictitious 2x2-design example the variables
 <code>gifted_support</code> and <code>enrichment</code> are the
 independent (i.e., the treatment) variables. We are interested in how
-the receiving of giftedness support and the participation in afternoon
-enrichment affects the college GPA. The process of matching and balance
-evaluation is the same as in the former examples. The grouping variable
-consists of two variables, wherefore we use a character vector as input
-for the groupung variable
+receiving giftedness support and the participation in afternoon
+enrichment affect the college GPA. The process of matching and balance
+evaluation is the same as in the previous examples. The grouping
+variable consists of two variables, so we use a character vector as
+input for the grouping variable
 (<code>c(&quot;gifted_support&quot;, &quot;enrichment&quot;)</code>). Consequently, we also
 adapt the distance variable/propensity score (<code>ps_2x2</code>).
 Moreover, we use the same covariates as in the two-group example. Note
-that this 2x2 matching is nearly equivalent to a four group matching
+that this 2x2 matching is nearly equivalent to a four-group matching
 using a multinominal variable indicating the four cells of the 2x2 group
 design. The multinominal variable for this example is
-<code>support_enrichment</code>. Major distinctions betwwen such a
-multinominal four-group matching and a 2x2 matching occur only for
-balance estimation. This differences are described more thoroughly
+<code>support_enrichment</code>. Major distinctions between such a
+multinominal four-group matching and a 2x2 matching occur only in the
+balance estimation. These differences are described more thoroughly
 below.</p>
 <div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>covariates_2x2 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;GPA_school&quot;</span>, <span class="st">&quot;IQ_score&quot;</span>, <span class="st">&quot;Motivation&quot;</span>, <span class="st">&quot;parents_academic&quot;</span>, <span class="st">&quot;sex&quot;</span>)</span></code></pre></div>
 <div id="standard-matching-2" class="section level3">
 <h3>Standard Matching</h3>
-<p>Due to this changes in grouping variable and covariates, we need to
-estimate the initial unbalance for the two independent variables
+<p>Because of these changes in grouping variable and covariates, we need
+to estimate the initial unbalance for the two independent variables
 <code>gifted_support</code> and <code>enrichment</code>. The result of
-the <code>initial_unbalance</code> function slightly changes in this
+the <code>initial_unbalance</code> function changes slightly in this
 two-factorial design. Pillai’s Trace is estimated separately for the two
 main effects and the interaction. As can be seen, <em>d</em>-ratio, mean
 <em>g</em>, and adjusted <em>d</em>-ratio are the same for a 2x2 or a
-four-group matching. Changes only occur for Pillai’s Trace.</p>
+four-group matching. Changes occur only for Pillai’s Trace.</p>
 <div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>unbalance_2x2 <span class="ot">&lt;-</span> <span class="fu">initial_unbalance</span>(<span class="at">data =</span> MAGMA_sim_data,</span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">group =</span> <span class="fu">c</span>(<span class="st">&quot;gifted_support&quot;</span>, <span class="st">&quot;enrichment&quot;</span>),</span>
 <span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">covariates =</span> covariates_2x2)</span>
@@ -1049,16 +1057,16 @@ four-group matching. Changes only occur for Pillai’s Trace.</p>
 <span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>unbalance_4_group</span>
 <span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           Pillai&#39;s Trace d-ratio Mean g adj. d-ratio</span></span>
 <span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Unbalance           0.16    0.53   0.29         0.53</span></span></code></pre></div>
-<p>After this check of initial unbalance we can conduct the matching. As
-mentioned, we need to adapt the grouping variable and the distance
-variable/propensity score to this example. Moreover, the conducting of a
-2x2/four-group matching has some computational load. If a RAM threshold
-is exceeded, MAGMA computes quasi-systematic matching. The rationality
-of this is described elsewhere. Again, this only affects the
-computational backend and does not affect the user application. Note
-that in the case of a multifactorial matching, MAGMA returns a fourth
-variable. This fourth variable is a multinominal version of the two
-independent variables (<code>group_long</code>).</p>
+<p>After this check of initial unbalance, we can conduct the matching.
+As mentioned above, we need to adapt the grouping variable and the
+distance variable/propensity score for this example. Moreover,
+conducting a 2x2/four-group matching has some computational load. If a
+RAM threshold is exceeded, MAGMA computes quasi-systematic matching.
+Again, this only affects the computational backend and does not affect
+the user application. Note that in the case of a multifactorial
+matching, MAGMA returns a fourth variable. This fourth variable is a
+multinominal version of the two independent variables
+(<code>group_long</code>).</p>
 <div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>MAGMA_sim_data_2x2 <span class="ot">&lt;-</span> <span class="fu">MAGMA</span>(<span class="at">Data =</span> MAGMA_sim_data,</span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>                            <span class="at">group =</span> <span class="fu">c</span>(<span class="st">&quot;gifted_support&quot;</span>, <span class="st">&quot;enrichment&quot;</span>),</span>
 <span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>                            <span class="at">dist =</span> <span class="st">&quot;ps_2x2&quot;</span>,</span>
@@ -1126,12 +1134,11 @@ independent variables (<code>group_long</code>).</p>
 <span id="cb33-65"><a href="#cb33-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 <div id="balance-estimation-and-visualization-2" class="section level4">
 <h4>Balance Estimation and Visualization</h4>
-<p>For this example, we only continue with the 2x2 design for balance
-estimation. The only difference to the former examples in the process is
-again, that the grouping variable is a character vector length two. As a
+<p>For this example, we continue only with the 2x2 design for balance
+estimation. The only difference to the former examples in the process
+is, that the grouping variable is a character vector of length two. As a
 result of this, <code>Plot_MAGMA</code> displays three Pillai’s Trace
-plots corresponding to the two main effects and the interactin
-respectively.</p>
+plots corresponding to the two main effects and the interaction.</p>
 <div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>Balance_2x2 <span class="ot">&lt;-</span> <span class="fu">Balance_MAGMA</span>(<span class="at">data =</span> MAGMA_sim_data_2x2,</span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>                             <span class="at">group =</span> <span class="fu">c</span>(<span class="st">&quot;gifted_support&quot;</span>, <span class="st">&quot;enrichment&quot;</span>),</span>
 <span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">covariates =</span> covariates_2x2,</span>
@@ -1185,7 +1192,7 @@ respectively.</p>
 <pre><code>#&gt; Warning: Removed 19 rows containing missing values (`geom_point()`).</code></pre>
 <p><img src="data:image/png;base64,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" /><!-- --></p>
 <div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="co">#Creating APA table</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="co">#Creating table</span></span>
 <span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="fu">Table_MAGMA</span>(<span class="at">Balance =</span> Balance_2x2,</span>
 <span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">filename =</span> <span class="st">&quot;Balance_2x2.docx&quot;</span>)</span>
 <span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 8</span></span>
@@ -1205,9 +1212,9 @@ respectively.</p>
 <div id="exact-matching-2" class="section level3">
 <h3>Exact Matching</h3>
 <p>We use the same covariates as we used for the standard 2x2 matching.
-The only change constitutes using <code>teacher_ability_rating</code> as
-exact variable. Attached you find the whole matching, balance
-estimataion, and visualization process.</p>
+The only change constitutes the use of
+<code>teacher_ability_rating</code> as exact variable. Below is the
+whole matching, balance estimataion, and visualization process.</p>
 <div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>MAGMA_sim_data_2x2_exact <span class="ot">&lt;-</span> <span class="fu">MAGMA_exact</span>(<span class="at">Data =</span> MAGMA_sim_data,</span>
 <span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">group =</span> <span class="fu">c</span>(<span class="st">&quot;gifted_support&quot;</span>, <span class="st">&quot;enrichment&quot;</span>),</span>
 <span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">dist =</span> <span class="st">&quot;ps_2x2&quot;</span>,</span>
@@ -1289,7 +1296,7 @@ estimataion, and visualization process.</p>
 <pre><code>#&gt; Warning: Removed 19 rows containing missing values (`geom_point()`).</code></pre>
 <p><img src="data:image/png;base64,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" /><!-- --></p>
 <div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="co">#Creating APA table</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="co">#Creating table</span></span>
 <span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="fu">Table_MAGMA</span>(<span class="at">Balance =</span> Balance_2x2_exact,</span>
 <span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">filename =</span> <span class="st">&quot;Balance_2x2_exact.docx&quot;</span>)</span>
 <span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 8</span></span>
