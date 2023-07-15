@@ -103,17 +103,17 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
   #Creating data set with relevant variables
   if(length(group) == 1) {
     data <- Data %>%
-      filter(as.logical(!is.na(.[group])),
+      dplyr::filter(as.logical(!is.na(.[group])),
              as.logical(!is.na(.[dist]))) %>%
-      mutate( ID = c(1:nrow(Data)))
+      dplyr::mutate( ID = c(1:nrow(Data)))
   } else {
     values_1 <- unlist(unique(Data[group[1]]))
     values_2 <- unlist(unique(Data[group[2]]))
     data <- Data %>%
-      filter(as.logical(!is.na(.[group[1]])),
+      dplyr::filter(as.logical(!is.na(.[group[1]])),
              as.logical(!is.na(.[group[2]])),
              as.logical(!is.na(.[dist]))) %>%
-      mutate(ID = c(1:nrow(Data)),
+      dplyr::mutate(ID = c(1:nrow(Data)),
              group_long = case_when(
                as.logical(Data[group[1]] == values_1[1] & Data[group[2]] == values_2[1]) ~ 1,
                as.logical(Data[group[1]] == values_1[1] & Data[group[2]] == values_2[2]) ~ 2,
@@ -142,11 +142,11 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
 
   colnames(input) <- c("ID", "group", "distance_ps","exact")
   input <- input %>%
-    as_tibble(.) %>%
-    group_by(group) %>%
-    mutate(group_id = row_number()) %>%
-    ungroup() %>%
-    mutate(weight = NA,
+    tibble::as_tibble(.) %>%
+    dplyr::group_by(group) %>%
+    dplyr::mutate(group_id = row_number()) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(weight = NA,
            step = NA,
            distance = NA)
 
@@ -158,8 +158,8 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
   var_ma <- as.numeric(var(input$distance_ps))
 
   elements <- input %>%
-    group_by(group) %>%
-    summarise(max(group_id)) %>%
+    dplyr::group_by(group) %>%
+    dplyr::summarise(max(group_id)) %>%
     .[, 2] %>%
     unlist()
 
@@ -174,11 +174,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
 
     elements_temp <- sapply(group_list_temp, nrow)
 
-    value_matrix <- matrix(NA, nrow = prod(elements_temp), length(elements_temp))
-
-    value_matrix[, 1] <- rep(group_list_temp[[1]][["distance_ps"]], elements_temp[2])
-    value_matrix[, 2] <- purrr::map(group_list_temp[[2]][["distance_ps"]], rep, elements_temp[1]) %>%
-      unlist()
+    value_matrix <- build_value_matrix(group_list_temp, elements_temp)
 
     means <- rowMeans(value_matrix)
 
@@ -198,34 +194,18 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
     rm(distance_mean)
     gc()
 
-    iteration <- 1
-    iteration_max <- min(elements_temp)
-    while (iteration <= iteration_max) {
-      index <- which(distance_array == min(distance_array, na.rm = T), arr.ind=T)[1, ] # Indizierung notwenig, wenn zufällig selbe Distanz zweimal vorhanden
-
-      group_list_temp[[1]][["step"]][[index[1]]] <- iteration
-      group_list_temp[[2]][["step"]][[index[2]]] <- iteration
-      group_list_temp[[1]][["weight"]][[index[1]]] <- 1
-      group_list_temp[[2]][["weight"]][[index[2]]] <- 1
-      group_list_temp[[1]][["distance"]][[index[1]]] <- min(distance_array, na.rm = T)
-      group_list_temp[[2]][["distance"]][[index[2]]] <- min(distance_array, na.rm = T)
-
-
-      distance_array[index[1], ] <- NA
-      distance_array[, index[2]] <- NA
-
-      iteration <- iteration + 1
-    }
+    group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
     rm(distance_array)
     gc()
+    
     exact_list[[i]] <- do.call(rbind.data.frame, group_list_temp)
     }
 
   data_temp <- do.call(rbind.data.frame, exact_list) %>%
-    arrange(distance, step) %>%
-    mutate(step = ceiling(c(1:nrow(.))/2)) %>%
-    select(ID, step, weight, distance) %>%
-    filter(weight == 1)
+    dplyr::arrange(distance, step) %>%
+    dplyr::mutate(step = ceiling(c(1:nrow(.))/2)) %>%
+    dplyr::select(ID, step, weight, distance) %>%
+    dplyr::filter(weight == 1)
 
   data <- merge(data,
                 data_temp,
@@ -243,14 +223,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
 
         elements_temp <- sapply(group_list_temp, nrow)
 
-        value_matrix <- matrix(NA, nrow = prod(elements_temp), length(elements_temp))
-
-        value_matrix[, 1] <- rep(group_list_temp[[1]][["distance_ps"]], elements_temp[2] * elements_temp[3])
-        value_matrix[, 2] <- purrr::map(group_list_temp[[2]][["distance_ps"]], rep, elements_temp[1]) %>%
-          unlist() %>%
-          rep(., elements_temp[3])
-        value_matrix[, 3] <- purrr::map(group_list_temp[[3]][["distance_ps"]], rep, elements_temp[1] * elements_temp[2]) %>%
-          unlist()
+        value_matrix <- build_value_matrix(group_list_temp, elements_temp)
 
         means <- rowMeans(value_matrix)
 
@@ -270,37 +243,16 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
         rm(distance_mean)
         gc()
 
-        iteration <- 1
-        iteration_max <- min(elements_temp)
-        while (iteration <= iteration_max) {
-          index <- which(distance_array == min(distance_array, na.rm = T), arr.ind=T)[1, ] # Indizierung notwenig, wenn zufällig selbe Distanz zweimal vorhanden
-
-          group_list_temp[[1]][["step"]][[index[1]]] <- iteration
-          group_list_temp[[2]][["step"]][[index[2]]] <- iteration
-          group_list_temp[[3]][["step"]][[index[3]]] <- iteration
-          group_list_temp[[1]][["weight"]][[index[1]]] <- 1
-          group_list_temp[[2]][["weight"]][[index[2]]] <- 1
-          group_list_temp[[3]][["weight"]][[index[3]]] <- 1
-          group_list_temp[[1]][["distance"]][[index[1]]] <- min(distance_array, na.rm = T)
-          group_list_temp[[2]][["distance"]][[index[2]]] <- min(distance_array, na.rm = T)
-          group_list_temp[[3]][["distance"]][[index[3]]] <- min(distance_array, na.rm = T)
-
-
-          distance_array[index[1], , ] <- NA
-          distance_array[, index[2], ] <- NA
-          distance_array[, , index[3]] <- NA
-
-          iteration <- iteration + 1
-        }
+        group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
         rm(distance_array)
         gc()
         exact_list[[i]] <- do.call(rbind.data.frame, group_list_temp)
       }
       data_temp <- do.call(rbind.data.frame, exact_list) %>%
-        arrange(distance, step) %>%
-        mutate(step = ceiling(c(1:nrow(.))/3)) %>%
-        select(ID, step, weight, distance) %>%
-        filter(weight == 1)
+        dplyr::arrange(distance, step) %>%
+        dplyr::mutate(step = ceiling(c(1:nrow(.))/3)) %>%
+        dplyr::select(ID, step, weight, distance) %>%
+        dplyr::filter(weight == 1)
 
       data <- merge(data,
                     data_temp,
@@ -318,17 +270,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
 
         elements_temp <- sapply(group_list_temp, nrow)
 
-        value_matrix <- matrix(NA, nrow = prod(elements_temp), length(elements_temp))
-
-        value_matrix[, 1] <- rep(group_list_temp[[1]][["distance_ps"]], elements_temp[2] * elements_temp[3] * elements_temp[4])
-        value_matrix[, 2] <- purrr::map(group_list_temp[[2]][["distance_ps"]], rep, elements_temp[1]) %>%
-          unlist() %>%
-          rep(., elements_temp[3] * elements_temp[4])
-        value_matrix[, 3] <- purrr::map(group_list_temp[[3]][["distance_ps"]], rep, elements_temp[1] * elements_temp[2]) %>%
-          unlist() %>%
-          rep(., elements_temp[4])
-        value_matrix[, 4] <- purrr::map(group_list_temp[[4]][["distance_ps"]], rep, elements_temp[1] * elements_temp[2] * elements_temp[3]) %>%
-          unlist()
+        value_matrix <- build_value_matrix(group_list_temp, elements_temp)
 
         means <- rowMeans(value_matrix)
 
@@ -347,42 +289,17 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
         rm(distance_matrix)
         rm(distance_mean)
         gc()
-
-        iteration <- 1
-        iteration_max <- min(elements_temp)
-        while (iteration <= iteration_max) {
-          index <- which(distance_array == min(distance_array, na.rm = T), arr.ind=T)[1, ]
-
-          group_list_temp[[1]][["step"]][[index[1]]] <- iteration
-          group_list_temp[[2]][["step"]][[index[2]]] <- iteration
-          group_list_temp[[3]][["step"]][[index[3]]] <- iteration
-          group_list_temp[[4]][["step"]][[index[4]]] <- iteration
-          group_list_temp[[1]][["weight"]][[index[1]]] <- 1
-          group_list_temp[[2]][["weight"]][[index[2]]] <- 1
-          group_list_temp[[3]][["weight"]][[index[3]]] <- 1
-          group_list_temp[[4]][["weight"]][[index[4]]] <- 1
-          group_list_temp[[1]][["distance"]][[index[1]]] <- min(distance_array, na.rm = T)
-          group_list_temp[[2]][["distance"]][[index[2]]] <- min(distance_array, na.rm = T)
-          group_list_temp[[3]][["distance"]][[index[3]]] <- min(distance_array, na.rm = T)
-          group_list_temp[[4]][["distance"]][[index[4]]] <- min(distance_array, na.rm = T)
-
-
-          distance_array[index[1], , , ] <- NA
-          distance_array[, index[2], , ] <- NA
-          distance_array[, , index[3], ] <- NA
-          distance_array[, , , index[4]] <- NA
-
-          iteration <- iteration + 1
-        }
+        
+        group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
         rm(distance_array)
         gc()
         exact_list[[i]] <- do.call(rbind.data.frame, group_list_temp)
       }
       data_temp <- do.call(rbind.data.frame, exact_list) %>%
-        arrange(distance, step) %>%
-        mutate(step = ceiling(c(1:nrow(.))/4)) %>%
-        select(ID, step, weight, distance) %>%
-        filter(weight == 1)
+        dplyr::arrange(distance, step) %>%
+        dplyr::mutate(step = ceiling(c(1:nrow(.))/4)) %>%
+        dplyr::select(ID, step, weight, distance) %>%
+        dplyr::filter(weight == 1)
 
       data <- merge(data,
                     data_temp,

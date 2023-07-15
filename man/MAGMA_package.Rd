@@ -2,8 +2,8 @@
 % Please edit documentation in R/Package_documentation.R
 \docType{package}
 \name{MAGMA_package}
-\alias{MAGMA}
-\alias{MAGMA-package}
+\alias{^MAGMA}
+\alias{^MAGMA-package}
 \title{MAGMA: A package for MAny Group MAtching}
 \description{
 This package enables nearest neighbor matching for two to four groups. It is

@@ -14,9 +14,9 @@
 #'
 #'
 J_group_size <- function(group_size) {
-  J <- tibble(N = c(1:group_size),
+  J <- tibble::tibble(N = c(1:group_size),
             J = NA) %>%
-    transmute(J = 1 - (3/(4 * (2 * N - 2) - 1)))
+    dplyr::transmute(J = 1 - (3/(4 * (2 * N - 2) - 1)))
   J <- as.numeric(J$J)
   return(J)
 }
@@ -107,23 +107,23 @@ mean_g_meta <- function(input, number_groups) {
   suppressMessages({
   g <- input$effects %>%
     t() %>%
-    as_tibble(., .name_repair = "minimal") %>%
+    tibble::as_tibble(., .name_repair = "minimal") %>%
     sapply(., multiply, J) %>%
-    as_tibble(., .name_repair = "minimal") %>%
+    tibble::as_tibble(., .name_repair = "minimal") %>%
     t() %>%
     abs() %>%
-    as_tibble(., .name_repair = "minimal")
+    tibble::as_tibble(., .name_repair = "minimal")
 
   size_per_group <- c(1:ncol(input$effects))
   variance_g <- input$effects^2 %>% #improve code, avoid t()
     t() %>%
-    as_tibble(., .name_repair = "minimal") %>%
+    tibble::as_tibble(., .name_repair = "minimal") %>%
     sapply(., inner_variance, size_per_group) %>%
-    as_tibble(., .name_repair = "minimal") %>%
+    tibble::as_tibble(., .name_repair = "minimal") %>%
     sapply(., multiply_variance, J) %>%
-    as_tibble(., .name_repair = "minimal") %>%
+    tibble::as_tibble(., .name_repair = "minimal") %>%
     t()%>%
-    as_tibble(., .name_repair = "minimal")
+    tibble::as_tibble(., .name_repair = "minimal")
   })
 
   #meta-analysis can not tak NAs as input. Defining starting value for analysis

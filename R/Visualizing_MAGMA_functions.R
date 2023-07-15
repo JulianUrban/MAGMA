@@ -132,7 +132,7 @@ if(length(group) == 2) {
   for(i in 1:nrow(values_1)) {
     for(j in 1:nrow(values_2)) {
       data <- data %>%
-        mutate(group_d = case_when(
+        dplyr::mutate(group_d = dplyr::case_when(
           as.logical(.[group[1]] == as.numeric(values_1[i, ]) &
             .[group[2]] == as.numeric(values_2[j, ])) ~ group_value,
           TRUE ~ group_d
@@ -158,9 +158,9 @@ if(length(group) == 2) {
   ########################
 cat("\n", "d-ratio finsihed. Starting to compute mean-g.", "\n")
   group_number <- data %>%
-    select(group) %>%
+    dplyr::select(group) %>%
     table() %>%
-    length
+    length()
 
   mean_g <- mean_g_meta(input = d_effects,
                         number_groups = group_number)
@@ -254,7 +254,7 @@ initial_unbalance <- function(data, group, covariates) {
   ########################
   if(length(group) == 1) {
     Pillai_input <- data %>%
-      select(all_of(covariates),
+      dplyr::select(all_of(covariates),
            IV = all_of(group))
 
       Pillai <- manova(Pillai_DV(Pillai_input, covariates) ~ IV,
@@ -265,7 +265,7 @@ initial_unbalance <- function(data, group, covariates) {
         unlist()
   } else {
     Pillai_input <- data %>%
-      select(all_of(covariates),
+      dplyr::select(all_of(covariates),
              IV_1 = all_of(group[1]),
              IV_2 = all_of(group[2]))
     Pillai <- manova(Pillai_DV(Pillai_input, covariates) ~ IV_1 + IV_2 + IV_1 * IV_2,
@@ -305,10 +305,10 @@ group_test <- group
 
 
   group_stats <- data %>%
-    select(IV = all_of(group),
+    dplyr::select(IV = all_of(group),
            all_of(covariates)) %>%
-    group_by(IV) %>%
-    summarise_at(., covariates, describe) %>%
+    dplyr::group_by(IV) %>%
+    dplyr::summarise_at(., covariates, psych::describe) %>%
     as.list() %>%
     .[-1]
 
@@ -339,7 +339,7 @@ group_test <- group
     value_2 <- pairwise_matrix[j, 2]
     for(i in seq_along(group_stats)) {
       temp_stats <- group_stats[[i]] %>%
-        select(n, mean, sd)
+        dplyr::select(n, mean, sd)
       mean_diff <- (temp_stats[value_1, 2] - temp_stats[value_2, 2])
       pooled_sd <- sqrt(
         ((temp_stats[value_1, 1] - 1) * temp_stats[value_1, 3]^2 +
@@ -363,7 +363,7 @@ group_test <- group
     value_2 <- pairwise_matrix[j, 2]
     for(i in seq_along(group_stats)) {
       temp_n <- group_stats[[i]] %>%
-        select(n) %>%
+        dplyr::select(n) %>%
         unlist()
       n_matrix[j, i] <- sum(temp_n)
       var_matrix[j, i] <- d_effect[j, i]^2/(2 * sum(temp_n)) +
@@ -400,7 +400,7 @@ group_test <- group
   ###adj. d ratioo########
   ########################
 
-  adj_d_ratio <- map2_dbl(effect_g, var_g, pnorm, q = .20) %>%
+  adj_d_ratio <- purrr::map2_dbl(effect_g, var_g, pnorm, q = .20) %>%
     matrix(., ncol = ncol(effect_g), nrow = nrow(effect_g)) %>%
     sum(.)/(ncol(effect_g) * nrow(effect_g))
 
@@ -505,18 +505,17 @@ Table_MAGMA <- function(Balance, filename) {
     stop("input needs to be a Balance_MAGMA object!")
   }
   #Creating index vector of models with optimalized criteria
-  suppressWarnings(attach(Balance))
+
   if(!is.matrix(Balance$Pillai)) {
-  index_optimal <- c(max(which(Pillai == min(Pillai, na.rm = T), arr.ind = T)),
-                   max(which(d_ratio$d_rate == max(d_ratio$d_rate, na.rm = T), arr.ind = T)),
-                   max(which(mean_effect == min(mean_effect, na.rm = T), arr.ind = T)),
-                   max(which(adjusted_d_ratio == max(adjusted_d_ratio, na.rm = T), arr.ind = T)))
-  detach(Balance)
+  index_optimal <- c(max(which(Balance$Pillai == min(Balance$Pillai, na.rm = T), arr.ind = T)),
+                   max(which(Balance$d_ratio$d_rate == max(Balance$d_ratio$d_rate, na.rm = T), arr.ind = T)),
+                   max(which(Balance$mean_effect == min(Balance$mean_effect, na.rm = T), arr.ind = T)),
+                   max(which(Balance$adjusted_d_ratio == max(Balance$adjusted_d_ratio, na.rm = T), arr.ind = T)))
   suppressMessages({
-  balance_matrix <- as_tibble(matrix(NA, ncol = length(index_optimal),
+  balance_matrix <- tibble::as_tibble(matrix(NA, ncol = length(index_optimal),
                                      nrow = length(index_optimal)),
                               .name_repair = "unique") %>%
-    transmute(Criterion_optimized = c("Best Pillai",
+    dplyr::transmute(Criterion_optimized = c("Best Pillai",
                                       "Best d-ratio",
                                       "Best mean g",
                                       "adjusted d-ratio"), #Row names for table
@@ -527,23 +526,23 @@ Table_MAGMA <- function(Balance, filename) {
               adjusted_d_ratio = round(Balance$adjusted_d_ratio[index_optimal], 2),
               n_per_group = index_optimal) %>%
     #Ordering table after n per group
-    arrange(., n_per_group)
+    dplyr::arrange(., n_per_group)
   })
   }
 
   if(is.matrix(Balance$Pillai)) {
-    index_optimal <- c(max(which(Pillai[1, ] == min(Pillai[1, ], na.rm = T), arr.ind = T)),
-                       max(which(Pillai[2, ] == min(Pillai[2, ], na.rm = T), arr.ind = T)),
-                       max(which(Pillai[3, ] == min(Pillai[3, ], na.rm = T), arr.ind = T)),
-                       max(which(d_ratio$d_rate == max(d_ratio$d_rate, na.rm = T), arr.ind = T)),
-                       max(which(mean_effect == min(mean_effect, na.rm = T), arr.ind = T)),
-                       max(which(adjusted_d_ratio == max(adjusted_d_ratio, na.rm = T), arr.ind = T)))
-    detach(Balance)
+    index_optimal <- c(max(which(Balance$Pillai[1, ] == min(Balance$Pillai[1, ], na.rm = T), arr.ind = T)),
+                       max(which(Balance$Pillai[2, ] == min(Balance$Pillai[2, ], na.rm = T), arr.ind = T)),
+                       max(which(Balance$Pillai[3, ] == min(Balance$Pillai[3, ], na.rm = T), arr.ind = T)),
+                       max(which(Balance$d_ratio$d_rate == max(Balance$d_ratio$d_rate, na.rm = T), arr.ind = T)),
+                       max(which(Balance$mean_effect == min(Balance$mean_effect, na.rm = T), arr.ind = T)),
+                       max(which(Balance$adjusted_d_ratio == max(Balance$adjusted_d_ratio, na.rm = T), arr.ind = T)))
+    
     suppressMessages({
-    balance_matrix <- as_tibble(matrix(NA, ncol = length(index_optimal),
+    balance_matrix <- tibble::as_tibble(matrix(NA, ncol = length(index_optimal),
                                        nrow = length(index_optimal)),
                                 .name_repair = "unique") %>%
-      transmute(Criterion_optimized = c("Best Pillai ME 1",
+      dplyr::transmute(Criterion_optimized = c("Best Pillai ME 1",
                                         "Best Pillai ME 2",
                                         "Best Pillai IA",
                                         "Best d-ratio",
@@ -558,14 +557,14 @@ Table_MAGMA <- function(Balance, filename) {
                 adjusted_d_ratio = round(Balance$adjusted_d_ratio[index_optimal], 2),
                 n_per_group = index_optimal) %>%
       #Ordering table after n per group
-      arrange(., n_per_group)
+      dplyr::arrange(., n_per_group)
     })
   }
   print(balance_matrix)
 
   balance_matrix %>%
     #convert matrix into rough APA Table
-    adorn_title(
+    janitor::adorn_title(
       row_name = "Optimized",
       col_name = "Criterion",
       placement = "combined") %>%
@@ -574,6 +573,7 @@ Table_MAGMA <- function(Balance, filename) {
     flextable::save_as_docx(., path = paste("./",filename,sep=""))
 
 cat("Balance Table successfully created!")
+return(balance_matrix)
 }
 
 
@@ -646,76 +646,75 @@ Plot_MAGMA <- function(Balance,
     stop("input needs to be a Balance_MAGMA object!")
   }
 
-  suppressWarnings(attach(Balance))
+
   if (any(criterion == "Pillai")) {
 
-    if(!is.matrix(Pillai)) {
-    print(Pillai %>%
+    if(!is.matrix(Balance$Pillai)) {
+    print(Balance$Pillai %>%
             unlist() %>%
-            as_tibble(., .name_repair = "minimal") %>%
-            mutate(N = row_number()) %>%
-            ggplot() +
-            geom_point(aes(x = N, y = value))+
-            theme(panel.background = element_blank()) +
-            scale_y_continuous(limits = c(0, .5),
+            tibble::as_tibble(., .name_repair = "minimal") %>%
+            dplyr::mutate(N = row_number()) %>%
+            ggplot2::ggplot() +
+            ggplot2::geom_point(aes(x = N, y = value)) +
+            ggplot2::theme(panel.background = element_blank()) +
+            ggplot2::scale_y_continuous(limits = c(0, .5),
                                breaks = seq(0, .5, .05)) +
-            labs(y = "Pillai`s Trace", x ="\nN per group",
+            ggplot2::labs(y = "Pillai`s Trace", x ="\nN per group",
                  title = "Pillai`s Trace values for different sample sizes",))
     }
 
-    if(is.matrix(Pillai)) {
-      for(i in 1:nrow(Pillai))
-      print(Pillai[i, ] %>%
+    if(is.matrix(Balance$Pillai)) {
+      for(i in 1:nrow(Balance$Pillai))
+      print(Balance$Pillai[i, ] %>%
               unlist() %>%
-              as_tibble(., .name_repair = "minimal") %>%
-              mutate(N = c(1:nrow(.))) %>%
-              ggplot() +
-              geom_point(aes(x = N, y = value))+
-              theme(panel.background = element_blank()) +
-              scale_y_continuous(limits = c(0, .5),
+              tibble::as_tibble(., .name_repair = "minimal") %>%
+              dplyr::mutate(N = c(1:nrow(.))) %>%
+              ggplot2::ggplot() +
+              ggplot2::geom_point(aes(x = N, y = value))+
+              ggplot2::theme(panel.background = element_blank()) +
+              ggplot2::scale_y_continuous(limits = c(0, .5),
                                  breaks = seq(0, .5, .05)) +
-              labs(y = "Pillai`s Trace", x ="\nN per group",
+              ggplot2::labs(y = "Pillai`s Trace", x ="\nN per group",
                    title = "Pillai`s Trace values for different sample sizes",))
     }
 
   }
   if (any(criterion == "d_ratio")) {
-    print(d_ratio$d_rate %>%
-            as_tibble(., .name_repair = "minimal") %>%
-            mutate(N = c(1:nrow(.))) %>%
-            ggplot() +
-            geom_point(aes(x = N, y = value)) +
-            theme(panel.background = element_blank()) +
-            scale_y_continuous(limits = c(0, 1),
+    print(Balance$d_ratio$d_rate %>%
+            tibble::as_tibble(., .name_repair = "minimal") %>%
+            dplyr::mutate(N = c(1:nrow(.))) %>%
+            ggplot2::ggplot() +
+            ggplot2::geom_point(aes(x = N, y = value)) +
+            ggplot2::theme(panel.background = element_blank()) +
+            ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +
-            labs(y = "d`s < 0.20", x ="\nN per group",
+            ggplot2::labs(y = "d`s < 0.20", x ="\nN per group",
                  title = "Cohen`s d < .20` for different sample sizes",))
   }
   if (any(criterion == "mean_g")) {
-    print(mean_effect %>%
-            as_tibble(., .name_repair = "minimal") %>%
-            mutate(N = c(1:nrow(.))) %>%
-            ggplot() +
-            geom_point(aes(x = N, y = value))+
-            theme(panel.background = element_blank()) +
-            scale_y_continuous(limits = c(0, 1),
+    print(Balance$mean_effect %>%
+            tibble::as_tibble(., .name_repair = "minimal") %>%
+            dplyr::mutate(N = c(1:nrow(.))) %>%
+            ggplot2::ggplot() +
+            ggplot2::geom_point(aes(x = N, y = value))+
+            ggplot2::theme(panel.background = element_blank()) +
+            ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +
-            labs(y ="mean g", x ="\nN per group",
+            ggplot2::labs(y ="mean g", x ="\nN per group",
                  title = "Mean effect for different sample sizes",))
   }
   if (any(criterion == "Adj_d_ratio")) {
-    print(adjusted_d_ratio %>%
-            as_tibble(., .name_repair = "minimal") %>%
-            mutate(N = c(1:nrow(.))) %>%
-            ggplot() +
-            geom_point(aes(x = N, y = value)) +
-            theme(panel.background = element_blank()) +
-            scale_y_continuous(limits = c(0, 1),
+    print(Balance$adjusted_d_ratio %>%
+            tibble::as_tibble(., .name_repair = "minimal") %>%
+            dplyr::mutate(N = c(1:nrow(.))) %>%
+            ggplot2::ggplot() +
+            ggplot2::geom_point(aes(x = N, y = value)) +
+            ggplot2::theme(panel.background = element_blank()) +
+            ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +
-            labs(y = "Adjusted d-ratio", x = "\nN per group",
+            ggplot2::labs(y = "Adjusted d-ratio", x = "\nN per group",
                  title = "Adjusted d-ratio for different sample sizes",))
   }
-  detach(Balance)
 }
 
 

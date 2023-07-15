@@ -48,7 +48,7 @@ inner_d <- function(da, gr, co, st) {
     for(i in 1:nrow(values_1)) {
       for(j in 1:nrow(values_2)) {
         da <- da %>%
-          mutate(group_d = case_when(
+          dplyr::mutate(group_d = dplyr::case_when(
             .[gr[1]] == as.numeric(values_1[i, ]) &
                .[gr[2]] == as.numeric(values_2[j, ]) ~ group_value,
             TRUE ~ group_d
@@ -61,13 +61,13 @@ inner_d <- function(da, gr, co, st) {
   }
 
   group_factor <- da %>%
-    select(gr) %>%
+    dplyr::select(tidyselect::all_of(gr)) %>%
     table(.) %>%
     length(.)
 
   #max step calculated equivalent to above
   max_step <- da %>%
-    select(st) %>%
+    dplyr::select(tidyselect::all_of(st)) %>%
     max(., na.rm = T)
   #spanning matrix for all pairwise effects
   d_matrix <- matrix(NA,
@@ -102,11 +102,11 @@ inner_d <- function(da, gr, co, st) {
     d_iteration <- double(nrow(d_matrix))
     suppressWarnings({
     group_stats <- da %>%
-      filter(.[st] <= iteration) %>%
-      select(IV = gr,
-             all_of(co)) %>%
-      group_by(IV) %>%
-      summarise_at(., co, c(mean, var), na.rm = T)
+      dplyr::filter(.[st] <= iteration) %>%
+      dplyr::select(IV = gr,
+                    tidyselect::all_of(co)) %>%
+      dplyr::group_by(IV) %>%
+      dplyr::summarise_at(., co, c(mean, var), na.rm = T)
     })
 
     for(i in 1:nrow(pairwise_matrix)) {
@@ -159,9 +159,9 @@ adj_d_ratio <- function(input) {
 suppressMessages({
   g <- input$effects %>%
     t() %>%
-    as_tibble(., .name_repair = "minimal") %>%
+    tibble::as_tibble(., .name_repair = "minimal") %>%
     sapply(., multiply, J) %>%
-    as_tibble(., .name_repair = "minimal") %>%
+    tibble::as_tibble(., .name_repair = "minimal") %>%
     t() %>%
     abs() %>%
     matrix(., ncol = 1,
@@ -170,18 +170,18 @@ suppressMessages({
   size_per_group <- c(1:ncol(input$effects))
   sd_g <- input$effects^2 %>%
     t() %>%
-    as_tibble(., .name_repair = "minimal") %>%
+    tibble::as_tibble(., .name_repair = "minimal") %>%
     sapply(., inner_variance, size_per_group) %>%
-    as_tibble(., .name_repair = "minimal") %>%
+    tibble::as_tibble(., .name_repair = "minimal") %>%
     sapply(., multiply_variance, J) %>%
-    as_tibble(., .name_repair = "minimal") %>%
+    tibble::as_tibble(., .name_repair = "minimal") %>%
     t(.) %>%
     sqrt(.) %>%
     matrix(., ncol = 1,
            nrow = ncol(input$effects) * nrow(input$effects))
     })
 
-  likelihood <- map2_dbl(g, sd_g, pnorm, q = .20) %>%
+  likelihood <- purrr::map2_dbl(g, sd_g, pnorm, q = .20) %>%
     matrix(., ncol = ncol(input$effects), nrow = nrow(input$effects)) %>%
     colSums()/nrow(input$effects)
   return(likelihood)
