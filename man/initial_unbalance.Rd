@@ -37,6 +37,7 @@ are excluded listwise, whiel for the other balance criteria pairwise
 exclusion is applied.
 }
 \examples{
+\dontrun {
 #Defining covariates for balance estimation
 covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 
@@ -57,6 +58,7 @@ unbalance_2x2 <- initial_unbalance(data = MAGMA_sim_data,
                                   group = c("gifted_support", "enrichment"),
                                   covariates = covariates_vector)
 unbalance_2x2
+}
 
 }
 \author{

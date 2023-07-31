@@ -1,11 +1,11 @@
 Package: MAGMA
 Title:MAny-Group MAtching
-Version: 0.2
+Version: 0.3
 Authors@R: c(person("Julian", "Urban", email = "julian.urban@gesis.org", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-8886-4724")), person("Markus", "Feuchter", role = c("aut")),person("Vsevolod", "Scherrer", role = c("aut")), person("Moritz", "Breit", role = c("aut")), person("Franzis", "Preckel", role = c("aut")))
 Description: This package provides function to conduct nearest neighbor matching for multiple groups. It also includes functions for model selection and balance estimation.
 Depends: R (>= 4.2.1), tidyverse
 License: GPL-2
-Imports: parallel, doParallel, foreach, metafor, robumeta, psych, ggplot2, janitor
+Imports: parallel, doParallel, foreach, metafor, robumeta, psych, ggplot2, janitor, flextable, overlapping
 LazyData: true
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

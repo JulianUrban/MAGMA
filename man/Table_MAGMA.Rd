@@ -13,9 +13,10 @@ Table_MAGMA(Balance, filename)
 resulting Word document with the Table should have..}
 }
 \value{
-A Word document with an 4x5 APA Table showing the four balance
+A 4x5 APA Table showing the four balance
 criteria and the respective sample size per group for four scenarios. In
-each of these scenario one balance criteria has its optimal value.
+each of these scenario one balance criteria has its optimal value. It prints
+a Word Document with this table, too.
 }
 \description{
 This function prints an APA Table of the Balance criteria. It displays the
@@ -30,6 +31,7 @@ balance criterion, the other criteria for this sample size per group as well
 as the sample size itself.
 }
 \examples{
+\dontrun {
 #This function bases on a MAGMA function as well as Balance_MAGMA.
 #To run examples, copy them into your console or script.
 #Defining the names of the metric and binary covariates
@@ -66,6 +68,7 @@ Balance_2x2 <- Balance_MAGMA(data = MAGMA_sim_data_gift_enrich,
                              step = "step") #step created during matching
 
 Table_MAGMA(Balance_2x2, "Balance_2x2.docx")
+}
 
 }
 \author{

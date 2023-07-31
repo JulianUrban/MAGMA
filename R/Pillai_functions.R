@@ -97,7 +97,7 @@ Pillai_iterativ <- function(da, gr, co, st) {
                           nrow = 3)
     while (iteration <= max_step) {
       Pillai_input <- da %>%
-        dplyr::select(tidyselect::all_ofall_of(co),
+        dplyr::select(tidyselect::all_of(co),
               IV1 = gr[1],
               IV2 = gr[2],
                It = st) %>%

@@ -52,6 +52,7 @@ variable can be matched. As example, only person of the same gender, the
 same school, or the same organization are possible matches.
 }
 \examples{
+\dontrun {
 #Running this code will take a while
 #Computing two-group Matching for giftedness support with exact for enrichment
 MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
@@ -77,6 +78,7 @@ MAGMA_sim_data_gift_enrich_exact <- MAGMA_exact(Data = MAGMA_sim_data,
                                                 exact = "teacher_ability_rating",
                                                 cores = 2)
 head(MAGMA_sim_data_gift_enrich_exact)
+}
 
 }
 \author{

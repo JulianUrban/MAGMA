@@ -1,44 +1,28 @@
-#' Balance extracttion
+#' Balance extraction
 #'
-#' This function computes all four Balance criteria of MAGMA, namely
-#' *Pillai's Trace*, *d-ratio*, *mean g*, and *adjusted d-ratio*. It can
-#' consider binary and metric variables for balance estimation. Balance
-#' Estimation is conducted over a varying sample size. See Details for more
-#' information.
+#' This function extracts the balance criteria or pairwise effects of a 
+#' Balance_MAGMA result for a specified sample size.
 #'
-#' This function computes all four Balance criteria of MAGMA, namely Pillai's
-#' Trace, d-ratio, mean g, and adjusted d-ratio. This is an iterative process
-#' including more cases with each iteration according to the step variable.
-#' Thus, starting with cases having a small within match distance, larger
-#' distances are included with increasing iterations. As minimum the function
-#' specifies a n >= 20 per group. This does not imply, that balance criteria
-#' with such a small sample size can be estimated consistently. For Pillai's
-#' Trace a higher minimum sample size can be possible. It depends on the number
-#' of covariates to ensure a positive model identification.
-#' Missing data for Pillai's Trace are excluded listwise, whiel for the other
-#' balance criteria pairwise exclusion is applied.
+#' Based on a previous computed Balance_MAGMA object this function enables the
+#' extraction of balance criteria or pairwise effects for each desired sample 
+#' size. Thus, checking the balance for each possible sample size independently
+#'  is possible.
 #'
-#' @param data A data frame containing at least the *grouping* variable, the
-#' *step* variable from the main MAGMA-function (or other mathcing algorithms),
-#'  and all *covariates* of interest.
-#' @param group A character specifying the name of
-#' your grouping variable in data. Note that MAGMA can only match your data for
-#' a maximum of 4 groups. For matching over two groups (e.g., 2x2 Design) is
-#' possible by specifying group as a character vector with a length of two. In
-#' this case each or the 2 grouping variables can only have two levels.
-#' @param covariates A character vector listing the names of all binary and
-#' metric covariates of interest.
-#' @param step A character naming the step variable of the matching. Per
-#' default it specifies the name as *step*, which corresponds the resulting
-#' name of the main MAGMA function.
+#' @param Balance A Balance_MAGMA object. Compare the function Balance_MAGMA.
+#' @param samplesize An integer indicating the sample size for which the balance
+#' criteria or pairwise effects hould be extracted.
+#' @param effects Indicates whether balance criteria or pairwise effects should
+#' be extracted. The default *FALSE* returns the balance criteria, while *TRUE*
+#' leads to the extraction of the pairwise effects.
 #'
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych metafor robumeta
+#' @import tidyverse 
 #'
-#' @return A list of length four containing all balance criteria and all
-#' pairwise effects with respect to group sample size.
+#' @return Depends on effects argument. If *FALSE* it returns in a vector
+#' containing the balance criteria. If *TRUE* it returns a vector containing
+#' all possible pairwise effects.
 #' @export
 #'
 #' @examples
@@ -62,11 +46,17 @@
 #' str(Balance_gifted_exact)
 #'
 #' #Balance criteria for a 100 cases per group
-#' Balance_100_gifted <- c(Balance_gifted_exact$Pillai[100],
-#'                         Balance_gifted_exact$d_ratio$d_rate[100],
-#'                         Balance_gifted_exact$mean_effect[100],
-#'                         Balance_gifted_exact$adjusted_d_ratio[100])
+#' #Balance criteria
+#' Balance_100_gifted <- Balance_extract(Balance = Balance_gifted_exact,
+#'                                       samplesize = 100,
+#'                                       effects = FALSE)
 #' Balance_100_gifted
+#' 
+#' #Pairwise Effects
+#' Balance_100_gifted_effects <- Balance_extract(Balance = Balance_gifted_exact,
+#'                                               samplesize = 100,
+#'                                               effects = TRUE)
+#' Balance_100_gifted_effects
 #'
 #' #Computing 2x2 Matching for giftedness support and enrichment equivalent to
 #' #a four group matching
@@ -83,13 +73,18 @@
 #'                              step = "step") #step created during matching
 #' str(Balance_2x2)
 #'
-#' Balance_100_2x2<- c(Balance_2x2$Pillai[1, 100], #Main Effect 1
-#'                     Balance_2x2$Pillai[2, 100], #Main Effect 2
-#'                     Balance_2x2$Pillai[3, 100], #Interaction
-#'                     Balance_2x2$d_ratio$d_rate[100],
-#'                     Balance_2x2$mean_effect[100],
-#'                     Balance_2x2$adjusted_d_ratio[100])
-#' Balance_100_2x2
+#' #Balance criteria for a 125 cases per group
+#' #Balance criteria
+#' Balance_125_2x2 <- Balance_extract(Balance = Balance_2x2,
+#'                                       samplesize = 125,
+#'                                       effects = FALSE)
+#' Balance_125_2x2
+#' 
+#' #Pairwise Effects
+#' Balance_125_2x2_effects <- Balance_extract(Balance = Balance_2x2,
+#'                                               samplesize = 125,
+#'                                               effects = TRUE)
+#' Balance_125_2x2_effects
 #' }
 #'
 Balance_extract <- function(Balance, samplesize, effects = FALSE) {
@@ -97,23 +92,46 @@ Balance_extract <- function(Balance, samplesize, effects = FALSE) {
   if (!is_list(Balance)) {
     stop("Balance needs to be a Balance_MAGMA object!")
   }
+  if (samplesize > length(Balance$Pillai)) {
+    stop(paste("Samplesize exceeds the maximum size of ", length(Balance$Pillai),
+               ". Please specify a lower samplesize", sep = ""))
+  }
+  if (samplesize > length(Balance$Pillai)) {
+    stop(paste("Samplesize exceeds the maximum size of ", length(Balance$Pillai),
+               ". Please specify a lower samplesize", sep = ""))
+  }
   if(effects == FALSE) {
     if(!is.matrix(Balance$Pillai)) {
       Balance_criteria <- c(Balance$Pillai[samplesize],
                             Balance$d_ratio$d_rate[samplesize],
                             Balance$mean_effect[samplesize],
-                            Balance$adjusted_d_ratio[samplesize])
+                            Balance$adjusted_d_ratio[samplesize]) %>%
+        round(., 2) %>%
+        set_names("Pillai's Trace",
+                  "d-ratio",
+                  "mean g",
+                  "adj. d-ratio")
     } else {
       Balance_criteria <- c(Balance_2x2$Pillai[1, samplesize],
                             Balance_2x2$Pillai[2, samplesize],
                             Balance_2x2$Pillai[3, samplesize],
                             Balance$d_ratio$d_rate[samplesize],
                             Balance$mean_effect[samplesize],
-                            Balance$adjusted_d_ratio[samplesize])
+                            Balance$adjusted_d_ratio[samplesize]) %>%
+        round(., 2) %>%
+        set_names("Pillai's Trace",
+                  "d-ratio",
+                  "mean g",
+                  "adj. d-ratio")
     }
     
-    
+  return(Balance_criteria) 
+  } else {
+    Balance_effects <- Balance$d_ratio$effects[ , samplesize] %>%
+      round(., 2)
+    return(Balance_effects) 
   }
+  
 }
 
 

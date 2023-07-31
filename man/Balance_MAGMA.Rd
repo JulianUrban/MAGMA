@@ -49,6 +49,7 @@ Missing data for Pillai's Trace are excluded listwise, whiel for the other
 balance criteria pairwise exclusion is applied.
 }
 \examples{
+\dontrun {
 #Defining the names of the metric and binary covariates
 covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 
@@ -96,6 +97,7 @@ Balance_100_2x2<- c(Balance_2x2$Pillai[1, 100], #Main Effect 1
                     Balance_2x2$mean_effect[100],
                     Balance_2x2$adjusted_d_ratio[100])
 Balance_100_2x2
+}
 
 }
 \author{
