@@ -75,7 +75,7 @@ Pillai_iterativ <- function(da, gr, co, st) {
   #Computing all Traces with increasing sample size
   while (iteration <= max_step){
     Pillai_input <- da %>%
-      dplyr::select(tidyselect::all_ofall_of(co),
+      dplyr::select(tidyselect::all_of(co),
              IV = gr,
              It = st) %>%
       filter(It <= iteration)
