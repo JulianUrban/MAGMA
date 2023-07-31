@@ -81,14 +81,25 @@ inner_d <- function(da, gr, co, st) {
     pairwise_matrix <- matrix(c(1, 2),
                               ncol = 2,
                               nrow = 1)
+    names_covariates <- co
   } else if (group_factor == 3) {
     pairwise_matrix <- matrix(c(1, 1, 2, 2, 3, 3),
                               ncol = 2,
                               nrow = 3)
-  } else if (group_factor == 4) {
+    names_covariates <- purrr:::map2(pairwise_matrix[, 1],
+                                     pairwise_matrix[, 2],
+                                     function(group_1, group_2)
+                                       paste(co, group_1, group_2, sep = "_")) %>%
+      unlist()
+      } else if (group_factor == 4) {
     pairwise_matrix <- matrix(c(1, 1, 1, 2, 2, 3, 2, 3, 4, 3, 4, 4),
                               ncol = 2,
                               nrow = 6)
+    names_covariates <- purrr:::map2(pairwise_matrix[, 1],
+                                     pairwise_matrix[, 2],
+                                     function(group_1, group_2)
+                                       paste(co, group_1, group_2, sep = "_")) %>%
+      unlist()
   } else { #function independent of group number. Currently breaking algorithm
     pairwise_matrix <- NA
     stop("To many groups (maximum possible 4) for current package version!")
@@ -124,6 +135,7 @@ inner_d <- function(da, gr, co, st) {
     }
 
   d_matrix <- abs(d_matrix)
+  rownames(d_matrix) <- names_covariates
   d_logic <- d_matrix < .20
   pairwise_effects <- list(d_rate = colSums(d_logic)/nrow(d_logic),
                          effects = abs(d_matrix))

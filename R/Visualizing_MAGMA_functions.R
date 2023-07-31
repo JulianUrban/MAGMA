@@ -42,6 +42,7 @@
 #' @export
 #'
 #' @examples
+#' \dontrun {
 #' #Defining the names of the metric and binary covariates
 #' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 #'
@@ -89,6 +90,7 @@
 #'                     Balance_2x2$mean_effect[100],
 #'                     Balance_2x2$adjusted_d_ratio[100])
 #' Balance_100_2x2
+#' }
 #'
 Balance_MAGMA <- function(data, group, covariates, step = "step") {
   #Fehlermeldungen
@@ -215,6 +217,7 @@ cat("\n", "d-ratio finsihed. Starting to compute mean-g.", "\n")
 #' @export
 #'
 #' @examples
+#' \dontrun {
 #' #Defining covariates for balance estimation
 #' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 #'
@@ -235,6 +238,7 @@ cat("\n", "d-ratio finsihed. Starting to compute mean-g.", "\n")
 #'                                   group = c("gifted_support", "enrichment"),
 #'                                   covariates = covariates_vector)
 #' unbalance_2x2
+#' }
 #'
 initial_unbalance <- function(data, group, covariates) {
   if (!is.data.frame(data) && !is_tibble(data)) {
@@ -456,12 +460,14 @@ group_test <- group
 #'
 #' @import tidyverse janitor
 #'
-#' @return A Word document with an 4x5 APA Table showing the four balance
+#' @return A 4x5 APA Table showing the four balance
 #' criteria and the respective sample size per group for four scenarios. In
-#' each of these scenario one balance criteria has its optimal value.
+#' each of these scenario one balance criteria has its optimal value. It prints
+#' a Word Document with this table, too.
 #' @export
 #'
 #' @examples
+#' \dontrun {
 #' #This function bases on a MAGMA function as well as Balance_MAGMA.
 #' #To run examples, copy them into your console or script.
 #' #Defining the names of the metric and binary covariates
@@ -498,11 +504,12 @@ group_test <- group
 #'                              step = "step") #step created during matching
 #'
 #' Table_MAGMA(Balance_2x2, "Balance_2x2.docx")
+#' }
 #'
 Table_MAGMA <- function(Balance, filename) {
   #Check input
   if (!is_list(Balance)) {
-    stop("input needs to be a Balance_MAGMA object!")
+    stop("Balance needs to be a Balance_MAGMA object!")
   }
   #Creating index vector of models with optimalized criteria
 
@@ -598,6 +605,7 @@ return(balance_matrix)
 #' @export
 #'
 #' @examples
+#' \dontrun {
 #' #This function bases on a MAGMA function as well as Balance_MAGMA.
 #' #To run examples, copy them into your console or script.
 #' #Defining the names of the metric and binary covariates
@@ -635,6 +643,8 @@ return(balance_matrix)
 #'
 #' Plot_MAGMA(Balance = Balance_2x2,
 #'            criterion = c("d_ration", "Adj_d_ratio"))
+#' }
+#'            
 #'
 Plot_MAGMA <- function(Balance,
                        criterion = c("Pillai",
@@ -643,7 +653,7 @@ Plot_MAGMA <- function(Balance,
                                      "Adj_d_ratio")) {
   #Check input
   if (!is_list(Balance)) {
-    stop("input needs to be a Balance_MAGMA object!")
+    stop("Balance needs to be a Balance_MAGMA object!")
   }
 
 
