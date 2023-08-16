@@ -101,15 +101,15 @@ Balance_MAGMA <- function(data, group, covariates, step = "step") {
   }
 
   if(!is.character(group) | length(group) > 2) {
-    stop("gr needs to be a character vector of maximum length 2!")
+    stop("group needs to be a character vector of maximum length 2!")
   }
 
   if(!is.character(covariates)) {
-    stop("co needs to be a character or a character vector!")
+    stop("covariates needs to be a character or a character vector!")
   }
 
   if(!is.character(step) | length(step) > 1) {
-    stop("st needs to be a character of length 1!")
+    stop("step needs to be a character of length 1!")
   }
 
 cat("Start estimating Pillai's Trace.")
