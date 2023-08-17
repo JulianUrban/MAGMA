@@ -60,7 +60,7 @@ MAGMA_desc <- function(Data,
                        covariates,
                        group,
                        step_num = NULL,
-                       step_var = NULL
+                       step_var = NULL,
                        filename = NULL) {
   if (!is.data.frame(Data) && !is_tibble(Data
                                          )) {
