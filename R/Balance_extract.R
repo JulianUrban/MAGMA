@@ -116,7 +116,9 @@ Balance_extract <- function(Balance, samplesize, effects = FALSE) {
                             Balance$mean_effect[samplesize],
                             Balance$adjusted_d_ratio[samplesize]) %>%
         round(., 2) %>%
-        set_names("Pillai's Trace",
+        set_names("Pillai's Trace ME 1",
+                  "Pillai's Trace ME 2",
+                  "Pillai's Trace IA",
                   "d-ratio",
                   "mean g",
                   "adj. d-ratio")
