@@ -25,7 +25,7 @@
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych purrr
+#' @import tidyverse psych purrr janitor flextable
 #'
 #' @return A table of descriptvive statistics and pairwise effects for pre- or
 #' postmatching samples.
@@ -56,8 +56,14 @@
 #' 
 #' }
 #'
-MAGMA_desc <- function(Data, covariates, group, step_num = NULL, step_var = NULL) {
-  if (!is.data.frame(Data) && !is_tibble(Data)) {
+MAGMA_desc <- function(Data,
+                       covariates,
+                       group,
+                       step_num = NULL,
+                       step_var = NULL
+                       filename = NULL) {
+  if (!is.data.frame(Data) && !is_tibble(Data
+                                         )) {
     stop("Class data needs to be data frame, or tibble!")
   }
   
@@ -150,6 +156,17 @@ MAGMA_desc <- function(Data, covariates, group, step_num = NULL, step_var = NULL
                          effects_groups)
   
   return(stats_overall)
+  if(!is.null(filename)) {
+    stats_overall %>%
+      #convert matrix into rough APA Table
+      janitor::adorn_title(
+        row_name = "Optimized",
+        col_name = "Criterion",
+        placement = "combined") %>%
+      flextable::flextable() %>%
+      flextable::autofit() %>%
+      flextable::save_as_docx(., path = paste("./",filename,sep=""))
+  }
 }
 
 

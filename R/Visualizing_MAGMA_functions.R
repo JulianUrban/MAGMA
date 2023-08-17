@@ -449,21 +449,22 @@ group_test <- group
 #'
 #' This function creates an APA Table including the optimal models for each
 #' balance criterion, the other criteria for this sample size per group as well
-#' as the sample size itself.
+#' as the sample size itself. With an optional argument you can save a the APA
+#' table in Word.
 #'
 #' @param Balance A Balance MAGMA object. Compare the function Balance_MAGMA.
-#' @param filename A character specifying the filename that the
-#' resulting Word document with the Table should have..
+#' @param filename Optional argument.  A character specifying the filename that 
+#' the resulting Word document with the Table should have..
 #'
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse janitor
+#' @import tidyverse janitor flextable
 #'
 #' @return A 4x5 APA Table showing the four balance
 #' criteria and the respective sample size per group for four scenarios. In
-#' each of these scenario one balance criteria has its optimal value. It prints
-#' a Word Document with this table, too.
+#' each of these scenario one balance criteria has its optimal value. It can
+#' print a Word Document with this table, too.
 #' @export
 #'
 #' @examples
@@ -506,7 +507,7 @@ group_test <- group
 #' Table_MAGMA(Balance_2x2, "Balance_2x2.docx")
 #' }
 #'
-Table_MAGMA <- function(Balance, filename) {
+Table_MAGMA <- function(Balance, filename = NULL) {
   #Check input
   if (!is_list(Balance)) {
     stop("Balance needs to be a Balance_MAGMA object!")
@@ -567,8 +568,8 @@ Table_MAGMA <- function(Balance, filename) {
       dplyr::arrange(., n_per_group)
     })
   }
-  print(balance_matrix)
-
+  
+if(!is.null(filename)) {
   balance_matrix %>%
     #convert matrix into rough APA Table
     janitor::adorn_title(
@@ -578,6 +579,7 @@ Table_MAGMA <- function(Balance, filename) {
     flextable::flextable() %>%
     flextable::autofit() %>%
     flextable::save_as_docx(., path = paste("./",filename,sep=""))
+}
 
 cat("Balance Table successfully created!")
 return(balance_matrix)
