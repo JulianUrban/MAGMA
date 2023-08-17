@@ -96,10 +96,7 @@ Balance_extract <- function(Balance, samplesize, effects = FALSE) {
     stop(paste("Samplesize exceeds the maximum size of ", length(Balance$Pillai),
                ". Please specify a lower samplesize", sep = ""))
   }
-  if (samplesize > length(Balance$Pillai)) {
-    stop(paste("Samplesize exceeds the maximum size of ", length(Balance$Pillai),
-               ". Please specify a lower samplesize", sep = ""))
-  }
+
   if(effects == FALSE) {
     if(!is.matrix(Balance$Pillai)) {
       Balance_criteria <- c(Balance$Pillai[samplesize],
@@ -125,13 +122,14 @@ Balance_extract <- function(Balance, samplesize, effects = FALSE) {
                   "adj. d-ratio")
     }
     
-  return(Balance_criteria) 
-  } else {
+    return(Balance_criteria) 
+    
+  } else if(effects == TRUE) {
     Balance_effects <- Balance$d_ratio$effects[ , samplesize] %>%
       round(., 2)
-    return(Balance_effects) 
+    return(Balance_effects)  
   }
-  
+
 }
 
 
