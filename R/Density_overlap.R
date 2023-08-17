@@ -77,8 +77,8 @@ Density_overlap <- function(Data, variable, group,
   if(!is.character(variable) | length(variable) > 1) {
     stop("Variable needs to be a character of length 1!")
   }
-  if(!is.character(group) | length(group) != 1) {
-    stop("Group needs to be a character of length 1!")
+  if(!is.character(group) | length(group) > 2) {
+    stop("Group needs to be a character of length 1 or 2!")
   }
   if((!is.character(variable_name) & !is.null(variable_name)) | length(variable_name) > 1) {
     stop("variable_name needs to be a character of length 1!")
@@ -93,6 +93,21 @@ Density_overlap <- function(Data, variable, group,
     stop("step_num and step_var need to be both NULL or both specified!")
   }
   
+  if(length(group) == 2) {
+    Data <- Data %>%
+      dplyr::mutate(group_long = dplyr::case_when(
+        .[group[1]] == unique(Data[group[1]])[1, 1] &
+          .[group[2]] == unique(Data[group[2]])[1, 1] ~ 1,
+        .[group[1]] == unique(Data[group[1]])[1, 1] &
+          .[group[2]] == unique(Data[group[2]])[2, 1] ~ 2,
+        .[group[1]] == unique(Data[group[1]])[2, 1] &
+          .[group[2]] == unique(Data[group[2]])[1, 1] ~ 3,
+        .[group[1]] == unique(Data[group[1]])[2, 1] &
+          .[group[2]] == unique(Data[group[2]])[2, 1] ~ 4
+      ))
+    group <- "group_long"
+    cat("2x2 groups are represented as 4 groups.")
+  }
 
   
   if(is.null(variable_name)) {
