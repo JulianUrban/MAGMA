@@ -157,10 +157,12 @@ MAGMA_desc <- function(Data,
   
   if(!is.null(filename)) {
     stats_overall %>%
+      dplyr::mutate(names = rownames(.)) %>%
+      select(names, everything()) %>%
       #convert matrix into rough APA Table
       janitor::adorn_title(
-        row_name = "Optimized",
-        col_name = "Criterion",
+        row_name = "Variable",
+        col_name = "Statistic",
         placement = "combined") %>%
       flextable::flextable() %>%
       flextable::autofit() %>%
