@@ -104,11 +104,12 @@ Balance_extract <- function(Balance, samplesize, effects = FALSE) {
                             Balance$mean_effect[samplesize],
                             Balance$adjusted_d_ratio[samplesize]) %>%
         round(., 2) %>%
-        set_names("Pillai's Trace",
+        purrr::set_names("Pillai's Trace",
                   "d-ratio",
                   "mean g",
                   "adj. d-ratio")
-    } else if(is.matrix(Balance$Pillai)){
+      
+    } else if(is.matrix(Balance$Pillai)) {
       Balance_criteria <- c(Balance_2x2$Pillai[1, samplesize],
                             Balance_2x2$Pillai[2, samplesize],
                             Balance_2x2$Pillai[3, samplesize],
@@ -116,7 +117,7 @@ Balance_extract <- function(Balance, samplesize, effects = FALSE) {
                             Balance$mean_effect[samplesize],
                             Balance$adjusted_d_ratio[samplesize]) %>%
         round(., 2) %>%
-        set_names("Pillai's Trace ME 1",
+        purrr::set_names("Pillai's Trace ME 1",
                   "Pillai's Trace ME 2",
                   "Pillai's Trace IA",
                   "d-ratio",
