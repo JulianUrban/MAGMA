@@ -155,7 +155,6 @@ MAGMA_desc <- function(Data,
                          descs_group,
                          effects_groups)
   
-  return(stats_overall)
   if(!is.null(filename)) {
     stats_overall %>%
       #convert matrix into rough APA Table
@@ -167,6 +166,8 @@ MAGMA_desc <- function(Data,
       flextable::autofit() %>%
       flextable::save_as_docx(., path = paste("./",filename,sep=""))
   }
+  
+  return(stats_overall)
 }
 
 
