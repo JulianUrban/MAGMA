@@ -108,7 +108,7 @@ Balance_extract <- function(Balance, samplesize, effects = FALSE) {
                   "d-ratio",
                   "mean g",
                   "adj. d-ratio")
-    } else {
+    } else if(is.matrix(Balance$Pillai)){
       Balance_criteria <- c(Balance_2x2$Pillai[1, samplesize],
                             Balance_2x2$Pillai[2, samplesize],
                             Balance_2x2$Pillai[3, samplesize],
