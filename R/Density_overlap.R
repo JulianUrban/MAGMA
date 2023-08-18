@@ -4,7 +4,7 @@
 #' for two or more groups.
 #'
 #' This function enables the comparison of the density of variables for two
-#' or more groups. It plots the kernel density seperately for each group and
+#' or more groups. It plots the kernel density separately for each group and
 #' quantifies the amount of overlap.
 #'
 #' @param Data A data frame that contains the desired variable for density
@@ -28,6 +28,10 @@
 #' @author Julian Urban
 #'
 #' @import tidyverse ggplot2 overlapping
+#' 
+#' #' @references
+#' \insertRef{Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
+#' 2.1, <https://CRAN.R-project.org/package=overlapping>.}
 #'
 #' @return A Plot showing the kernel density for a specified variable separated
 #' for specified groups and the quantification of this overlap.

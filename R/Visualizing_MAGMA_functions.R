@@ -18,7 +18,7 @@
 #' Missing data for Pillai's Trace are excluded listwise, whiel for the other
 #' balance criteria pairwise exclusion is applied.
 #'
-#' @param data A data frame containing at least the *grouping* variable, the
+#' @param Data A data frame containing at least the *grouping* variable, the
 #' *step* variable from the main MAGMA-function (or other mathcing algorithms),
 #'  and all *covariates* of interest.
 #' @param group A character specifying the name of
@@ -55,18 +55,11 @@
 #'
 #'
 #' #Estimating Balance
-#' Balance_gifted_exact <- Balance_MAGMA(data = MAGMA_sim_data_gifted_exact,
+#' Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
 #'                                       group = "gifted_support",
 #'                                       covariates = covariates_vector,
 #'                                       step = "step") #step created during matching
 #' str(Balance_gifted_exact)
-#'
-#' #Balance criteria for a 100 cases per group
-#' Balance_100_gifted <- c(Balance_gifted_exact$Pillai[100],
-#'                         Balance_gifted_exact$d_ratio$d_rate[100],
-#'                         Balance_gifted_exact$mean_effect[100],
-#'                         Balance_gifted_exact$adjusted_d_ratio[100])
-#' Balance_100_gifted
 #'
 #' #Computing 2x2 Matching for giftedness support and enrichment equivalent to
 #' #a four group matching
@@ -77,26 +70,19 @@
 #'
 #'
 #' #Estimating Balance. Covariates same as above
-#' Balance_2x2 <- Balance_MAGMA(data = MAGMA_sim_data_gift_enrich,
+#' Balance_2x2 <- Balance_MAGMA(Dta = MAGMA_sim_data_gift_enrich,
 #'                              group = c("gifted_support", "enrichment"),
 #'                              covariates = covariates_vector,
 #'                              step = "step") #step created during matching
 #' str(Balance_2x2)
 #'
-#' Balance_100_2x2<- c(Balance_2x2$Pillai[1, 100], #Main Effect 1
-#'                     Balance_2x2$Pillai[2, 100], #Main Effect 2
-#'                     Balance_2x2$Pillai[3, 100], #Interaction
-#'                     Balance_2x2$d_ratio$d_rate[100],
-#'                     Balance_2x2$mean_effect[100],
-#'                     Balance_2x2$adjusted_d_ratio[100])
-#' Balance_100_2x2
 #' }
 #'
-Balance_MAGMA <- function(data, group, covariates, step = "step") {
+Balance_MAGMA <- function(Data, group, covariates, step = "step") {
   #Fehlermeldungen
   #Prüfen ob data korrekt ist
   #TODO: tbl class > 1
-  if (!is.data.frame(data) && !is_tibble(data)) {
+  if (!is.data.frame(Data) && !is_tibble(Data)) {
     stop("Class data needs to be list, data frame, or tibble!")
   }
 
@@ -118,7 +104,7 @@ cat("Start estimating Pillai's Trace.")
   #####Pillai's Trace#####
   ########################
 
-Pillai <- Pillai_iterativ(da = data,
+Pillai <- Pillai_iterativ(da = Data,
                          gr = group,
                          co = covariates,
                          st = step)
@@ -127,13 +113,13 @@ Pillai <- Pillai_iterativ(da = data,
 cat("\n", "Pillai's Trace finsihed. Starting to compute d-ratio.")
 
 if(length(group) == 2) {
-  values_1 <- unique(data[group[1]])
-  values_2 <- unique(data[group[2]])
+  values_1 <- unique(Data[group[1]])
+  values_2 <- unique(Data[group[2]])
   group_value <- 1
-  data$group_d <- 99
+  Data$group_d <- 99
   for(i in 1:nrow(values_1)) {
     for(j in 1:nrow(values_2)) {
-      data <- data %>%
+      Data <- Data %>%
         dplyr::mutate(group_d = dplyr::case_when(
           as.logical(.[group[1]] == as.numeric(values_1[i, ]) &
             .[group[2]] == as.numeric(values_2[j, ])) ~ group_value,
@@ -150,7 +136,7 @@ if(length(group) == 2) {
   ########################
   ########d ratio#########
   ########################
-  d_effects <- inner_d(da = data,
+  d_effects <- inner_d(da = Data,
                        gr = group,
                        co = covariates,
                        st = step)
@@ -159,7 +145,7 @@ if(length(group) == 2) {
   ########mean g#########
   ########################
 cat("\n", "d-ratio finsihed. Starting to compute mean-g.", "\n")
-  group_number <- data %>%
+  group_number <- Data %>%
     dplyr::select(group) %>%
     table() %>%
     length()
@@ -197,7 +183,7 @@ cat("\n", "d-ratio finsihed. Starting to compute mean-g.", "\n")
 #' are excluded listwise, whiel for the other balance criteria pairwise
 #' exclusion is applied.
 #'
-#' @param data A data frame containing at least the *grouping* variable and all
+#' @param Data A data frame containing at least the *grouping* variable and all
 #'  *covariates* of interest.
 #' @param group A character specifying the name of
 #' your grouping variable in data. Note that MAGMA can only match your data for
@@ -222,26 +208,26 @@ cat("\n", "d-ratio finsihed. Starting to compute mean-g.", "\n")
 #' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 #'
 #' #Computing initial unbalance for giftedness support
-#' unbalance_gifted <- initial_unbalance(data = MAGMA_sim_data,
+#' unbalance_gifted <- initial_unbalance(Data = MAGMA_sim_data,
 #'                                       group = "gifted_support",
 #'                                       covariates = covariates_vector)
 #' unbalance_gifted
 #'
 #' #Computing initial unbalnce for teacher rated ability
-#' unbalance_tar <- initial_unbalance(data = MAGMA_sim_data,
+#' unbalance_tar <- initial_unbalance(Data = MAGMA_sim_data,
 #'                                   group = "teacher_ability_rating",
 #'                                   covariates = covariates_vector)
 #' unbalance_tar
 #'
 #'#' #Computing initial unbalnce for teacher rated ability
-#' unbalance_2x2 <- initial_unbalance(data = MAGMA_sim_data,
+#' unbalance_2x2 <- initial_unbalance(Data = MAGMA_sim_data,
 #'                                   group = c("gifted_support", "enrichment"),
 #'                                   covariates = covariates_vector)
 #' unbalance_2x2
 #' }
 #'
-initial_unbalance <- function(data, group, covariates) {
-  if (!is.data.frame(data) && !is_tibble(data)) {
+initial_unbalance <- function(Data, group, covariates) {
+  if (!is.data.frame(Data) && !is_tibble(Data)) {
     stop("Data needs to be a data frame, or tibble!")
   }
 
@@ -257,7 +243,7 @@ initial_unbalance <- function(data, group, covariates) {
   #####Pillai's Trace#####
   ########################
   if(length(group) == 1) {
-    Pillai_input <- data %>%
+    Pillai_input <- Data %>%
       dplyr::select(all_of(covariates),
            IV = all_of(group))
 
@@ -268,7 +254,7 @@ initial_unbalance <- function(data, group, covariates) {
         .[1, 2] %>%
         unlist()
   } else {
-    Pillai_input <- data %>%
+    Pillai_input <- Data %>%
       dplyr::select(all_of(covariates),
              IV_1 = all_of(group[1]),
              IV_2 = all_of(group[2]))
@@ -287,13 +273,13 @@ group_test <- group
   ########d ratio#########
   ########################
   if(length(group) == 2) {
-    values_1 <- unique(data[group[1]])
-    values_2 <- unique(data[group[2]])
+    values_1 <- unique(Data[group[1]])
+    values_2 <- unique(Data[group[2]])
     group_value <- 1
-    data$group_d <- 99
+    Data$group_d <- 99
     for(i in 1:nrow(values_1)) {
       for(j in 1:nrow(values_2)) {
-        data <- data %>%
+        Data <- Data %>%
           mutate(group_d = case_when(
             as.logical(.[group[1]] == as.numeric(values_1[i, ]) &
               .[group[2]] == as.numeric(values_2[j, ])) ~ group_value,
@@ -308,7 +294,7 @@ group_test <- group
 
 
 
-  group_stats <- data %>%
+  group_stats <- Data %>%
     dplyr::select(IV = all_of(group),
            all_of(covariates)) %>%
     dplyr::group_by(IV) %>%
@@ -316,7 +302,7 @@ group_test <- group
     as.list() %>%
     .[-1]
 
-  group_factor <- length(table(data[group]))
+  group_factor <- length(table(Data[group]))
   if (group_factor == 2) {
     pairwise_matrix <- matrix(c(1, 2),
                               ncol = 2,
@@ -483,7 +469,7 @@ group_test <- group
 #'
 #'
 #' #Estimating Balance
-#' Balance_gifted_exact <- Balance_MAGMA(data = MAGMA_sim_data_gifted_exact,
+#' Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
 #'                                       group = "gifted_support",
 #'                                       covariates = covariates_vector,
 #'                                       step = "step") #step created during matching
@@ -499,7 +485,7 @@ group_test <- group
 #'
 #'
 #' #Estimating Balance. Covariates same as above
-#' Balance_2x2 <- Balance_MAGMA(data = MAGMA_sim_data_gift_enrich,
+#' Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_gift_enrich,
 #'                              group = c("gifted_support", "enrichment"),
 #'                              covariates = covariates_vector,
 #'                              step = "step") #step created during matching
@@ -622,7 +608,7 @@ return(balance_matrix)
 #'
 #'
 #' #Estimating Balance
-#' Balance_gifted_exact <- Balance_MAGMA(data = MAGMA_sim_data_gifted_exact,
+#' Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
 #'                                       group = "gifted_support",
 #'                                       covariates = covariates_vector,
 #'                                       step = "step") #step created during matching
@@ -638,7 +624,7 @@ return(balance_matrix)
 #'
 #'
 #' #Estimating Balance. Covariates same as above
-#' Balance_2x2 <- Balance_MAGMA(data = MAGMA_sim_data_gift_enrich,
+#' Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_gift_enrich,
 #'                              group = c("gifted_support", "enrichment"),
 #'                              covariates = covariates_vector,
 #'                              step = "step") #step created during matching

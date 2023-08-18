@@ -3,14 +3,15 @@
 #' This function extracts the balance criteria or pairwise effects of a 
 #' Balance_MAGMA result for a specified sample size.
 #'
-#' Based on a previous computed Balance_MAGMA object this function enables the
-#' extraction of balance criteria or pairwise effects for each desired sample 
-#' size. Thus, checking the balance for each possible sample size independently
-#'  is possible.
+#' Based on a previous computed \code{\link{Balance_MAGMA}} object this function
+#' enables the extraction of balance criteria or pairwise effects for each
+#' desired sample size. Thus, checking the balance for each possible sample size
+#' independently is possible.
 #'
-#' @param Balance A Balance_MAGMA object. Compare the function Balance_MAGMA.
+#' @param Balance A result of Balance_MAGMA. Compare the function
+#' \code{\link{Balance_MAGMA}}.
 #' @param samplesize An integer indicating the sample size for which the balance
-#' criteria or pairwise effects hould be extracted.
+#' criteria or pairwise effects should be extracted.
 #' @param effects Indicates whether balance criteria or pairwise effects should
 #' be extracted. The default *FALSE* returns the balance criteria, while *TRUE*
 #' leads to the extraction of the pairwise effects.
