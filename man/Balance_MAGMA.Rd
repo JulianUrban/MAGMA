@@ -4,10 +4,10 @@
 \alias{Balance_MAGMA}
 \title{Balance estimation}
 \usage{
-Balance_MAGMA(data, group, covariates, step = "step")
+Balance_MAGMA(Data, group, covariates, step = "step")
 }
 \arguments{
-\item{data}{A data frame containing at least the \emph{grouping} variable, the
+\item{Data}{A data frame containing at least the \emph{grouping} variable, the
 \emph{step} variable from the main MAGMA-function (or other mathcing algorithms),
 and all \emph{covariates} of interest.}
 
@@ -62,18 +62,11 @@ MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
 
 
 #Estimating Balance
-Balance_gifted_exact <- Balance_MAGMA(data = MAGMA_sim_data_gifted_exact,
+Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
                                       group = "gifted_support",
                                       covariates = covariates_vector,
                                       step = "step") #step created during matching
 str(Balance_gifted_exact)
-
-#Balance criteria for a 100 cases per group
-Balance_100_gifted <- c(Balance_gifted_exact$Pillai[100],
-                        Balance_gifted_exact$d_ratio$d_rate[100],
-                        Balance_gifted_exact$mean_effect[100],
-                        Balance_gifted_exact$adjusted_d_ratio[100])
-Balance_100_gifted
 
 #Computing 2x2 Matching for giftedness support and enrichment equivalent to
 #a four group matching
@@ -84,19 +77,12 @@ MAGMA_sim_data_gift_enrich <- MAGMA(Data = MAGMA_sim_data,
 
 
 #Estimating Balance. Covariates same as above
-Balance_2x2 <- Balance_MAGMA(data = MAGMA_sim_data_gift_enrich,
+Balance_2x2 <- Balance_MAGMA(Dta = MAGMA_sim_data_gift_enrich,
                              group = c("gifted_support", "enrichment"),
                              covariates = covariates_vector,
                              step = "step") #step created during matching
 str(Balance_2x2)
 
-Balance_100_2x2<- c(Balance_2x2$Pillai[1, 100], #Main Effect 1
-                    Balance_2x2$Pillai[2, 100], #Main Effect 2
-                    Balance_2x2$Pillai[3, 100], #Interaction
-                    Balance_2x2$d_ratio$d_rate[100],
-                    Balance_2x2$mean_effect[100],
-                    Balance_2x2$adjusted_d_ratio[100])
-Balance_100_2x2
 }
 
 }

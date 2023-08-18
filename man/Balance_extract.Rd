@@ -7,10 +7,11 @@
 Balance_extract(Balance, samplesize, effects = FALSE)
 }
 \arguments{
-\item{Balance}{A Balance_MAGMA object. Compare the function Balance_MAGMA.}
+\item{Balance}{A result of Balance_MAGMA. Compare the function
+\code{\link{Balance_MAGMA}}.}
 
 \item{samplesize}{An integer indicating the sample size for which the balance
-criteria or pairwise effects hould be extracted.}
+criteria or pairwise effects should be extracted.}
 
 \item{effects}{Indicates whether balance criteria or pairwise effects should
 be extracted. The default \emph{FALSE} returns the balance criteria, while \emph{TRUE}
@@ -26,10 +27,10 @@ This function extracts the balance criteria or pairwise effects of a
 Balance_MAGMA result for a specified sample size.
 }
 \details{
-Based on a previous computed Balance_MAGMA object this function enables the
-extraction of balance criteria or pairwise effects for each desired sample
-size. Thus, checking the balance for each possible sample size independently
-is possible.
+Based on a previous computed \code{\link{Balance_MAGMA}} object this function
+enables the extraction of balance criteria or pairwise effects for each
+desired sample size. Thus, checking the balance for each possible sample size
+independently is possible.
 }
 \examples{
 \dontrun {

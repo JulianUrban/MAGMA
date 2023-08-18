@@ -4,19 +4,19 @@
 \alias{Table_MAGMA}
 \title{Balance table}
 \usage{
-Table_MAGMA(Balance, filename)
+Table_MAGMA(Balance, filename = NULL)
 }
 \arguments{
 \item{Balance}{A Balance MAGMA object. Compare the function Balance_MAGMA.}
 
-\item{filename}{A character specifying the filename that the
-resulting Word document with the Table should have..}
+\item{filename}{Optional argument.  A character specifying the filename that
+the resulting Word document with the Table should have..}
 }
 \value{
 A 4x5 APA Table showing the four balance
 criteria and the respective sample size per group for four scenarios. In
-each of these scenario one balance criteria has its optimal value. It prints
-a Word Document with this table, too.
+each of these scenario one balance criteria has its optimal value. It can
+print a Word Document with this table, too.
 }
 \description{
 This function prints an APA Table of the Balance criteria. It displays the
@@ -28,7 +28,8 @@ for the four scenarios.
 \details{
 This function creates an APA Table including the optimal models for each
 balance criterion, the other criteria for this sample size per group as well
-as the sample size itself.
+as the sample size itself. With an optional argument you can save a the APA
+table in Word.
 }
 \examples{
 \dontrun {
@@ -46,7 +47,7 @@ MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
 
 
 #Estimating Balance
-Balance_gifted_exact <- Balance_MAGMA(data = MAGMA_sim_data_gifted_exact,
+Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
                                       group = "gifted_support",
                                       covariates = covariates_vector,
                                       step = "step") #step created during matching
@@ -62,7 +63,7 @@ MAGMA_sim_data_gift_enrich <- MAGMA(Data = MAGMA_sim_data,
 
 
 #Estimating Balance. Covariates same as above
-Balance_2x2 <- Balance_MAGMA(data = MAGMA_sim_data_gift_enrich,
+Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_gift_enrich,
                              group = c("gifted_support", "enrichment"),
                              covariates = covariates_vector,
                              step = "step") #step created during matching

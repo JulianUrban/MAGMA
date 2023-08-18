@@ -51,7 +51,7 @@ for two or more groups.
 }
 \details{
 This function enables the comparison of the density of variables for two
-or more groups. It plots the kernel density seperately for each group and
+or more groups. It plots the kernel density separately for each group and
 quantifies the amount of overlap.
 }
 \examples{
@@ -65,8 +65,7 @@ variable_name = "Propensity Score",
 group_labels = c("No Support", "Support"),
 group_name = "Gifted Support")
 
- #Density overlap in Propensity scores for gifted after matching with 250
- cases per group.
+ #Density overlap in Propensity scores for gifted after matching with 250 cases per group.
 Density_overlap(Data = MAGMA_sim_data_gifted,
 variable = "ps_gifted", 
 group = "gifted_support",
@@ -86,6 +85,10 @@ group_name = "Rating")
 
 }
 
+}
+\references{
+\insertRef{Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). \emph{overlapping: Estimation of Overlapping in Empirical Distributions}. R package version
+2.1, \url{https://CRAN.R-project.org/package=overlapping}.}
 }
 \author{
 Julian Urban

@@ -4,10 +4,10 @@
 \alias{initial_unbalance}
 \title{Initial Unbalance estimation}
 \usage{
-initial_unbalance(data, group, covariates)
+initial_unbalance(Data, group, covariates)
 }
 \arguments{
-\item{data}{A data frame containing at least the \emph{grouping} variable and all
+\item{Data}{A data frame containing at least the \emph{grouping} variable and all
 \emph{covariates} of interest.}
 
 \item{group}{A character specifying the name of
@@ -42,19 +42,19 @@ exclusion is applied.
 covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 
 #Computing initial unbalance for giftedness support
-unbalance_gifted <- initial_unbalance(data = MAGMA_sim_data,
+unbalance_gifted <- initial_unbalance(Data = MAGMA_sim_data,
                                       group = "gifted_support",
                                       covariates = covariates_vector)
 unbalance_gifted
 
 #Computing initial unbalnce for teacher rated ability
-unbalance_tar <- initial_unbalance(data = MAGMA_sim_data,
+unbalance_tar <- initial_unbalance(Data = MAGMA_sim_data,
                                   group = "teacher_ability_rating",
                                   covariates = covariates_vector)
 unbalance_tar
 
 #' #Computing initial unbalnce for teacher rated ability
-unbalance_2x2 <- initial_unbalance(data = MAGMA_sim_data,
+unbalance_2x2 <- initial_unbalance(Data = MAGMA_sim_data,
                                   group = c("gifted_support", "enrichment"),
                                   covariates = covariates_vector)
 unbalance_2x2

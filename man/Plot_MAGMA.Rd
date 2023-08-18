@@ -41,7 +41,7 @@ MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
 
 
 #Estimating Balance
-Balance_gifted_exact <- Balance_MAGMA(data = MAGMA_sim_data_gifted_exact,
+Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
                                       group = "gifted_support",
                                       covariates = covariates_vector,
                                       step = "step") #step created during matching
@@ -57,7 +57,7 @@ MAGMA_sim_data_gift_enrich <- MAGMA(Data = MAGMA_sim_data,
 
 
 #Estimating Balance. Covariates same as above
-Balance_2x2 <- Balance_MAGMA(data = MAGMA_sim_data_gift_enrich,
+Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_gift_enrich,
                              group = c("gifted_support", "enrichment"),
                              covariates = covariates_vector,
                              step = "step") #step created during matching

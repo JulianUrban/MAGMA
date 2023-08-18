@@ -4,7 +4,14 @@
 \alias{MAGMA_desc}
 \title{MAGMA_desc}
 \usage{
-MAGMA_desc(Data, covariates, group, step_num = NULL, step_var = NULL)
+MAGMA_desc(
+  Data,
+  covariates,
+  group,
+  step_num = NULL,
+  step_var = NULL,
+  filename = NULL
+)
 }
 \arguments{
 \item{Data}{A data frame that contains the desired variable for density
