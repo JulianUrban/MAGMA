@@ -2,7 +2,7 @@
 % Please edit documentation in R/Visualizing_MAGMA_functions.R
 \name{initial_unbalance}
 \alias{initial_unbalance}
-\title{Initial Unbalance estimation}
+\title{Initial unbalance estimation}
 \usage{
 initial_unbalance(Data, group, covariates)
 }
@@ -20,24 +20,25 @@ this case each or the 2 grouping variables can only have two levels.}
 metric covariates of interest.}
 }
 \value{
-A numeric vector of length 4 containg the respective balance
+A numeric vector of length 4 containing the respective balance
 criteria for the unmatched sample.
 }
 \description{
 This function computes all four Balance criteria of MAGMA, namely
 \emph{Pillai's Trace}, \emph{d-ratiO}, \emph{mean g}, and \emph{adjusted d-ratio} for the
-unmatched data set. This enables comparision of inital and after matching
+unmatched data set. This enables comparison of initial and after matching
 unbalance.
 }
 \details{
 This function computes all four Balance criteria of MAGMA, namely Pillai's
 Trace, d-ratio, mean g, and adjusted d-ratio for the overall samples. This
 leads to different sample sizes per group. Missing data for Pillai's Trace
-are excluded listwise, whiel for the other balance criteria pairwise
+are excluded listwise, while for the other balance criteria pairwise
 exclusion is applied.
 }
 \examples{
-\dontrun {
+{
+\dontrun{
 #Defining covariates for balance estimation
 covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 
@@ -53,13 +54,22 @@ unbalance_tar <- initial_unbalance(Data = MAGMA_sim_data,
                                   covariates = covariates_vector)
 unbalance_tar
 
-#' #Computing initial unbalnce for teacher rated ability
+#Computing initial unbalnce for teacher rated ability
 unbalance_2x2 <- initial_unbalance(Data = MAGMA_sim_data,
                                   group = c("gifted_support", "enrichment"),
                                   covariates = covariates_vector)
 unbalance_2x2
 }
+}
 
+}
+\references{
+{Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). \emph{overlapping: Estimation of Overlapping in Empirical Distributions}. R package version
+2.1, \url{https://CRAN.R-project.org/package=overlapping}.
+William Revelle (2023). \emph{psych: Procedures for Psychological, Psychometric, and Personality Research}. Northwestern University, Evanston, Illinois. R package version 2.3.6, \url{https://CRAN.R-project.org/package=psych}.
+Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. Journal of Statistical Software, 36(3), 1-48. \doi{10.18637/jss.v036.i03}
+Fisher Z, Tipton E, Zhipeng H (2023). \emph{robumeta: Robust Variance Meta-Regression}. R package version 2.1,
+\url{https://CRAN.R-project.org/package=robumeta}.}
 }
 \author{
 Julian Urban

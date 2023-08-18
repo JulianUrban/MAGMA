@@ -10,7 +10,8 @@ Plot_MAGMA(
 )
 }
 \arguments{
-\item{Balance}{A Balance MAGMA object. Compare the function Balance_MAGMA.}
+\item{Balance}{A result of Balance_MAGMA. Compare the function
+\code{\link{Balance_MAGMA}}.}
 
 \item{criterion}{A character vector specifying for which balance criteria
 a plot should be created. Default is all criteria.}
@@ -22,11 +23,12 @@ R Plots showing the balance trend over sample size.
 Plots for Balance with respect to sample size.
 }
 \details{
-This function creates R-Plots using ggplot to show the belance trend over
+This function creates R-Plots using ggplot to show the balance trend over
 sample size.
 }
 \examples{
-\dontrun {
+{
+\dontrun{
 #This function bases on a MAGMA function as well as Balance_MAGMA.
 #To run examples, copy them into your console or script.
 #Defining the names of the metric and binary covariates
@@ -65,7 +67,7 @@ Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_gift_enrich,
 Plot_MAGMA(Balance = Balance_2x2,
            criterion = c("d_ration", "Adj_d_ratio"))
 }
-           
+}          
 
 }
 \author{

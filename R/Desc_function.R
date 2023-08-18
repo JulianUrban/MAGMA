@@ -3,36 +3,38 @@
 #' This function provides pre- and post matching descriptive statistics and
 #' effects.
 #'
-#' This function enables the compuatation of descriptive statistics of 
-#' continuous variables for the overall sample and specifed groups. Additional,
+#' This function enables the computation of descriptive statistics of 
+#' continuous variables for the overall sample and specified groups. Additional,
 #' pairwise effects (Cohen's d) is computed.
 #'
 #' @param Data A data frame that contains the desired variable for density
 #' plotting as well as the specified grouping variable.
 #' @param covariates A character vector naming the variable names of the
-#' continuous varibales for that the descriptive statistics should be computed.
+#' continuous variables for that the descriptive statistics should be computed.
 #' @param group A character (vector) specifying the groups for which 
 #' differentiated statistics should be computed.
 #' @param step_num Optional argument. If no value is specified, pre matching 
 #' statistics are computed. For post matching statistics the exact needs to be
-#' defined via the stp arguments. step_num is andinteger specifying the number
+#' defined via the step arguments. step_num is an integer specifying the number
 #' of cases that should be included per group in this post matching comparison. 
 #' Is based on the step variable of MAGMA.
 #' @param step_var Optional argument. If no value is specified, pre matching 
 #' statistics are computed. For post matching statistics the exact needs to be
-#' defined via the stp arguments.A Character specifying the name of the step
+#' defined via the step arguments. A Character specifying the name of the step
 #' variable in the data set.
+#' @param filename Optional argument.  A character specifying the filename that 
+#' the resulting Word document with the Table should have.
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych purrr janitor flextable
+#' @import tidyverse psych purrr janitor flextable dplyr tidyselect
 #'
-#' @return A table of descriptvive statistics and pairwise effects for pre- or
+#' @return A table of descriptive statistics and pairwise effects for pre- or
 #' postmatching samples.
 #' @export
 #'
-#' @examples
-#' \dontrun {
+#' @examples{
+#' \dontrun{
 #' #Defining covariates
 #' covariates_gifted <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 #' 
@@ -55,6 +57,7 @@
 #'            step_var = "step")
 #' 
 #' }
+#' }
 #'
 MAGMA_desc <- function(Data,
                        covariates,
@@ -62,8 +65,7 @@ MAGMA_desc <- function(Data,
                        step_num = NULL,
                        step_var = NULL,
                        filename = NULL) {
-  if (!is.data.frame(Data) && !is_tibble(Data
-                                         )) {
+  if (!is.data.frame(Data) && !tibble::is_tibble(Data)) {
     stop("Class data needs to be data frame, or tibble!")
   }
   
@@ -113,16 +115,16 @@ MAGMA_desc <- function(Data,
   
   
   descs_overall <- Data %>%
-    dplyr::select(dplyr::all_of(group),
-                  all_of(covariates)) %>%
+    dplyr::select(tidyselect::all_of(group),
+                  tidyselect::all_of(covariates)) %>%
     psych::describe() %>%
     dplyr::select(n, mean, sd) %>%
     tibble::as_tibble() %>%
     round(., 2)
   
   descs_group <- Data %>%
-    dplyr::select( dplyr::all_of(group),
-                   dplyr::all_of(covariates)) %>%
+    dplyr::select(tidyselect::all_of(group),
+                  tidyselect::all_of(covariates)) %>%
     split.data.frame(., .[group]) %>%
     lapply(., function(data) 
       psych::describe(data) %>%
@@ -158,7 +160,7 @@ MAGMA_desc <- function(Data,
   if(!is.null(filename)) {
     stats_overall %>%
       dplyr::mutate(names = rownames(.)) %>%
-      select(names, everything()) %>%
+      dplyr::select(names, tidyselect::everything()) %>%
       #convert matrix into rough APA Table
       janitor::adorn_title(
         row_name = "Variable",
@@ -176,7 +178,7 @@ MAGMA_desc <- function(Data,
 
 #' cohen_d
 #'
-#' This function estimates cohen's d in MAGMA_desc.
+#' This function estimates Cohen's d in MAGMA_desc.
 #'
 #' Inner function of MAGMA_desc that computes Cohen's d using the pooled SD.
 #'
@@ -187,15 +189,15 @@ MAGMA_desc <- function(Data,
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse purrr
+#' @import tidyverse purrr dplyr tidyselect
 #'
 #' @return A vector of pairwise Cohen'ds.
 #'
 #'
-cohen_d <- function(data, index_1, index_2) {
+cohen_d <- function(Data, index_1, index_2) {
   data %>%
-    dplyr::select( dplyr::starts_with(index_1),
-                   dplyr::starts_with(index_2)) %>%
+    dplyr::select(tidyselect::starts_with(index_1),
+                  tidyselect::starts_with(index_2)) %>%
     dplyr::mutate(mean_diff = .[, 2] - .[, 5],
                   pooled_sd = sqrt(
                     ((.[, 1] - 1) * .[, 3]^2 + 

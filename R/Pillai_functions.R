@@ -33,18 +33,18 @@ Pillai_DV <- function(data, input) {
 #' @param da Specifying the data frame or tibble with the data.
 #' @param gr A character vector specifying the IVs.
 #' @param co A character vector naming the DVs.
-#' @param st A character naming the variable for iteratively inclsuion.
+#' @param st A character naming the variable for iteratively inclusion
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych
-#' @return A vector containg Pillai's Trace in dependeny of sample size. If two
+#' @import tidyverse psych dplyr tidyselect tibble stats
+#' @return A vector containing Pillai's Trace in dependency of sample size. If two
 #' grouping variables were specified, the output is a matrix containing
 #' Pillai's Trace for both IVs and their ineraction.
 #'
 #'
 Pillai_iterativ <- function(da, gr, co, st) {
-  if(!is.data.frame(da) && !is_tibble(da)) {
+  if(!is.data.frame(da) && !tibble::is_tibble(da)) {
     stop("da needs to be an object of class dataframe or tibble!")
   }
 
@@ -78,10 +78,10 @@ Pillai_iterativ <- function(da, gr, co, st) {
       dplyr::select(tidyselect::all_of(co),
              IV = gr,
              It = st) %>%
-      filter(It <= iteration)
+      dplyr::filter(It <= iteration)
 
-    Pillai_temp[iteration] <- manova(Pillai_DV(Pillai_input, co) ~ IV,
-                                     data = Pillai_input) %>%
+    Pillai_temp[iteration] <- stats::manova(Pillai_DV(Pillai_input, co) ~ IV,
+                                            data = Pillai_input) %>%
       summary(.) %>%
       .[["stats"]] %>%
       .[1, 2]
@@ -101,10 +101,10 @@ Pillai_iterativ <- function(da, gr, co, st) {
               IV1 = gr[1],
               IV2 = gr[2],
                It = st) %>%
-        filter(It <= iteration)
+        dplyr::filter(It <= iteration)
 
       Pillai_temp[, iteration] <- Pillai_input %>%
-        manova(Pillai_DV(., co) ~ IV1 + IV2 + IV1 * IV2, data = .) %>%
+        stats::manova(Pillai_DV(., co) ~ IV1 + IV2 + IV1 * IV2, data = .) %>%
         summary(.) %>%
         .[["stats"]] %>%
         .[c(1:3), 2]

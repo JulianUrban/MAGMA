@@ -15,11 +15,11 @@
 #' with such a small sample size can be estimated consistently. For Pillai's
 #' Trace a higher minimum sample size can be possible. It depends on the number
 #' of covariates to ensure a positive model identification.
-#' Missing data for Pillai's Trace are excluded listwise, whiel for the other
+#' Missing data for Pillai's Trace are excluded listwise, while for the other
 #' balance criteria pairwise exclusion is applied.
 #'
 #' @param Data A data frame containing at least the *grouping* variable, the
-#' *step* variable from the main MAGMA-function (or other mathcing algorithms),
+#' *step* variable from the main MAGMA-function (or other matching algorithms),
 #'  and all *covariates* of interest.
 #' @param group A character specifying the name of
 #' your grouping variable in data. Note that MAGMA can only match your data for
@@ -35,14 +35,23 @@
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych metafor robumeta
+#' @import tidyverse psych metafor robumeta tibble dplyr tidyselect
 #'
 #' @return A list of length four containing all balance criteria and all
 #' pairwise effects with respect to group sample size.
 #' @export
+#' 
+#' @references {Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
+#' 2.1, <https://CRAN.R-project.org/package=overlapping>.
+#' William Revelle (2023). _psych: Procedures for Psychological, Psychometric, and Personality Research_. Northwestern University, Evanston,
+#' Illinois. R package version 2.3.6, <https://CRAN.R-project.org/package=psych>.
+#' Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. Journal of Statistical Software, 36(3), 1-48.
+#' \doi{10.18637/jss.v036.i03}
+#' Fisher Z, Tipton E, Zhipeng H (2023). _robumeta: Robust Variance Meta-Regression_. R package version 2.1,
+#' <https://CRAN.R-project.org/package=robumeta>.}
 #'
-#' @examples
-#' \dontrun {
+#' @examples{
+#' \dontrun{
 #' #Defining the names of the metric and binary covariates
 #' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 #'
@@ -77,12 +86,13 @@
 #' str(Balance_2x2)
 #'
 #' }
+#' }
 #'
 Balance_MAGMA <- function(Data, group, covariates, step = "step") {
   #Fehlermeldungen
   #Prüfen ob data korrekt ist
   #TODO: tbl class > 1
-  if (!is.data.frame(Data) && !is_tibble(Data)) {
+  if (!is.data.frame(Data) && !tibble::is_tibble(Data)) {
     stop("Class data needs to be list, data frame, or tibble!")
   }
 
@@ -170,17 +180,17 @@ cat("\n", "d-ratio finsihed. Starting to compute mean-g.", "\n")
   return(output)
 }
 
-#' Initial Unbalance estimation
+#' Initial unbalance estimation
 #'
 #' This function computes all four Balance criteria of MAGMA, namely
 #' *Pillai's Trace*, *d-ratiO*, *mean g*, and *adjusted d-ratio* for the
-#' unmatched data set. This enables comparision of inital and after matching
+#' unmatched data set. This enables comparison of initial and after matching
 #' unbalance.
 #'
 #' This function computes all four Balance criteria of MAGMA, namely Pillai's
 #' Trace, d-ratio, mean g, and adjusted d-ratio for the overall samples. This
 #' leads to different sample sizes per group. Missing data for Pillai's Trace
-#' are excluded listwise, whiel for the other balance criteria pairwise
+#' are excluded listwise, while for the other balance criteria pairwise
 #' exclusion is applied.
 #'
 #' @param Data A data frame containing at least the *grouping* variable and all
@@ -193,17 +203,23 @@ cat("\n", "d-ratio finsihed. Starting to compute mean-g.", "\n")
 #' @param covariates A character vector listing the names of all binary and
 #' metric covariates of interest.
 #'
-#'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych metafor robumeta
+#' @import tidyverse psych metafor robumeta tibble dplyr tidyselect
 #'
-#' @return A numeric vector of length 4 containg the respective balance
+#' @return A numeric vector of length 4 containing the respective balance
 #' criteria for the unmatched sample.
 #' @export
 #'
-#' @examples
-#' \dontrun {
+#' @references {Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
+#' 2.1, <https://CRAN.R-project.org/package=overlapping>.
+#' William Revelle (2023). _psych: Procedures for Psychological, Psychometric, and Personality Research_. Northwestern University, Evanston, Illinois. R package version 2.3.6, <https://CRAN.R-project.org/package=psych>.
+#' Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. Journal of Statistical Software, 36(3), 1-48. \doi{10.18637/jss.v036.i03}
+#' Fisher Z, Tipton E, Zhipeng H (2023). _robumeta: Robust Variance Meta-Regression_. R package version 2.1,
+#' <https://CRAN.R-project.org/package=robumeta>.}
+#'
+#' @examples{
+#' \dontrun{
 #' #Defining covariates for balance estimation
 #' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 #'
@@ -219,15 +235,16 @@ cat("\n", "d-ratio finsihed. Starting to compute mean-g.", "\n")
 #'                                   covariates = covariates_vector)
 #' unbalance_tar
 #'
-#'#' #Computing initial unbalnce for teacher rated ability
+#' #Computing initial unbalnce for teacher rated ability
 #' unbalance_2x2 <- initial_unbalance(Data = MAGMA_sim_data,
 #'                                   group = c("gifted_support", "enrichment"),
 #'                                   covariates = covariates_vector)
 #' unbalance_2x2
 #' }
+#' }
 #'
 initial_unbalance <- function(Data, group, covariates) {
-  if (!is.data.frame(Data) && !is_tibble(Data)) {
+  if (!is.data.frame(Data) && !tibble::is_tibble(Data)) {
     stop("Data needs to be a data frame, or tibble!")
   }
 
@@ -244,21 +261,21 @@ initial_unbalance <- function(Data, group, covariates) {
   ########################
   if(length(group) == 1) {
     Pillai_input <- Data %>%
-      dplyr::select(all_of(covariates),
-           IV = all_of(group))
+      dplyr::select(tidyselect::all_of(covariates),
+           IV = tidyselect::all_of(group))
 
-      Pillai <- manova(Pillai_DV(Pillai_input, covariates) ~ IV,
-                                   data = Pillai_input) %>%
+      Pillai <- stats::manova(Pillai_DV(Pillai_input, covariates) ~ IV,
+                              data = Pillai_input) %>%
         summary(.) %>%
         .[["stats"]] %>%
         .[1, 2] %>%
         unlist()
   } else {
     Pillai_input <- Data %>%
-      dplyr::select(all_of(covariates),
-             IV_1 = all_of(group[1]),
-             IV_2 = all_of(group[2]))
-    Pillai <- manova(Pillai_DV(Pillai_input, covariates) ~ IV_1 + IV_2 + IV_1 * IV_2,
+      dplyr::select(tidyselect::all_of(covariates),
+             IV_1 = tidyselect::all_of(group[1]),
+             IV_2 = tidyselect::all_of(group[2]))
+    Pillai <- stats::manova(Pillai_DV(Pillai_input, covariates) ~ IV_1 + IV_2 + IV_1 * IV_2,
                      data = Pillai_input) %>%
       summary(.) %>%
       .[["stats"]] %>%
@@ -280,7 +297,7 @@ group_test <- group
     for(i in 1:nrow(values_1)) {
       for(j in 1:nrow(values_2)) {
         Data <- Data %>%
-          mutate(group_d = case_when(
+          dplyr::mutate(group_d = dplyr::case_when(
             as.logical(.[group[1]] == as.numeric(values_1[i, ]) &
               .[group[2]] == as.numeric(values_2[j, ])) ~ group_value,
             TRUE ~ group_d
@@ -295,8 +312,8 @@ group_test <- group
 
 
   group_stats <- Data %>%
-    dplyr::select(IV = all_of(group),
-           all_of(covariates)) %>%
+    dplyr::select(IV = tidyselect::all_of(group),
+                  tidyselect::all_of(covariates)) %>%
     dplyr::group_by(IV) %>%
     dplyr::summarise_at(., covariates, psych::describe) %>%
     as.list() %>%
@@ -438,9 +455,10 @@ group_test <- group
 #' as the sample size itself. With an optional argument you can save a the APA
 #' table in Word.
 #'
-#' @param Balance A Balance MAGMA object. Compare the function Balance_MAGMA.
+#' @param Balance A result of Balance_MAGMA. Compare the function
+#' \code{\link{Balance_MAGMA}}.
 #' @param filename Optional argument.  A character specifying the filename that 
-#' the resulting Word document with the Table should have..
+#' the resulting Word document with the Table should have.
 #'
 #'
 #' @author Julian Urban
@@ -453,8 +471,8 @@ group_test <- group
 #' print a Word Document with this table, too.
 #' @export
 #'
-#' @examples
-#' \dontrun {
+#' @examples{
+#' \dontrun{
 #' #This function bases on a MAGMA function as well as Balance_MAGMA.
 #' #To run examples, copy them into your console or script.
 #' #Defining the names of the metric and binary covariates
@@ -491,6 +509,7 @@ group_test <- group
 #'                              step = "step") #step created during matching
 #'
 #' Table_MAGMA(Balance_2x2, "Balance_2x2.docx")
+#' }
 #' }
 #'
 Table_MAGMA <- function(Balance, filename = NULL) {
@@ -577,10 +596,11 @@ return(balance_matrix)
 #'
 #' Plots for Balance with respect to sample size.
 #'
-#' This function creates R-Plots using ggplot to show the belance trend over
+#' This function creates R-Plots using ggplot to show the balance trend over
 #' sample size.
 #'
-#' @param Balance A Balance MAGMA object. Compare the function Balance_MAGMA.
+#' @param Balance A result of Balance_MAGMA. Compare the function
+#' \code{\link{Balance_MAGMA}}.
 #' @param criterion A character vector specifying for which balance criteria
 #' a plot should be created. Default is all criteria.
 #'
@@ -592,8 +612,8 @@ return(balance_matrix)
 #' @return R Plots showing the balance trend over sample size.
 #' @export
 #'
-#' @examples
-#' \dontrun {
+#' @examples{
+#' \dontrun{
 #' #This function bases on a MAGMA function as well as Balance_MAGMA.
 #' #To run examples, copy them into your console or script.
 #' #Defining the names of the metric and binary covariates
@@ -632,7 +652,7 @@ return(balance_matrix)
 #' Plot_MAGMA(Balance = Balance_2x2,
 #'            criterion = c("d_ration", "Adj_d_ratio"))
 #' }
-#'            
+#' }          
 #'
 Plot_MAGMA <- function(Balance,
                        criterion = c("Pillai",
@@ -651,7 +671,7 @@ Plot_MAGMA <- function(Balance,
     print(Balance$Pillai %>%
             unlist() %>%
             tibble::as_tibble(., .name_repair = "minimal") %>%
-            dplyr::mutate(N = row_number()) %>%
+            dplyr::mutate(N = dplyr::row_number()) %>%
             ggplot2::ggplot() +
             ggplot2::geom_point(aes(x = N, y = value)) +
             ggplot2::theme(panel.background = element_blank()) +

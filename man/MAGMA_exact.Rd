@@ -29,7 +29,7 @@ parallel computation.}
 Your input data frame of valid cases augmented with matching
 relevant variables, namely \emph{weight}, \emph{step}, \emph{distance}, and \emph{ID}. In case
 of missing values on the distance or group variable, MAGMA excludes them for
-th matching process. The returned data set does not contain those excluded
+the matching process. The returned data set does not contain those excluded
 cases. For more information, see Details.
 }
 \description{
@@ -49,10 +49,12 @@ Since matches with a lower distance are matched in an earlier iteration,
 step and distance are strongly correlated.
 Exact matching means that only cases with the same value on the exact
 variable can be matched. As example, only person of the same gender, the
-same school, or the same organization are possible matches.
+same school, or the same organization are possible matches. For standard
+matching, see \code{\link{MAGMA}}
 }
 \examples{
-\dontrun {
+{
+\dontrun{
 #Running this code will take a while
 #Computing two-group Matching for giftedness support with exact for enrichment
 MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
@@ -78,6 +80,7 @@ MAGMA_sim_data_gift_enrich_exact <- MAGMA_exact(Data = MAGMA_sim_data,
                                                 exact = "teacher_ability_rating",
                                                 cores = 2)
 head(MAGMA_sim_data_gift_enrich_exact)
+}
 }
 
 }

@@ -8,19 +8,19 @@
 #' @param da Specifying the data frame or tibble with the data.
 #' @param gr A character vector specifying the IVs.
 #' @param co A character vector naming the DVs.
-#' @param st A character naming the variable for iteratively inclsuion.
+#' @param st A character naming the variable for iteratively inclusion
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych
-#' @return A list of length two. The first elemnt is a matrix including all
+#' @import tidyverse psych tibble tidyselect
+#' @return A list of length two. The first element is a matrix including all
 #' pairwise effects. The second is a vector expressing d-ratio
 #' in dependency of sample size.
 #'
 #'
 inner_d <- function(da, gr, co, st) {
 
-  if(!is.data.frame(da) && !is_tibble(da)) {
+  if(!is.data.frame(da) && !tibble::is_tibble(da)) {
     stop("da needs to be an object of class dataframe or tibble!")
   }
 
@@ -86,7 +86,7 @@ inner_d <- function(da, gr, co, st) {
     pairwise_matrix <- matrix(c(1, 1, 2, 2, 3, 3),
                               ncol = 2,
                               nrow = 3)
-    names_covariates <- purrr:::map2(pairwise_matrix[, 1],
+    names_covariates <- purrr::map2(pairwise_matrix[, 1],
                                      pairwise_matrix[, 2],
                                      function(group_1, group_2)
                                        paste(co, group_1, group_2, sep = "_")) %>%
@@ -95,7 +95,7 @@ inner_d <- function(da, gr, co, st) {
     pairwise_matrix <- matrix(c(1, 1, 1, 2, 2, 3, 2, 3, 4, 3, 4, 4),
                               ncol = 2,
                               nrow = 6)
-    names_covariates <- purrr:::map2(pairwise_matrix[, 1],
+    names_covariates <- purrr::map2(pairwise_matrix[, 1],
                                      pairwise_matrix[, 2],
                                      function(group_1, group_2)
                                        paste(co, group_1, group_2, sep = "_")) %>%
@@ -154,7 +154,7 @@ inner_d <- function(da, gr, co, st) {
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych
+#' @import tidyverse psych tibble
 #' @return A vector containing the adjusted d-ratio in dependency of
 #' sample size.
 #'
@@ -193,7 +193,7 @@ suppressMessages({
            nrow = ncol(input$effects) * nrow(input$effects))
     })
 
-  likelihood <- purrr::map2_dbl(g, sd_g, pnorm, q = .20) %>%
+  likelihood <- purrr::map2_dbl(g, sd_g, stats::pnorm, q = .20) %>%
     matrix(., ncol = ncol(input$effects), nrow = nrow(input$effects)) %>%
     colSums()/nrow(input$effects)
   return(likelihood)

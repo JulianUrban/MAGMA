@@ -19,15 +19,15 @@
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse 
+#' @import tidyverse purrr
 #'
 #' @return Depends on effects argument. If *FALSE* it returns in a vector
 #' containing the balance criteria. If *TRUE* it returns a vector containing
 #' all possible pairwise effects.
 #' @export
 #'
-#' @examples
-#' \dontrun {
+#' @examples{
+#' \dontrun{
 #' #Defining the names of the metric and binary covariates
 #' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 #'
@@ -87,6 +87,7 @@
 #'                                               effects = TRUE)
 #' Balance_125_2x2_effects
 #' }
+#' }
 #'
 Balance_extract <- function(Balance, samplesize, effects = FALSE) {
   #Check input
@@ -111,9 +112,9 @@ Balance_extract <- function(Balance, samplesize, effects = FALSE) {
                   "adj. d-ratio")
       
     } else if(is.matrix(Balance$Pillai)) {
-      Balance_criteria <- c(Balance_2x2$Pillai[1, samplesize],
-                            Balance_2x2$Pillai[2, samplesize],
-                            Balance_2x2$Pillai[3, samplesize],
+      Balance_criteria <- c(Balance$Pillai[1, samplesize],
+                            Balance$Pillai[2, samplesize],
+                            Balance$Pillai[3, samplesize],
                             Balance$d_ratio$d_rate[samplesize],
                             Balance$mean_effect[samplesize],
                             Balance$adjusted_d_ratio[samplesize]) %>%

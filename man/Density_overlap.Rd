@@ -33,7 +33,7 @@ in the plot for variable.}
 that should appear in the legend of the plot.}
 
 \item{group_name}{A character specifying the name of the grouping variable
-tha should appear in the title of the legend.}
+that should appear in the title of the legend.}
 
 \item{step_num}{An integer specifying the number of cases that should be included
 per group in this post matching comparison. Is based on the step variable of
@@ -55,12 +55,14 @@ or more groups. It plots the kernel density separately for each group and
 quantifies the amount of overlap.
 }
 \examples{
-\dontrun {
+{
+\dontrun{
 #Density overlap in Propensity scores for gifted before matching
 Density_overlap(Data = MAGMA_sim_data,
 variable = "ps_gifted", 
 group = "gifted_support",
-step = NULL,
+step_num = NULL,
+step_var = NULL,
 variable_name = "Propensity Score",
 group_labels = c("No Support", "Support"),
 group_name = "Gifted Support")
@@ -82,12 +84,12 @@ group = "teacher_ability_rating",
 variable_name = "School Achievement",
 group_labels = c("Low", "Medium", "High"),
 group_name = "Rating") 
-
+}
 }
 
 }
 \references{
-\insertRef{Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). \emph{overlapping: Estimation of Overlapping in Empirical Distributions}. R package version
+{Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). \emph{overlapping: Estimation of Overlapping in Empirical Distributions}. R package version
 2.1, \url{https://CRAN.R-project.org/package=overlapping}.}
 }
 \author{

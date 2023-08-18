@@ -15,7 +15,8 @@
 #' step and distance are strongly correlated.
 #' Exact matching means that only cases with the same value on the exact
 #' variable can be matched. As example, only person of the same gender, the
-#' same school, or the same organization are possible matches.
+#' same school, or the same organization are possible matches. For standard
+#' matching, see \code{\link{MAGMA}}
 #'
 #'
 #' @param Data A data frame or tibble containing at least your grouping and
@@ -34,16 +35,16 @@
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse parallel doParallel foreach
+#' @import tidyverse parallel doParallel foreach tibble dplyr tidyselect stats
 #' @return Your input data frame of valid cases augmented with matching
 #' relevant variables, namely *weight*, *step*, *distance*, and *ID*. In case
 #' of missing values on the distance or group variable, MAGMA excludes them for
-#' th matching process. The returned data set does not contain those excluded
+#' the matching process. The returned data set does not contain those excluded
 #' cases. For more information, see Details.
 #' @export
 #'
-#' @examples
-#' \dontrun {
+#' @examples{
+#' \dontrun{
 #' #Running this code will take a while
 #' #Computing two-group Matching for giftedness support with exact for enrichment
 #' MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
@@ -70,11 +71,12 @@
 #'                                                 cores = 2)
 #' head(MAGMA_sim_data_gift_enrich_exact)
 #' }
+#' }
 #'
 MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
 
   #Check for regular input
-  if(!is.data.frame(Data) && !is_tibble(Data)) {
+  if(!is.data.frame(Data) && !tibble::is_tibble(Data)) {
     stop("Data needs to be an object of class dataframe or tibble!")
   }
 
@@ -116,7 +118,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
              as.logical(!is.na(.[group[2]])),
              as.logical(!is.na(.[dist]))) %>%
       dplyr::mutate(ID = c(1:nrow(Data)),
-             group_long = case_when(
+             group_long = dplyr::case_when(
                as.logical(Data[group[1]] == values_1[1] & Data[group[2]] == values_2[1]) ~ 1,
                as.logical(Data[group[1]] == values_1[1] & Data[group[2]] == values_2[2]) ~ 2,
                as.logical(Data[group[2]] == values_1[2] & Data[group[2]] == values_2[1]) ~ 3,
@@ -146,7 +148,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
   input <- input %>%
     tibble::as_tibble(.) %>%
     dplyr::group_by(group) %>%
-    dplyr::mutate(group_id = row_number()) %>%
+    dplyr::mutate(group_id = dplyr::row_number()) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(weight = NA,
            step = NA,
@@ -157,7 +159,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
   #######################
   #distance estimation##
   ######################
-  var_ma <- as.numeric(var(input$distance_ps))
+  var_ma <- as.numeric(stats::var(input$distance_ps))
 
   elements <- input %>%
     dplyr::group_by(group) %>%

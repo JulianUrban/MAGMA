@@ -19,7 +19,7 @@
 #' @param group_labels A character vector specifying the labels for the groups 
 #' that should appear in the legend of the plot.
 #' @param group_name A character specifying the name of the grouping variable
-#' tha should appear in the title of the legend.
+#' that should appear in the title of the legend.
 #' @param step_num An integer specifying the number of cases that should be included
 #' per group in this post matching comparison. Is based on the step variable of
 #' MAGMA.
@@ -27,22 +27,23 @@
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse ggplot2 overlapping
+#' @import tidyverse ggplot2 overlapping tibble dplyr tidyselect
 #' 
-#' @references \insertRef{Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
+#' @references {Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
 #' 2.1, <https://CRAN.R-project.org/package=overlapping>.}
 #'
 #' @return A Plot showing the kernel density for a specified variable separated
 #' for specified groups and the quantification of this overlap.
 #' @export
 #'
-#' @examples
-#' \dontrun {
+#' @examples{
+#' \dontrun{
 #' #Density overlap in Propensity scores for gifted before matching
 #' Density_overlap(Data = MAGMA_sim_data,
 #' variable = "ps_gifted", 
 #' group = "gifted_support",
-#' step = NULL,
+#' step_num = NULL,
+#' step_var = NULL,
 #' variable_name = "Propensity Score",
 #' group_labels = c("No Support", "Support"),
 #' group_name = "Gifted Support")
@@ -64,7 +65,7 @@
 #' variable_name = "School Achievement",
 #' group_labels = c("Low", "Medium", "High"),
 #' group_name = "Rating") 
-#' 
+#' }
 #' }
 #'
 Density_overlap <- function(Data, variable, group,
@@ -73,7 +74,7 @@ Density_overlap <- function(Data, variable, group,
                             group_name  = NULL,
                             step_num = NULL,
                             step_var = NULL) {
-  if(!is.data.frame(Data) && !is_tibble(Data)) {
+  if(!is.data.frame(Data) && !tibble::is_tibble(Data)) {
     stop("Data needs to be an object of class dataframe or tibble!")
   }
   if(!is.character(variable) | length(variable) > 1) {
@@ -156,7 +157,7 @@ Density_overlap <- function(Data, variable, group,
     
 overlap_areas <- split.data.frame(Data, Data[group]) %>%
   lapply(., function(data) data %>%
-           select(all_of(variable)) %>%
+           dplyr::select(tidyselect::all_of(variable)) %>%
            unlist()) %>%
   overlapping::overlap(., type= "1") %>%
   unlist()

@@ -6,7 +6,7 @@
 #' of all possible matches.
 #'
 #' @param data A matrix containing all possible combinations.
-#' @param means A matrix containg all row means of all possible matches.
+#' @param means A matrix containing all row means of all possible matches.
 #' @param variance A numeric indicating the variance of the propensity scores.
 #' @param cores An integer defining the number of cores used for
 #' parallel computation.
@@ -44,7 +44,7 @@ distance_estimator <- function(data, means, variance, cores) {
 #' three group applications with large sample size, RAM may be not sufficient.
 #' Therefore MAGMA switches to random quasi-systematic matching. If this is the
 #' case MAGMA informs you. Results does not change, but Balance might be
-#' sligtly affected.
+#' slightly affected.
 #'
 #'
 #' @param Data A data frame or tibble containing at least your grouping and
@@ -61,16 +61,16 @@ distance_estimator <- function(data, means, variance, cores) {
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse parallel doParallel foreach
+#' @import tidyverse parallel doParallel foreach dplyr tibble tidyselect purrr stats
 #' @return Your input data frame augmented with matching
 #' relevant variables, namely *weight*, *step*, *distance*, and *ID*. In case
 #' of missing values on the distance or group variable, MAGMA excludes them for
-#' th matching process. The returned data set does not contain those excluded
+#' the matching process. The returned data set does not contain those excluded
 #' cases. For more information, see Details.
 #' @export
 #'
-#' @examples
-#' \dontrun {
+#' @examples{
+#' \dontrun{
 #' #Running this code will take a while
 #' #Computing two-group Matching for giftedness support
 #' MAGMA_sim_data_gifted<- MAGMA(Data = MAGMA_sim_data,
@@ -94,11 +94,12 @@ distance_estimator <- function(data, means, variance, cores) {
 #'                                    cores = 2)
 #' head(MAGMA_sim_data_gift_enrich)
 #' }
+#' }
 #'
 MAGMA <- function(Data, group, dist, cores = 1) {
   
   #Check for regular input
-  if(!is.data.frame(Data) && !is_tibble(Data)) {
+  if(!is.data.frame(Data) && !tibble::is_tibble(Data)) {
     stop("Data needs to be an object of class dataframe or tibble!")
   }
   
@@ -127,7 +128,7 @@ MAGMA <- function(Data, group, dist, cores = 1) {
     data <- Data %>%
       dplyr::filter(as.logical(!is.na(.[group])),
                     as.logical(!is.na(.[dist]))) %>%
-      mutate( ID = c(1:nrow(Data)))
+      dplyr::mutate(ID = c(1:nrow(Data)))
   }  else {
     values_1 <- unlist(unique(Data[group[1]]))
     values_2 <- unlist(unique(Data[group[2]]))
@@ -137,7 +138,7 @@ MAGMA <- function(Data, group, dist, cores = 1) {
                       as.logical(!is.na(.[group[2]])),
                       as.logical(!is.na(.[dist]))) %>%
         dplyr::mutate(ID = c(1:nrow(Data)),
-                      group_long = case_when(
+                      group_long = dplyr::case_when(
                         as.logical(.[[group[1]]] == values_1[1] & .[[group[2]]] == values_2[1]) ~ 1,
                         as.logical(.[[group[1]]] == values_1[1] & .[[group[2]]] == values_2[2]) ~ 2,
                         as.logical(.[[group[1]]] == values_1[2] & .[[group[2]]] == values_2[1]) ~ 3,
@@ -150,7 +151,7 @@ MAGMA <- function(Data, group, dist, cores = 1) {
                       as.logical(!is.na(.[dist[1]])),
                       as.logical(!is.na(.[dist[2]]))) %>%
         dplyr::mutate(ID = c(1:nrow(Data)),
-                      group_long = case_when(
+                      group_long = dplyr::case_when(
                         as.logical(.[[group[1]]] == values_1[1] & .[[group[2]]] == values_2[1]) ~ 1,
                         as.logical(.[[group[1]]] == values_1[1] & .[[group[2]]] == values_2[2]) ~ 2,
                         as.logical(.[[group[1]]] == values_1[2] & .[[group[2]]] == values_2[1]) ~ 3,
@@ -169,10 +170,10 @@ MAGMA <- function(Data, group, dist, cores = 1) {
     input <- data.frame(ID = data["ID"],
                         group = data[group],
                         distance = data[dist]) %>%
-      set_names(c("ID", "group", "distance_ps")) %>%
+      purrr::set_names(c("ID", "group", "distance_ps")) %>%
       tibble::as_tibble(., .name_repair = "minimal") %>%
       dplyr::group_by(group) %>%
-      dplyr::mutate(group_id = row_number()) %>%
+      dplyr::mutate(group_id = dplyr::row_number()) %>%
       dplyr::ungroup() %>%
       dplyr::mutate(weight = NA,
                     step = NA,
@@ -182,10 +183,10 @@ MAGMA <- function(Data, group, dist, cores = 1) {
       input <- data.frame(ID = data["ID"],
                           group = data["group_long"],
                           distance = data[dist]) %>%
-        set_names(c("ID", "group", "distance_ps")) %>%
+        purrr::set_names(c("ID", "group", "distance_ps")) %>%
         tibble::as_tibble(., .name_repair = "minimal") %>%
         dplyr::group_by(group) %>%
-        dplyr::mutate(group_id = row_number()) %>%
+        dplyr::mutate(group_id = dplyr::row_number()) %>%
         dplyr::ungroup() %>%
         dplyr::mutate(weight = NA,
                       step = NA,
@@ -195,10 +196,10 @@ MAGMA <- function(Data, group, dist, cores = 1) {
                           group = data["group_long"],
                           distance_1 = data[dist[1]],
                           distance_2 = data[dist[2]]) %>%
-        set_names(c("ID", "group", "distance_ps_1", "distance_ps_2")) %>%
+        purrr::set_names(c("ID", "group", "distance_ps_1", "distance_ps_2")) %>%
         tibble::as_tibble(., .name_repair = "minimal") %>%
         dplyr::group_by(group) %>%
-        dplyr::mutate(group_id = row_number()) %>%
+        dplyr::mutate(group_id =dplyr::row_number()) %>%
         dplyr::ungroup() %>%
         dplyr::mutate(weight = NA,
                       step = NA,
@@ -213,7 +214,7 @@ MAGMA <- function(Data, group, dist, cores = 1) {
   #distance estimation##
   ######################
   if(length(dist) == 1) {  
-    var_ma <- as.numeric(var(input$distance_ps))
+    var_ma <- as.numeric(stats::var(input$distance_ps))
     
     
     group_list <- split.data.frame(input, input$group)
@@ -225,7 +226,7 @@ MAGMA <- function(Data, group, dist, cores = 1) {
       unlist()
     
     if(length(elements) == 2) {
-      value_matrix <-build_value_matrix(group_list, elements)
+      value_matrix <- build_value_matrix(group_list, elements)
       
       means <- rowMeans(value_matrix)
       
@@ -248,8 +249,8 @@ MAGMA <- function(Data, group, dist, cores = 1) {
       
       group_list <- match_iterative(distance_array, group_list, elements)
       
-      output_temp <- do.call(rbind.data.frame, group_list)%>%
-        select(ID, step, weight, distance)
+      output_temp <- do.call(rbind.data.frame, group_list) %>%
+        dplyr::select(ID, step, weight, distance)
       
       data <- merge(data,
                     output_temp,
@@ -282,7 +283,7 @@ MAGMA <- function(Data, group, dist, cores = 1) {
         group_list <- match_iterative(distance_array, group_list, elements)
         
         output_temp <- do.call(rbind.data.frame, group_list)%>%
-          select(ID, step, weight, distance)
+          dplyr::select(ID, step, weight, distance)
         
         data <- merge(data,
                       output_temp,
@@ -299,7 +300,7 @@ MAGMA <- function(Data, group, dist, cores = 1) {
         set.seed(28062022)
         
         input <- input %>%
-          dplyr::mutate(random_group = floor(runif(nrow(input),
+          dplyr::mutate(random_group = floor(stats::runif(nrow(input),
                                                    1, number_split_groups)))
         random_list <- split.data.frame(input, input$random_group)
         
@@ -400,7 +401,7 @@ MAGMA <- function(Data, group, dist, cores = 1) {
         set.seed(28062022)
         
         input <- input %>%
-          dplyr::mutate(random_group = floor(runif(nrow(input),
+          dplyr::mutate(random_group = floor(stats::runif(nrow(input),
                                                    1, number_split_groups)))
         random_list <- split.data.frame(input, input$random_group)
         
@@ -460,9 +461,9 @@ MAGMA <- function(Data, group, dist, cores = 1) {
   } else {
     var_ma <- input %>%
       dplyr::select(
-        dplyr::starts_with("distance_")
+        tidyselect::starts_with("distance_")
       ) %>%
-      sapply(., var)
+      sapply(., stats::var)
     
     
     group_list <- split.data.frame(input, input$group)
@@ -531,7 +532,7 @@ MAGMA <- function(Data, group, dist, cores = 1) {
       set.seed(28062022)
       
       input <- input %>%
-        dplyr::mutate(random_group = floor(runif(nrow(input),
+        dplyr::mutate(random_group = floor(stats::runif(nrow(input),
                                                  1, number_split_groups)))
       random_list <- split.data.frame(input, input$random_group)
       

@@ -6,7 +6,7 @@
 #' @format A data frame with 14 variables of 800 cases.
 #' \describe{
 #' \item{ID}{Individual ID for each case}
-#' \item{sex}{Binary variable ndicating gender of a participant}
+#' \item{sex}{Binary variable indicating gender of a participant}
 #' \item{gifted_support}{Binary variable that specifies whether a case received
 #' giftedness support (1) or nor (0)}
 #' \item{teacher_ability_rating}{Three-step ordinal variable ranging from 1 to
@@ -19,9 +19,9 @@
 #' school GPA. Lower values indicate a higher achievement}
 #' \item{IQ_score}{Variable indicating the normed IQ score of a case}
 #' \item{Motivation}{The scale score of a case of a motivational questionnaire}
-#' \item{college_GPA}{ariable ranging from 1 to 6 that indicates a case college
+#' \item{college_GPA}{variable ranging from 1 to 6 that indicates a case college
 #'  GPA. Lower values indicate a higher achievement}
-#' \item{support_enrichment}{Multinomial variable representing the comination
+#' \item{support_enrichment}{Multinomial variable representing the combination
 #' of gifted support and enrichment}
 #' \item{ps_tar}{Propensity score of twangs mnps function for
 #' teacher_ability_rating}

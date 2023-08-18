@@ -7,10 +7,11 @@
 Table_MAGMA(Balance, filename = NULL)
 }
 \arguments{
-\item{Balance}{A Balance MAGMA object. Compare the function Balance_MAGMA.}
+\item{Balance}{A result of Balance_MAGMA. Compare the function
+\code{\link{Balance_MAGMA}}.}
 
 \item{filename}{Optional argument.  A character specifying the filename that
-the resulting Word document with the Table should have..}
+the resulting Word document with the Table should have.}
 }
 \value{
 A 4x5 APA Table showing the four balance
@@ -32,7 +33,8 @@ as the sample size itself. With an optional argument you can save a the APA
 table in Word.
 }
 \examples{
-\dontrun {
+{
+\dontrun{
 #This function bases on a MAGMA function as well as Balance_MAGMA.
 #To run examples, copy them into your console or script.
 #Defining the names of the metric and binary covariates
@@ -69,6 +71,7 @@ Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_gift_enrich,
                              step = "step") #step created during matching
 
 Table_MAGMA(Balance_2x2, "Balance_2x2.docx")
+}
 }
 
 }

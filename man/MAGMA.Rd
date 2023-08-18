@@ -26,7 +26,7 @@ parallel computation.}
 Your input data frame augmented with matching
 relevant variables, namely \emph{weight}, \emph{step}, \emph{distance}, and \emph{ID}. In case
 of missing values on the distance or group variable, MAGMA excludes them for
-th matching process. The returned data set does not contain those excluded
+the matching process. The returned data set does not contain those excluded
 cases. For more information, see Details.
 }
 \description{
@@ -46,10 +46,11 @@ This function has some CPU and RAM load. In most four group applications and
 three group applications with large sample size, RAM may be not sufficient.
 Therefore MAGMA switches to random quasi-systematic matching. If this is the
 case MAGMA informs you. Results does not change, but Balance might be
-sligtly affected.
+slightly affected.
 }
 \examples{
-\dontrun {
+{
+\dontrun{
 #Running this code will take a while
 #Computing two-group Matching for giftedness support
 MAGMA_sim_data_gifted<- MAGMA(Data = MAGMA_sim_data,
@@ -72,6 +73,7 @@ MAGMA_sim_data_gift_enrich <- MAGMA(Data = MAGMA_sim_data,
                                    dist = "ps_2x2",
                                    cores = 2)
 head(MAGMA_sim_data_gift_enrich)
+}
 }
 
 }

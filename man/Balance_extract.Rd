@@ -33,7 +33,8 @@ desired sample size. Thus, checking the balance for each possible sample size
 independently is possible.
 }
 \examples{
-\dontrun {
+{
+\dontrun{
 #Defining the names of the metric and binary covariates
 covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 
@@ -92,6 +93,7 @@ Balance_125_2x2_effects <- Balance_extract(Balance = Balance_2x2,
                                               samplesize = 125,
                                               effects = TRUE)
 Balance_125_2x2_effects
+}
 }
 
 }

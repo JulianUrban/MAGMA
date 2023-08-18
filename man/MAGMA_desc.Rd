@@ -18,24 +18,27 @@ MAGMA_desc(
 plotting as well as the specified grouping variable.}
 
 \item{covariates}{A character vector naming the variable names of the
-continuous varibales for that the descriptive statistics should be computed.}
+continuous variables for that the descriptive statistics should be computed.}
 
 \item{group}{A character (vector) specifying the groups for which
 differentiated statistics should be computed.}
 
 \item{step_num}{Optional argument. If no value is specified, pre matching
 statistics are computed. For post matching statistics the exact needs to be
-defined via the stp arguments. step_num is andinteger specifying the number
+defined via the step arguments. step_num is an integer specifying the number
 of cases that should be included per group in this post matching comparison.
 Is based on the step variable of MAGMA.}
 
 \item{step_var}{Optional argument. If no value is specified, pre matching
 statistics are computed. For post matching statistics the exact needs to be
-defined via the stp arguments.A Character specifying the name of the step
+defined via the step arguments. A Character specifying the name of the step
 variable in the data set.}
+
+\item{filename}{Optional argument.  A character specifying the filename that
+the resulting Word document with the Table should have.}
 }
 \value{
-A table of descriptvive statistics and pairwise effects for pre- or
+A table of descriptive statistics and pairwise effects for pre- or
 postmatching samples.
 }
 \description{
@@ -43,12 +46,13 @@ This function provides pre- and post matching descriptive statistics and
 effects.
 }
 \details{
-This function enables the compuatation of descriptive statistics of
-continuous variables for the overall sample and specifed groups. Additional,
+This function enables the computation of descriptive statistics of
+continuous variables for the overall sample and specified groups. Additional,
 pairwise effects (Cohen's d) is computed.
 }
 \examples{
-\dontrun {
+{
+\dontrun{
 #Defining covariates
 covariates_gifted <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 
@@ -70,6 +74,7 @@ MAGMA_desc(Data = MAGMA_sim_data_gifted,
            step_num = 100,
            step_var = "step")
 
+}
 }
 
 }

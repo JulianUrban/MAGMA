@@ -8,7 +8,7 @@ Balance_MAGMA(Data, group, covariates, step = "step")
 }
 \arguments{
 \item{Data}{A data frame containing at least the \emph{grouping} variable, the
-\emph{step} variable from the main MAGMA-function (or other mathcing algorithms),
+\emph{step} variable from the main MAGMA-function (or other matching algorithms),
 and all \emph{covariates} of interest.}
 
 \item{group}{A character specifying the name of
@@ -45,11 +45,12 @@ specifies a n >= 20 per group. This does not imply, that balance criteria
 with such a small sample size can be estimated consistently. For Pillai's
 Trace a higher minimum sample size can be possible. It depends on the number
 of covariates to ensure a positive model identification.
-Missing data for Pillai's Trace are excluded listwise, whiel for the other
+Missing data for Pillai's Trace are excluded listwise, while for the other
 balance criteria pairwise exclusion is applied.
 }
 \examples{
-\dontrun {
+{
+\dontrun{
 #Defining the names of the metric and binary covariates
 covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 
@@ -84,7 +85,18 @@ Balance_2x2 <- Balance_MAGMA(Dta = MAGMA_sim_data_gift_enrich,
 str(Balance_2x2)
 
 }
+}
 
+}
+\references{
+{Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). \emph{overlapping: Estimation of Overlapping in Empirical Distributions}. R package version
+2.1, \url{https://CRAN.R-project.org/package=overlapping}.
+William Revelle (2023). \emph{psych: Procedures for Psychological, Psychometric, and Personality Research}. Northwestern University, Evanston,
+Illinois. R package version 2.3.6, \url{https://CRAN.R-project.org/package=psych}.
+Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. Journal of Statistical Software, 36(3), 1-48.
+\doi{10.18637/jss.v036.i03}
+Fisher Z, Tipton E, Zhipeng H (2023). \emph{robumeta: Robust Variance Meta-Regression}. R package version 2.1,
+\url{https://CRAN.R-project.org/package=robumeta}.}
 }
 \author{
 Julian Urban
