@@ -40,7 +40,7 @@
 #' 
 #' #Estimating pre matching descriptive statistics and pairwise effects
 #' MAGMA_desc(Data = MAGMA_sim_data,
-#'            covariates = covariates_gifted)
+#'            covariates = covariates_gifted,
 #'            group =  "gifted_support")
 #'            
 #' #Matching the data for gifted support
@@ -51,7 +51,7 @@
 #'                                
 #' #Estimating post matching descriptive statistics and pairwise effects
 #' MAGMA_desc(Data = MAGMA_sim_data_gifted,
-#'            covariates = covariates_gifted)
+#'            covariates = covariates_gifted,
 #'            group =  "gifted_support"
 #'            step_num = 100,
 #'            step_var = "step")
@@ -150,7 +150,7 @@ MAGMA_desc <- function(Data,
   effects_groups <- purrr::map2_dfc(index_matrix[, 1],
                                     index_matrix[, 2],
                                     cohen_d,
-                                    data = descs_group) %>%
+                                    Data = descs_group) %>%
     round(., 2)
   
   stats_overall <- cbind(descs_overall,
@@ -195,7 +195,7 @@ MAGMA_desc <- function(Data,
 #'
 #'
 cohen_d <- function(Data, index_1, index_2) {
-  data %>%
+  Data %>%
     dplyr::select(tidyselect::starts_with(index_1),
                   tidyselect::starts_with(index_2)) %>%
     dplyr::mutate(mean_diff = .[, 2] - .[, 5],
