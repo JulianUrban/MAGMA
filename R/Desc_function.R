@@ -142,7 +142,7 @@ MAGMA_desc <- function(Data,
   } else if(ncol(descs_group) == 9) {
     index_matrix <- matrix(data = c("1", "1", "2", "2", "3", "3"),
                            ncol = 2)
-  } else if(ncol(descs_group == 12) {
+  } else if(ncol(descs_group == 12)) {
     index_matrix <- matrix(data = c("1", "1", "1", "2", "2", "3",
                                     "2", "3", "4", "3", "4", "4"),
                            ncol = 2)}
