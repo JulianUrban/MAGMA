@@ -1,12 +1,10 @@
 ---
 title: "Turn up the Heat! A Tutorial for the MAGMA R-package."
 author: "Julian Urban, Markus Feuchter, Vsevolod Scherrer, Moritz Breit, Franzis Preckel"
-date: "2023-08-17"
-output:
-  html_document:
-    df_print: paged
-    toc: yes
-    number_section: yes
+vignette: >
+  %\VignetteIndexEntry{MAGMA - MAny Group MAtching}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}
