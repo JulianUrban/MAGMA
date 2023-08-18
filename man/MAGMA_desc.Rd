@@ -58,7 +58,7 @@ covariates_gifted <- c("GPA_school", "IQ_score", "Motivation", "parents_academic
 
 #Estimating pre matching descriptive statistics and pairwise effects
 MAGMA_desc(Data = MAGMA_sim_data,
-           covariates = covariates_gifted)
+           covariates = covariates_gifted,
            group =  "gifted_support")
            
 #Matching the data for gifted support
@@ -69,7 +69,7 @@ MAGMA_sim_data_gifted <- MAGMA(Data = MAGMA_sim_data,
                                
 #Estimating post matching descriptive statistics and pairwise effects
 MAGMA_desc(Data = MAGMA_sim_data_gifted,
-           covariates = covariates_gifted)
+           covariates = covariates_gifted,
            group =  "gifted_support"
            step_num = 100,
            step_var = "step")
