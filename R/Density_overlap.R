@@ -29,8 +29,7 @@
 #'
 #' @import tidyverse ggplot2 overlapping
 #' 
-#' #' @references
-#' \insertRef{Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
+#' @references \insertRef{Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
 #' 2.1, <https://CRAN.R-project.org/package=overlapping>.}
 #'
 #' @return A Plot showing the kernel density for a specified variable separated
@@ -48,8 +47,7 @@
 #' group_labels = c("No Support", "Support"),
 #' group_name = "Gifted Support")
 #' 
-#'  #Density overlap in Propensity scores for gifted after matching with 250
-#'  cases per group.
+#'  #Density overlap in Propensity scores for gifted after matching with 250 cases per group.
 #' Density_overlap(Data = MAGMA_sim_data_gifted,
 #' variable = "ps_gifted", 
 #' group = "gifted_support",
