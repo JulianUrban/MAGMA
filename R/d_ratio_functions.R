@@ -41,8 +41,8 @@ inner_d <- function(da, gr, co, st) {
   #1/2*( (x-1)^2+(x-1)) with x being number of groups
 
   if(length(gr) == 2) {
-    values_1 <- unique(da[gr[1]])
-    values_2 <- unique(da[gr[2]])
+    values_1 <- unlist(unique(da[gr[1]]))
+    values_2 <- unlist(unique(da[gr[2]]))
 
     da <- da %>%
       dplyr::mutate(group_d = dplyr::case_when(

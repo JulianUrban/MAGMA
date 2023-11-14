@@ -293,8 +293,8 @@ group_test <- group
   ########d ratio#########
   ########################
 if(length(group) == 2) {
-  values_1 <- unique(Data[group[1]])
-  values_2 <- unique(Data[group[2]])
+  values_1 <- unlist(unique(Data[group[1]]))
+  values_2 <- unlist(unique(Data[group[2]]))
 
   Data <- Data %>%
     dplyr::mutate(group_d = dplyr::case_when(
