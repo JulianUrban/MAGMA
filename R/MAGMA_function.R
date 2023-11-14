@@ -20,8 +20,8 @@
 distance_estimator <- function(data, means, variance, cores) {
   cl <- parallel::makeCluster(cores)
   doParallel::registerDoParallel(cl, cores = cores)
-  distance_matrix <- foreach(data, .combine = cbind) %dopar%
-    stats::mahalanobis(center = means, cov = variance)
+  distance_matrix <- foreach(inp = data, .combine = cbind) %dopar%
+    stats::mahalanobis(inp, center = means, cov = variance)
   parallel::stopCluster(cl)
   return(distance_matrix)
 }

@@ -155,7 +155,7 @@ if(length(group) == 2) {
   ########################
 cat("\n", "d-ratio finsihed. Starting to compute mean-g.", "\n")
   group_number <- Data %>%
-    dplyr::select(group) %>%
+    dplyr::select(tidyselect::all_of(group)) %>%
     table() %>%
     length()
 

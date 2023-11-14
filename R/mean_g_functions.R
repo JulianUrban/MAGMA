@@ -16,8 +16,8 @@
 J_group_size <- function(group_size) {
   J <- tibble::tibble(c(1:group_size),
             NA) %>%
-    purrr::set_names(c("N", "J"))
-    dplyr::transmute(J = 1 - (3/(4 * (2 * N - 2) - 1)))
+    purrr::set_names(c("N", "J")) %>%
+    dplyr::mutate(J = 1 - (3/(4 * (2 * N - 2) - 1)))
   J <- as.numeric(J$J)
   return(J)
 }
