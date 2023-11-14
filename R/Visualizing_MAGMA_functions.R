@@ -318,7 +318,7 @@ if(length(group) == 2) {
     dplyr::summarise_at(.vars = covariates,
                         .funs = psych::describe) %>%
     as.list() %>%
-    `[[`(-1)
+    `[`(-1)
 
   group_factor <- length(table(Data[group]))
   if (group_factor == 2) {
