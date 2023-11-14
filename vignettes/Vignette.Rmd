@@ -2,9 +2,10 @@
 title: "Turn up the Heat! A Tutorial for the MAGMA R-package."
 author: "Julian Urban, Markus Feuchter, Vsevolod Scherrer, Moritz Breit, Franzis Preckel"
 output:  rmarkdown::html_vignette
-vignette: "%\\VignetteIndexEntry{MAGMA - MAny Group MAtching}
-          %\\VignetteEngine{knitr::rmarkdown}
-          %\\VignetteEncoding{UTF-8}"
+vignette: >
+  %\VignetteIndexEntry{Turn up the Heat! A Tutorial for the MAGMA R-package.}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}

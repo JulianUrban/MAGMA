@@ -274,13 +274,15 @@ initial_unbalance <- function(Data, group, covariates) {
   } else {
     Pillai_input <- Data %>%
       dplyr::select(tidyselect::all_of(covariates),
-             IV_1 = tidyselect::all_of(group[1]),
-             IV_2 = tidyselect::all_of(group[2]))
+                    tidyselect::all_of(group[1]),
+                    tidyselect::all_of(group[2])) %>%
+      purrr::set_names(c(covariates, "IV_1", "IV_2"))
+
     Pillai <- stats::manova(Pillai_DV(Pillai_input, covariates) ~ IV_1 + IV_2 + IV_1 * IV_2,
                      data = Pillai_input) %>%
       summary() %>%
       `[[`("stats") %>%
-      `[[`(c(1:3), 2) %>%
+      `[`(c(1:3), 2) %>%
       unlist()
 
   }
