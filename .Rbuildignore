@@ -1,2 +1,4 @@
 MAGMA\.Rproj$
 \.Rproj\.user$
+^\.Rproj\.user$
+

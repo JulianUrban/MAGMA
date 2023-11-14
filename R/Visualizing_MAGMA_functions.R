@@ -40,7 +40,7 @@
 #' @return A list of length four containing all balance criteria and all
 #' pairwise effects with respect to group sample size.
 #' @export
-#' 
+#'
 #' @references {Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
 #' 2.1, <https://CRAN.R-project.org/package=overlapping>.
 #' William Revelle (2023). _psych: Procedures for Psychological, Psychometric, and Personality Research_. Northwestern University, Evanston,
@@ -123,22 +123,21 @@ Pillai <- Pillai_iterativ(da = Data,
 cat("\n", "Pillai's Trace finsihed. Starting to compute d-ratio.")
 
 if(length(group) == 2) {
-  values_1 <- unique(Data[group[1]])
-  values_2 <- unique(Data[group[2]])
-  group_value <- 1
-  Data$group_d <- 99
-  for(i in 1:nrow(values_1)) {
-    for(j in 1:nrow(values_2)) {
-      Data <- Data %>%
-        dplyr::mutate(group_d = dplyr::case_when(
-          as.logical(.[group[1]] == as.numeric(values_1[i, ]) &
-            .[group[2]] == as.numeric(values_2[j, ])) ~ group_value,
-          TRUE ~ group_d
-        ))
-      group_value <- group_value + 1
+  values_1 <- unique(da[group[1]])
+  values_2 <- unique(da[group[2]])
 
-    }
-  }
+  da <- da %>%
+    dplyr::mutate(group_d = dplyr::case_when(
+      !!sym(group[1]) == values_1[1] &
+        !!sym(group[2]) == values_2[1] ~ 1,
+      !!sym(group[1]) == values_1[1] &
+        !!sym(group[2]) == values_2[2] ~ 2,
+      !!sym(group[1]) == values_1[2] &
+        !!sym(group[2]) == values_2[1] ~ 3,
+      !!sym(group[1]) == values_1[2] &
+        !!sym(group[2]) == values_2[2] ~ 4
+    ))
+
   group <- "group_d"
 }
 
@@ -262,14 +261,16 @@ initial_unbalance <- function(Data, group, covariates) {
   if(length(group) == 1) {
     Pillai_input <- Data %>%
       dplyr::select(tidyselect::all_of(covariates),
-           IV = tidyselect::all_of(group))
+                    tidyselect::all_of(group)) %>%
+      purrr::set_names(c(covariates, "IV"))
 
       Pillai <- stats::manova(Pillai_DV(Pillai_input, covariates) ~ IV,
                               data = Pillai_input) %>%
-        summary(.) %>%
-        .[["stats"]] %>%
-        .[1, 2] %>%
+        summary() %>%
+        `[[`("stats") %>%
+        `[[`(1, 2) %>%
         unlist()
+
   } else {
     Pillai_input <- Data %>%
       dplyr::select(tidyselect::all_of(covariates),
@@ -277,9 +278,9 @@ initial_unbalance <- function(Data, group, covariates) {
              IV_2 = tidyselect::all_of(group[2]))
     Pillai <- stats::manova(Pillai_DV(Pillai_input, covariates) ~ IV_1 + IV_2 + IV_1 * IV_2,
                      data = Pillai_input) %>%
-      summary(.) %>%
-      .[["stats"]] %>%
-      .[c(1:3), 2] %>%
+      summary() %>%
+      `[[`("stats") %>%
+      `[[`(c(1:3), 2) %>%
       unlist()
 
   }
@@ -289,25 +290,24 @@ group_test <- group
   ########################
   ########d ratio#########
   ########################
-  if(length(group) == 2) {
-    values_1 <- unique(Data[group[1]])
-    values_2 <- unique(Data[group[2]])
-    group_value <- 1
-    Data$group_d <- 99
-    for(i in 1:nrow(values_1)) {
-      for(j in 1:nrow(values_2)) {
-        Data <- Data %>%
-          dplyr::mutate(group_d = dplyr::case_when(
-            as.logical(.[group[1]] == as.numeric(values_1[i, ]) &
-              .[group[2]] == as.numeric(values_2[j, ])) ~ group_value,
-            TRUE ~ group_d
-          ))
-        group_value <- group_value + 1
+if(length(group) == 2) {
+  values_1 <- unique(da[group[1]])
+  values_2 <- unique(da[group[2]])
 
-      }
-    }
-    group <- "group_d"
-  }
+  da <- da %>%
+    dplyr::mutate(group_d = dplyr::case_when(
+      !!sym(group[1]) == values_1[1] &
+        !!sym(group[2]) == values_2[1] ~ 1,
+      !!sym(group[1]) == values_1[1] &
+        !!sym(group[2]) == values_2[2] ~ 2,
+      !!sym(group[1]) == values_1[2] &
+        !!sym(group[2]) == values_2[1] ~ 3,
+      !!sym(group[1]) == values_1[2] &
+        !!sym(group[2]) == values_2[2] ~ 4
+    ))
+
+  group <- "group_d"
+}
 
 
 
@@ -315,9 +315,10 @@ group_test <- group
     dplyr::select(IV = tidyselect::all_of(group),
                   tidyselect::all_of(covariates)) %>%
     dplyr::group_by(IV) %>%
-    dplyr::summarise_at(., covariates, psych::describe) %>%
+    dplyr::summarise_at(.vars = covariates,
+                        .funs = psych::describe) %>%
     as.list() %>%
-    .[-1]
+    `[[`(-1)
 
   group_factor <- length(table(Data[group]))
   if (group_factor == 2) {
@@ -386,8 +387,7 @@ group_test <- group
   var_g <- J_matrix^2 * var_matrix #matrix multiplication?
 
   if(nrow(effect_g) == 1) {
-    mean_g <- metafor::rma(effect_g, var_g) %>%
-      .[["b"]]
+    mean_g <- metafor::rma(effect_g, var_g)[["b"]]
     print("mean g was computed using random effects meta-analysis with metafor.")
   } else {
     effect <- as.numeric(effect_g)
@@ -398,8 +398,7 @@ group_test <- group
                                        length(effect)/length(covariates)))
 
     mean_g <- robumeta::robu(ma_input[, 1] ~ 1, var.eff.size = ma_input[, 2],
-                                studynum = ma_input[, 3], data = ma_input) %>%
-      .[["b.r"]]
+                                studynum = ma_input[, 3], data = ma_input)[["b.r"]]
     print("mean g was computed using robust variance meta-analysis with robumeta.")
   }
 
@@ -408,8 +407,8 @@ group_test <- group
   ########################
 
   adj_d_ratio <- purrr::map2_dbl(effect_g, var_g, pnorm, q = .20) %>%
-    matrix(., ncol = ncol(effect_g), nrow = nrow(effect_g)) %>%
-    sum(.)/(ncol(effect_g) * nrow(effect_g))
+    matrix(ncol = ncol(effect_g), nrow = nrow(effect_g)) %>%
+    sum() / (ncol(effect_g) * nrow(effect_g))
 
   #####################
   ###Output creation###
@@ -457,7 +456,7 @@ group_test <- group
 #'
 #' @param Balance A result of Balance_MAGMA. Compare the function
 #' \code{\link{Balance_MAGMA}}.
-#' @param filename Optional argument.  A character specifying the filename that 
+#' @param filename Optional argument.  A character specifying the filename that
 #' the resulting Word document with the Table should have.
 #'
 #'
@@ -550,7 +549,7 @@ Table_MAGMA <- function(Balance, filename = NULL) {
                        max(which(Balance$d_ratio$d_rate == max(Balance$d_ratio$d_rate, na.rm = T), arr.ind = T)),
                        max(which(Balance$mean_effect == min(Balance$mean_effect, na.rm = T), arr.ind = T)),
                        max(which(Balance$adjusted_d_ratio == max(Balance$adjusted_d_ratio, na.rm = T), arr.ind = T)))
-    
+
     suppressMessages({
     balance_matrix <- tibble::as_tibble(matrix(NA, ncol = length(index_optimal),
                                        nrow = length(index_optimal)),
@@ -573,7 +572,7 @@ Table_MAGMA <- function(Balance, filename = NULL) {
       dplyr::arrange(., n_per_group)
     })
   }
-  
+
 if(!is.null(filename)) {
   balance_matrix %>%
     #convert matrix into rough APA Table
@@ -583,7 +582,7 @@ if(!is.null(filename)) {
       placement = "combined") %>%
     flextable::flextable() %>%
     flextable::autofit() %>%
-    flextable::save_as_docx(., path = paste("./",filename,sep=""))
+    flextable::save_as_docx(path = paste("./",filename,sep=""))
 }
 
 cat("Balance Table successfully created!")
@@ -652,7 +651,7 @@ return(balance_matrix)
 #' Plot_MAGMA(Balance = Balance_2x2,
 #'            criterion = c("d_ration", "Adj_d_ratio"))
 #' }
-#' }          
+#' }
 #'
 Plot_MAGMA <- function(Balance,
                        criterion = c("Pillai",
@@ -670,7 +669,7 @@ Plot_MAGMA <- function(Balance,
     if(!is.matrix(Balance$Pillai)) {
     print(Balance$Pillai %>%
             unlist() %>%
-            tibble::as_tibble(., .name_repair = "minimal") %>%
+            tibble::as_tibble(.name_repair = "minimal") %>%
             dplyr::mutate(N = dplyr::row_number()) %>%
             ggplot2::ggplot() +
             ggplot2::geom_point(aes(x = N, y = value)) +
@@ -678,60 +677,60 @@ Plot_MAGMA <- function(Balance,
             ggplot2::scale_y_continuous(limits = c(0, .5),
                                breaks = seq(0, .5, .05)) +
             ggplot2::labs(y = "Pillai`s Trace", x ="\nN per group",
-                 title = "Pillai`s Trace values for different sample sizes",))
+                 title = "Pillai`s Trace values for different sample sizes"))
     }
 
     if(is.matrix(Balance$Pillai)) {
       for(i in 1:nrow(Balance$Pillai))
       print(Balance$Pillai[i, ] %>%
               unlist() %>%
-              tibble::as_tibble(., .name_repair = "minimal") %>%
-              dplyr::mutate(N = c(1:nrow(.))) %>%
+              tibble::as_tibble(.name_repair = "minimal") %>%
+              dplyr::mutate(N = dplyr::row_number()) %>%
               ggplot2::ggplot() +
               ggplot2::geom_point(aes(x = N, y = value))+
               ggplot2::theme(panel.background = element_blank()) +
               ggplot2::scale_y_continuous(limits = c(0, .5),
                                  breaks = seq(0, .5, .05)) +
               ggplot2::labs(y = "Pillai`s Trace", x ="\nN per group",
-                   title = "Pillai`s Trace values for different sample sizes",))
+                   title = "Pillai`s Trace values for different sample sizes"))
     }
 
   }
   if (any(criterion == "d_ratio")) {
     print(Balance$d_ratio$d_rate %>%
-            tibble::as_tibble(., .name_repair = "minimal") %>%
-            dplyr::mutate(N = c(1:nrow(.))) %>%
+            tibble::as_tibble(.name_repair = "minimal") %>%
+            dplyr::mutate(N = dplyr::row_number()) %>%
             ggplot2::ggplot() +
             ggplot2::geom_point(aes(x = N, y = value)) +
             ggplot2::theme(panel.background = element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +
             ggplot2::labs(y = "d`s < 0.20", x ="\nN per group",
-                 title = "Cohen`s d < .20` for different sample sizes",))
+                 title = "Cohen`s d < .20` for different sample sizes"))
   }
   if (any(criterion == "mean_g")) {
     print(Balance$mean_effect %>%
-            tibble::as_tibble(., .name_repair = "minimal") %>%
-            dplyr::mutate(N = c(1:nrow(.))) %>%
+            tibble::as_tibble(.name_repair = "minimal") %>%
+            dplyr::mutate(N = dplyr::row_number()) %>%
             ggplot2::ggplot() +
             ggplot2::geom_point(aes(x = N, y = value))+
             ggplot2::theme(panel.background = element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +
             ggplot2::labs(y ="mean g", x ="\nN per group",
-                 title = "Mean effect for different sample sizes",))
+                 title = "Mean effect for different sample sizes"))
   }
   if (any(criterion == "Adj_d_ratio")) {
     print(Balance$adjusted_d_ratio %>%
-            tibble::as_tibble(., .name_repair = "minimal") %>%
-            dplyr::mutate(N = c(1:nrow(.))) %>%
+            tibble::as_tibble(.name_repair = "minimal") %>%
+            dplyr::mutate(N = dplyr::row_number()) %>%
             ggplot2::ggplot() +
             ggplot2::geom_point(aes(x = N, y = value)) +
             ggplot2::theme(panel.background = element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +
             ggplot2::labs(y = "Adjusted d-ratio", x = "\nN per group",
-                 title = "Adjusted d-ratio for different sample sizes",))
+                 title = "Adjusted d-ratio for different sample sizes"))
   }
 }
 

@@ -59,7 +59,7 @@ quantifies the amount of overlap.
 \dontrun{
 #Density overlap in Propensity scores for gifted before matching
 Density_overlap(Data = MAGMA_sim_data,
-variable = "ps_gifted", 
+variable = "ps_gifted",
 group = "gifted_support",
 step_num = NULL,
 step_var = NULL,
@@ -69,7 +69,7 @@ group_name = "Gifted Support")
 
  #Density overlap in Propensity scores for gifted after matching with 250 cases per group.
 Density_overlap(Data = MAGMA_sim_data_gifted,
-variable = "ps_gifted", 
+variable = "ps_gifted",
 group = "gifted_support",
 step_num = 250,
 step_var = "step",
@@ -79,11 +79,11 @@ group_name = "Gifted Support")
 
 #Density overlap in GPA for teacher ability rating before matching
 Density_overlap(Data = MAGMA_sim_data,
-variable = "GPA_school", 
+variable = "GPA_school",
 group = "teacher_ability_rating",
 variable_name = "School Achievement",
 group_labels = c("Low", "Medium", "High"),
-group_name = "Rating") 
+group_name = "Rating")
 }
 }
 

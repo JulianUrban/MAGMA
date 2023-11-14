@@ -20,8 +20,8 @@
 distance_estimator <- function(data, means, variance, cores) {
   cl <- parallel::makeCluster(cores)
   doParallel::registerDoParallel(cl, cores = cores)
-  distance_matrix <- foreach(inp = data, .combine = cbind) %dopar%
-    stats::mahalanobis(inp, means, variance)
+  distance_matrix <- foreach(data, .combine = cbind) %dopar%
+    stats::mahalanobis(center = means, cov = variance)
   parallel::stopCluster(cl)
   return(distance_matrix)
 }
@@ -97,81 +97,90 @@ distance_estimator <- function(data, means, variance, cores) {
 #' }
 #'
 MAGMA <- function(Data, group, dist, cores = 1) {
-  
+
   #Check for regular input
   if(!is.data.frame(Data) && !tibble::is_tibble(Data)) {
     stop("Data needs to be an object of class dataframe or tibble!")
   }
-  
+
   if(!is.character(group) | length(group) > 2) {
     stop("group needs to be a character of length 1 or a character vector of length 2!")
   }
-  
+
   if(!is.character(dist) | length(dist) > 2) {
     stop("dist needs to be a character of length 1 or 2!")
   }
-  
+
   if(!is.integer(cores) & !is.numeric(cores) | length(cores) > 1) {
     stop("cores needs to be a single integer number")
   }
-  
+
   max_cores <- parallel::detectCores()
-  
+
   if(cores > max_cores) {
     warning("specified cores exceeds available cores. Proceeding with all available cores.")
     cores <- max_cores
   }
-  
-  
+
+
   #Creating data set with relevant variables
   if(length(group) == 1) {
     data <- Data %>%
-      dplyr::filter(as.logical(!is.na(.[group])),
-                    as.logical(!is.na(.[dist]))) %>%
-      dplyr::mutate(ID = c(1:nrow(Data)))
+      dplyr::filter(as.logical(!is.na(!!sym(group))),
+                    as.logical(!is.na(!!sym(dist)))) %>%
+      dplyr::mutate(ID = row_number())
   }  else {
     values_1 <- unlist(unique(Data[group[1]]))
     values_2 <- unlist(unique(Data[group[2]]))
+
     if(length(dist) == 1) {
       data <- Data %>%
-        dplyr::filter(as.logical(!is.na(.[group[1]])),
-                      as.logical(!is.na(.[group[2]])),
-                      as.logical(!is.na(.[dist]))) %>%
-        dplyr::mutate(ID = c(1:nrow(Data)),
+        dplyr::filter(!is.na(!!sym(group[1])),
+                      !is.na(!!sym(group[2])),
+                      !is.na(!!sym(dist))) %>%
+        dplyr::mutate(ID = row_number(),
                       group_long = dplyr::case_when(
-                        as.logical(.[[group[1]]] == values_1[1] & .[[group[2]]] == values_2[1]) ~ 1,
-                        as.logical(.[[group[1]]] == values_1[1] & .[[group[2]]] == values_2[2]) ~ 2,
-                        as.logical(.[[group[1]]] == values_1[2] & .[[group[2]]] == values_2[1]) ~ 3,
-                        as.logical(.[[group[1]]] == values_1[2] & .[[group[2]]] == values_2[2]) ~ 4
+                        !!sym(group[1]) == values_1[1] &
+                          !!sym(group[2]) == values_2[1] ~ 1,
+                        !!sym(group[1]) == values_1[1] &
+                          !!sym(group[2]) == values_2[2] ~ 2,
+                        !!sym(group[1]) == values_1[2] &
+                          !!sym(group[2]) == values_2[1] ~ 3,
+                        !!sym(group[1]) == values_1[2] &
+                          !!sym(group[2]) == values_2[2] ~ 4
                       ))
     } else {
       data <- Data %>%
-        dplyr::filter(as.logical(!is.na(.[group[1]])),
-                      as.logical(!is.na(.[group[2]])),
-                      as.logical(!is.na(.[dist[1]])),
-                      as.logical(!is.na(.[dist[2]]))) %>%
-        dplyr::mutate(ID = c(1:nrow(Data)),
+        dplyr::filter(!is.na(!!sym(group[1])),
+                      !is.na(!!sym(group[2])),
+                      !is.na(!!sym(dist[1])),
+                      !is.na(!!sym(dist[2]))) %>%
+        dplyr::mutate(ID = row_number(),
                       group_long = dplyr::case_when(
-                        as.logical(.[[group[1]]] == values_1[1] & .[[group[2]]] == values_2[1]) ~ 1,
-                        as.logical(.[[group[1]]] == values_1[1] & .[[group[2]]] == values_2[2]) ~ 2,
-                        as.logical(.[[group[1]]] == values_1[2] & .[[group[2]]] == values_2[1]) ~ 3,
-                        as.logical(.[[group[1]]] == values_1[2] & .[[group[2]]] == values_2[2]) ~ 4
+                        !!sym(group[1]) == values_1[1] &
+                          !!sym(group[2]) == values_2[1] ~ 1,
+                        !!sym(group[1]) == values_1[1] &
+                          !!sym(group[2]) == values_2[2] ~ 2,
+                        !!sym(group[1]) == values_1[2] &
+                          !!sym(group[2]) == values_2[1] ~ 3,
+                        !!sym(group[1]) == values_1[2] &
+                          !!sym(group[2]) == values_2[2] ~ 4
                       ))
     }
   }
-  
-  
+
+
   #Checking if cases were excluded for missing data reasons
   if(nrow(data) != nrow(Data)) {
     warning("Some cases were excluded due to missing values for group or distance variable. Matching proceeds with reduced dataset.")
   }
-  
+
   if(length(group) == 1) {
-    input <- data.frame(ID = data["ID"],
-                        group = data[group],
-                        distance = data[dist]) %>%
+    input <- data.frame(data["ID"],
+                        data[group],
+                        data[dist]) %>%
       purrr::set_names(c("ID", "group", "distance_ps")) %>%
-      tibble::as_tibble(., .name_repair = "minimal") %>%
+      tibble::as_tibble(.name_repair = "minimal") %>%
       dplyr::group_by(group) %>%
       dplyr::mutate(group_id = dplyr::row_number()) %>%
       dplyr::ungroup() %>%
@@ -180,11 +189,11 @@ MAGMA <- function(Data, group, dist, cores = 1) {
                     distance = NA)
   } else {
     if(length(dist) == 1) {
-      input <- data.frame(ID = data["ID"],
-                          group = data["group_long"],
-                          distance = data[dist]) %>%
+      input <- data.frame(data["ID"],
+                          data["group_long"],
+                          data[dist]) %>%
         purrr::set_names(c("ID", "group", "distance_ps")) %>%
-        tibble::as_tibble(., .name_repair = "minimal") %>%
+        tibble::as_tibble(.name_repair = "minimal") %>%
         dplyr::group_by(group) %>%
         dplyr::mutate(group_id = dplyr::row_number()) %>%
         dplyr::ungroup() %>%
@@ -192,132 +201,132 @@ MAGMA <- function(Data, group, dist, cores = 1) {
                       step = NA,
                       distance = NA)
     } else {
-      input <- data.frame(ID = data["ID"],
-                          group = data["group_long"],
-                          distance_1 = data[dist[1]],
-                          distance_2 = data[dist[2]]) %>%
+      input <- data.frame(data["ID"],
+                          data["group_long"],
+                          data[dist[1]],
+                          data[dist[2]]) %>%
         purrr::set_names(c("ID", "group", "distance_ps_1", "distance_ps_2")) %>%
-        tibble::as_tibble(., .name_repair = "minimal") %>%
+        tibble::as_tibble(.name_repair = "minimal") %>%
         dplyr::group_by(group) %>%
-        dplyr::mutate(group_id =dplyr::row_number()) %>%
+        dplyr::mutate(group_id = dplyr::row_number()) %>%
         dplyr::ungroup() %>%
         dplyr::mutate(weight = NA,
                       step = NA,
                       distance = NA)
     }
   }
-  
-  
+
+
   cat("input correctly identified")
-  
+
   #######################
   #distance estimation##
   ######################
-  if(length(dist) == 1) {  
+  if(length(dist) == 1) {
     var_ma <- as.numeric(stats::var(input$distance_ps))
-    
-    
+
+
     group_list <- split.data.frame(input, input$group)
-    
+
     elements <- input %>%
       dplyr::group_by(group) %>%
       dplyr::summarise(max(group_id)) %>%
-      .[, 2] %>%
+      `[`(, 2) %>%
       unlist()
-    
+
     if(length(elements) == 2) {
       value_matrix <- build_value_matrix(group_list, elements)
-      
+
       means <- rowMeans(value_matrix)
-      
+
       distance_matrix <- distance_estimator(data = value_matrix,
                                             means = means,
                                             variance = var_ma,
                                             cores = cores)
-      
+
       distance_mean <- rowMeans(distance_matrix)
-      
+
       distance_array <- array(data = distance_mean, dim = elements)
-      
+
       rm(distance_mean)
       rm(distance_matrix)
       rm(value_matrix)
       rm(means)
       gc()
-      
+
       cat("\n", "Distance computation finished. Starting matching.")
-      
+
       group_list <- match_iterative(distance_array, group_list, elements)
-      
+
       output_temp <- do.call(rbind.data.frame, group_list) %>%
         dplyr::select(ID, step, weight, distance)
-      
+
       data <- merge(data,
                     output_temp,
                     by = "ID")
     } else if(length(elements) == 3) {
-      
+
       if (prod(elements) < 1.0e+09) {
         value_matrix <- build_value_matrix(group_list, elements)
-        
+
         means <- rowMeans(value_matrix)
-        
+
         distance_matrix <- distance_estimator(data = value_matrix,
                                               means = means,
                                               variance = var_ma,
                                               cores = cores)
-        
+
         distance_mean <- rowMeans(distance_matrix)
-        
+
         distance_array <- array(data = distance_mean, dim = elements)
-        
+
         rm(distance_mean)
         rm(distance_matrix)
         rm(value_matrix)
         rm(means)
         gc()
-        
-        
+
+
         cat("\n", "Distance computation finished. Starting matching")
-        
+
         group_list <- match_iterative(distance_array, group_list, elements)
-        
+
         output_temp <- do.call(rbind.data.frame, group_list)%>%
           dplyr::select(ID, step, weight, distance)
-        
+
         data <- merge(data,
                       output_temp,
                       by = "ID",
-                      all.x = T)
+                      all.x = TRUE)
       } else {
         cores <- 2
         cat("\n", "Large Number of groups with large group sizes. Computing quasi-systematic matching. Cores were reduced to 2 to simplify node comumunication despite high RAM usage.")
-        
+
         number_split_groups <- ceiling(sqrt(prod(elements) / 1.0e+09)) + 1
-        
+
         initial_seed <- .Random.seed
-        
+
         set.seed(28062022)
-        
+
         input <- input %>%
           dplyr::mutate(random_group = floor(stats::runif(nrow(input),
                                                    1, number_split_groups)))
         random_list <- split.data.frame(input, input$random_group)
-        
+
         .Random.seed <- initial_seed
-        
+
         for(i in 1:length(random_list)) {
-          
+
           group_list_temp <- random_list[[i]] %>%
-            split.data.frame(., .$group)
-          
+            split.data.frame(f = random_list[[i]]$group)
+
           elements_temp <- sapply(group_list_temp, nrow)
-          
+
           value_matrix <- build_value_matrix(group_list_temp, elements_temp)
-          
+
           means <- rowMeans(value_matrix)
-          
-          
+
+
           distance_matrix <- distance_estimator(data = value_matrix,
                                                 means = means,
                                                 variance = var_ma,
@@ -325,100 +334,100 @@ MAGMA <- function(Data, group, dist, cores = 1) {
           rm(value_matrix)
           rm(means)
           gc()
-          
+
           distance_mean <- rowMeans(distance_matrix)
           distance_array <- array(data = distance_mean, dim = elements_temp)
-          
+
           rm(distance_matrix)
           rm(distance_mean)
           gc()
-          
+
           group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
-          
+
           rm(distance_array)
           gc()
-          
+
           random_list[[i]] <- do.call(rbind.data.frame, group_list_temp)
         }
         data_temp <- do.call(rbind.data.frame, random_list) %>%
           dplyr::arrange(distance, step) %>%
-          dplyr::mutate(step = ceiling(c(1:nrow(.))/3)) %>%
+          dplyr::mutate(step = ceiling(c(1:nrow(input)/3))) %>%
           dplyr::select(ID, step, weight, distance) %>%
           dplyr::filter(weight == 1)
-        
+
         data <- merge(data,
                       data_temp,
                       by = "ID",
-                      all.x = T)
-        
+                      all.x = TRUE)
+
       }
     } else if(length(elements) == 4) {
-      
+
       if (prod(elements) < 1.0e+09) {
-        
+
         value_matrix <- build_value_matrix(group_list, elements)
-        
+
         means <- rowMeans(value_matrix)
-        
+
         distance_matrix <- distance_estimator(data = value_matrix,
                                               means = means,
                                               variance = var_ma,
                                               cores = cores)
-        
+
         distance_mean <- rowMeans(distance_matrix)
-        
+
         distance_array <- array(data = distance_mean, dim = elements)
-        
+
         rm(distance_mean)
         rm(distance_matrix)
         rm(value_matrix)
         rm(means)
         gc()
-        
-        
+
+
         cat("\n", "Distance computation finished. Starting matching")
-        
+
         group_list <- match_iterative(distance_array, group_list, elements)
-        
-        output_temp <- do.call(rbind.data.frame, group_list)%>%
+
+        output_temp <- do.call(rbind.data.frame, group_list) %>%
           dplyr::select(ID, step, weight, distance)
-        
+
         data <- merge(data,
                       output_temp,
                       by = "ID",
-                      all.x = T)
+                      all.x = TRUE)
       } else {
         cores <- 2
         cat("\n", "Large Number of groups with large group sizes. Computing quasi-systematic matching. Cores were reduced to 2 to simplify node comumunication despite high RAM usage.")
-        
+
         number_split_groups <- ceiling(sqrt(prod(elements) / 1.0e+09)) + 1
         if(number_split_groups == 1) {
           number_split_groups <- 2
         }
-        
+
         initial_seed <- .Random.seed
-        
+
         set.seed(28062022)
-        
+
         input <- input %>%
           dplyr::mutate(random_group = floor(stats::runif(nrow(input),
                                                    1, number_split_groups)))
         random_list <- split.data.frame(input, input$random_group)
-        
+
         .Random.seed <- initial_seed
-        
+
         for(i in 1:length(random_list)) {
-          
+
           group_list_temp <- random_list[[i]] %>%
-            split.data.frame(., .$group)
-          
+            split.data.frame(f = random_list[[i]]$group)
+
           elements_temp <- sapply(group_list_temp, nrow)
-          
+
           value_matrix <- build_value_matrix(group_list_temp, elements_temp)
-          
+
           means <- rowMeans(value_matrix)
-          
-          
+
+
           distance_matrix <- distance_estimator(data = value_matrix,
                                                 means = means,
                                                 variance = var_ma,
@@ -426,27 +435,27 @@ MAGMA <- function(Data, group, dist, cores = 1) {
           rm(value_matrix)
           rm(means)
           gc()
-          
+
           distance_mean <- rowMeans(distance_matrix)
           distance_array <- array(data = distance_mean, dim = elements_temp)
-          
+
           rm(distance_matrix)
           rm(distance_mean)
           gc()
-          
+
           group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
-          
+
           rm(distance_array)
           gc()
-          
+
           random_list[[i]] <- do.call(rbind.data.frame, group_list_temp)
         }
         data_temp <- do.call(rbind.data.frame, random_list) %>%
           dplyr::arrange(distance, step) %>%
-          dplyr::mutate(step = ceiling(c(1:nrow(.))/4)) %>%
+          dplyr::mutate(step = ceiling(c(1:nrow(input)/4))) %>%
           dplyr::select(ID, step, weight, distance) %>%
           dplyr::filter(weight == 1)
-        
+
         data <- merge(data,
                       data_temp,
                       by = "ID",
@@ -455,7 +464,7 @@ MAGMA <- function(Data, group, dist, cores = 1) {
     } else {
       stop("Specify a grouping variable that distinguishes 2, 3, or 4 groups or represent a 2x2 Design!")
     }
-    
+
     cat("\n", "matching complete!")
     return(data)
   } else {
@@ -463,32 +472,32 @@ MAGMA <- function(Data, group, dist, cores = 1) {
       dplyr::select(
         tidyselect::starts_with("distance_")
       ) %>%
-      sapply(., stats::var)
-    
-    
+      sapply(FUN = stats::var)
+
+
     group_list <- split.data.frame(input, input$group)
-    
+
     elements <- input %>%
       dplyr::group_by(group) %>%
       dplyr::summarise(max(group_id)) %>%
-      .[, 2] %>%
+      `[`(, 2) %>%
       unlist()
-    
+
     if (prod(elements) < 1.0e+09) {
-      
+
       value_matrix <- build_value_matrix(group_list, elements)
-      
+
       means <- rowMeans(value_matrix)
-      
+
       distance_matrix_1 <- distance_estimator(data = value_matrix,
                                               means = means,
                                               variance = var_ma[1],
                                               cores = cores)
-      
+
       value_matrix <- build_value_matrix(group_list, elements)
-      
+
       means <- rowMeans(value_matrix)
-      
+
       distance_matrix_2 <- distance_estimator(data = value_matrix,
                                               means = means,
                                               variance = var_ma[2],
@@ -496,73 +505,73 @@ MAGMA <- function(Data, group, dist, cores = 1) {
       rm(means)
       rm(value_matrix)
       distance_array <- array(data = (distance_matrix_1 +
-                                        distance_matrix_2 + 
+                                        distance_matrix_2 +
                                         distance_matrix_1 * distance_matrix_2),
                               dim = elements)
       rm(distance_matrix)
       rm(distance_matrix_2)
       gc()
-      
+
       group_list <- match_iterative(distance_array, group_list, elements)
-      
+
       rm(distance_array)
       gc()
-      
+
       output_temp <- do.call(rbind.data.frame, group_list)%>%
         dplyr::select(ID, step, weight, distance)
-      
+
       data <- merge(data,
                     output_temp,
                     by = "ID",
-                    all.x = T)
+                    all.x = TRUE)
       cat("\n", "matching complete!")
       return(data)
-      
+
     } else {
       cores <- 2
       cat("\n", "Large Number of groups with large group sizes. Computing quasi-systematic matching. Cores were reduced to 2 to simplify node comumunication despite high RAM usage.")
-      
+
       number_split_groups <- ceiling(sqrt(prod(elements) / 1.0e+09)) + 1
       if(number_split_groups == 1) {
         number_split_groups <- 2
       }
-      
+
       initial_seed <- .Random.seed
-      
+
       set.seed(28062022)
-      
+
       input <- input %>%
         dplyr::mutate(random_group = floor(stats::runif(nrow(input),
                                                  1, number_split_groups)))
       random_list <- split.data.frame(input, input$random_group)
-      
+
       .Random.seed <- initial_seed
-      
+
       for(i in 1:length(random_list)) {
-        
+
         group_list_temp <- random_list[[i]] %>%
-          split.data.frame(., .$group)
-        
+          split.data.frame(f = random_list[[i]]$group)
+
         elements_temp <- sapply(group_list_temp, nrow)
-        
+
         value_matrix <- build_value_matrix(group_list_temp,
                                            elements_temp,
                                            name_ps = "distance_ps_1")
-        
+
         means <- rowMeans(value_matrix)
-        
-        
+
+
         distance_matrix_1 <- distance_estimator(data = value_matrix,
                                                 means = means,
                                                 variance = var_ma[1],
                                                 cores = cores)
-        
+
         value_matrix <- build_value_matrix(group_list_temp,
                                            elements_temp,
                                            name_ps = "distance_ps_2")
-        
+
         means <- rowMeans(value_matrix)
-        
+
         distance_matrix_2 <- distance_estimator(data = value_matrix,
                                                 means = means,
                                                 variance = var_ma[2],
@@ -570,30 +579,30 @@ MAGMA <- function(Data, group, dist, cores = 1) {
         rm(means)
         rm(value_matrix)
         distance_array <- array(data = ((distance_matrix_1 +
-                                           distance_matrix_2 + 
+                                           distance_matrix_2 +
                                            distance_matrix_1 * distance_matrix_2)),
                                 dim = elements_temp)
         rm(distance_matrix_1)
         rm(distance_matrix_2)
         gc()
-        
+
         group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
-        
+
         rm(distance_array)
         gc()
-        
+
         random_list[[i]] <- do.call(rbind.data.frame, group_list_temp)
       }
       data_temp <- do.call(rbind.data.frame, random_list) %>%
         dplyr::arrange(distance, step) %>%
-        dplyr::mutate(step = ceiling(c(1:nrow(.))/4)) %>%
+        dplyr::mutate(step = ceiling(c(1:nrow(input)/4))) %>%
         dplyr::select(ID, step, weight, distance) %>%
         dplyr::filter(weight == 1)
-      
+
       data <- merge(data,
                     data_temp,
                     by = "ID",
-                    all.x = T)
+                    all.x = TRUE)
       cat("\n", "matching complete!")
       return(data)
     }

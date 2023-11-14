@@ -43,32 +43,31 @@ inner_d <- function(da, gr, co, st) {
   if(length(gr) == 2) {
     values_1 <- unique(da[gr[1]])
     values_2 <- unique(da[gr[2]])
-    group_value <- 1
-    da$group_d <- 99
-    for(i in 1:nrow(values_1)) {
-      for(j in 1:nrow(values_2)) {
-        da <- da %>%
-          dplyr::mutate(group_d = dplyr::case_when(
-            .[gr[1]] == as.numeric(values_1[i, ]) &
-               .[gr[2]] == as.numeric(values_2[j, ]) ~ group_value,
-            TRUE ~ group_d
-          ))
-        group_value <- group_value + 1
 
-      }
-    }
+    da <- da %>%
+      dplyr::mutate(group_d = dplyr::case_when(
+        !!sym(gr[1]) == values_1[1] &
+          !!sym(gr[2]) == values_2[1] ~ 1,
+        !!sym(gr[1]) == values_1[1] &
+          !!sym(gr[2]) == values_2[2] ~ 2,
+        !!sym(gr[1]) == values_1[2] &
+          !!sym(gr[2]) == values_2[1] ~ 3,
+        !!sym(gr[1]) == values_1[2] &
+          !!sym(gr[2]) == values_2[2] ~ 4
+      ))
+
     gr <- "group_d"
   }
 
   group_factor <- da %>%
     dplyr::select(tidyselect::all_of(gr)) %>%
-    table(.) %>%
-    length(.)
+    table() %>%
+    length()
 
   #max step calculated equivalent to above
   max_step <- da %>%
     dplyr::select(tidyselect::all_of(st)) %>%
-    max(., na.rm = T)
+    max(na.rm = T)
   #spanning matrix for all pairwise effects
   d_matrix <- matrix(NA,
                      ncol = max_step,
@@ -113,11 +112,13 @@ inner_d <- function(da, gr, co, st) {
     d_iteration <- double(nrow(d_matrix))
     suppressWarnings({
     group_stats <- da %>%
-      dplyr::filter(.[st] <= iteration) %>%
-      dplyr::select(IV = gr,
+      dplyr::filter(!!sym(st) <= iteration) %>%
+      dplyr::select(!!sym(gr),
                     tidyselect::all_of(co)) %>%
-      dplyr::group_by(IV) %>%
-      dplyr::summarise_at(., co, c(mean, var), na.rm = T)
+      dplyr::group_by(!!sym(gr)) %>%
+      dplyr::summarise_at(.vars = co,
+                          .funs = c(mean, var),
+                          na.rm = T)
     })
 
     for(i in 1:nrow(pairwise_matrix)) {
@@ -171,30 +172,33 @@ adj_d_ratio <- function(input) {
 suppressMessages({
   g <- input$effects %>%
     t() %>%
-    tibble::as_tibble(., .name_repair = "minimal") %>%
-    sapply(., multiply, J) %>%
-    tibble::as_tibble(., .name_repair = "minimal") %>%
+    tibble::as_tibble(.name_repair = "minimal") %>%
+    dplyr::mutate(dplyr::across(.cols = everything(),
+                                .fns = ~.x * J,
+                                .names = "{.col}")) %>%
     t() %>%
     abs() %>%
-    matrix(., ncol = 1,
+    matrix(ncol = 1,
            nrow = ncol(input$effects) * nrow(input$effects))
 
   size_per_group <- c(1:ncol(input$effects))
   sd_g <- input$effects^2 %>%
     t() %>%
-    tibble::as_tibble(., .name_repair = "minimal") %>%
-    sapply(., inner_variance, size_per_group) %>%
-    tibble::as_tibble(., .name_repair = "minimal") %>%
-    sapply(., multiply_variance, J) %>%
-    tibble::as_tibble(., .name_repair = "minimal") %>%
-    t(.) %>%
-    sqrt(.) %>%
-    matrix(., ncol = 1,
+    tibble::as_tibble(.name_repair = "minimal") %>%
+    dplyr::mutate(dplyr::across(.cols = everything(),
+                                .fns = ~.x/(4 * size_per_group) + 2 * size_per_group/size_per_group^2,
+                                .names = "{.col}")) %>%
+    dplyr::mutate(dplyr::across(.cols = everything(),
+                                .fns = ~.x * J^2,
+                                .names = "{.col}")) %>%
+    t() %>%
+    sqrt() %>%
+    matrix(ncol = 1,
            nrow = ncol(input$effects) * nrow(input$effects))
     })
 
   likelihood <- purrr::map2_dbl(g, sd_g, stats::pnorm, q = .20) %>%
-    matrix(., ncol = ncol(input$effects), nrow = nrow(input$effects)) %>%
+    matrix(ncol = ncol(input$effects), nrow = nrow(input$effects)) %>%
     colSums()/nrow(input$effects)
   return(likelihood)
 }

@@ -107,23 +107,47 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
   #Creating data set with relevant variables
   if(length(group) == 1) {
     data <- Data %>%
-      dplyr::filter(as.logical(!is.na(.[group])),
-             as.logical(!is.na(.[dist]))) %>%
-      dplyr::mutate( ID = c(1:nrow(Data)))
-  } else {
+      dplyr::filter(as.logical(!is.na(!!sym(group))),
+                    as.logical(!is.na(!!sym(dist)))) %>%
+      dplyr::mutate(ID = row_number())
+  }  else {
     values_1 <- unlist(unique(Data[group[1]]))
     values_2 <- unlist(unique(Data[group[2]]))
-    data <- Data %>%
-      dplyr::filter(as.logical(!is.na(.[group[1]])),
-             as.logical(!is.na(.[group[2]])),
-             as.logical(!is.na(.[dist]))) %>%
-      dplyr::mutate(ID = c(1:nrow(Data)),
-             group_long = dplyr::case_when(
-               as.logical(Data[group[1]] == values_1[1] & Data[group[2]] == values_2[1]) ~ 1,
-               as.logical(Data[group[1]] == values_1[1] & Data[group[2]] == values_2[2]) ~ 2,
-               as.logical(Data[group[2]] == values_1[2] & Data[group[2]] == values_2[1]) ~ 3,
-               as.logical(Data[group[1]] == values_1[2] & Data[group[2]] == values_2[2]) ~ 4
-             ))
+
+    if(length(dist) == 1) {
+      data <- Data %>%
+        dplyr::filter(!is.na(!!sym(group[1])),
+                      !is.na(!!sym(group[2])),
+                      !is.na(!!sym(dist))) %>%
+        dplyr::mutate(ID = row_number(),
+                      group_long = dplyr::case_when(
+                        !!sym(group[1]) == values_1[1] &
+                          !!sym(group[2]) == values_2[1] ~ 1,
+                        !!sym(group[1]) == values_1[1] &
+                          !!sym(group[2]) == values_2[2] ~ 2,
+                        !!sym(group[1]) == values_1[2] &
+                          !!sym(group[2]) == values_2[1] ~ 3,
+                        !!sym(group[1]) == values_1[2] &
+                          !!sym(group[2]) == values_2[2] ~ 4
+                      ))
+    } else {
+      data <- Data %>%
+        dplyr::filter(!is.na(!!sym(group[1])),
+                      !is.na(!!sym(group[2])),
+                      !is.na(!!sym(dist[1])),
+                      !is.na(!!sym(dist[2]))) %>%
+        dplyr::mutate(ID = row_number(),
+                      group_long = dplyr::case_when(
+                        !!sym(group[1]) == values_1[1] &
+                          !!sym(group[2]) == values_2[1] ~ 1,
+                        !!sym(group[1]) == values_1[1] &
+                          !!sym(group[2]) == values_2[2] ~ 2,
+                        !!sym(group[1]) == values_1[2] &
+                          !!sym(group[2]) == values_2[1] ~ 3,
+                        !!sym(group[1]) == values_1[2] &
+                          !!sym(group[2]) == values_2[2] ~ 4
+                      ))
+    }
   }
 
 
@@ -146,7 +170,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
 
   colnames(input) <- c("ID", "group", "distance_ps","exact")
   input <- input %>%
-    tibble::as_tibble(.) %>%
+    tibble::as_tibble() %>%
     dplyr::group_by(group) %>%
     dplyr::mutate(group_id = dplyr::row_number()) %>%
     dplyr::ungroup() %>%
@@ -164,7 +188,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
   elements <- input %>%
     dplyr::group_by(group) %>%
     dplyr::summarise(max(group_id)) %>%
-    .[, 2] %>%
+    `[`(, 2) %>%
     unlist()
 
   if(length(elements) == 2) {
@@ -174,7 +198,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
     for(i in 1:length(exact_list)) {
 
     group_list_temp <- exact_list[[i]] %>%
-      split.data.frame(., .$group)
+      split.data.frame(f = exact_list[[i]]$group)
 
     elements_temp <- sapply(group_list_temp, nrow)
 
@@ -201,13 +225,13 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
     group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
     rm(distance_array)
     gc()
-    
+
     exact_list[[i]] <- do.call(rbind.data.frame, group_list_temp)
     }
 
   data_temp <- do.call(rbind.data.frame, exact_list) %>%
     dplyr::arrange(distance, step) %>%
-    dplyr::mutate(step = ceiling(c(1:nrow(.))/2)) %>%
+    dplyr::mutate(step = ceiling(c(1:nrow(input))/2)) %>%
     dplyr::select(ID, step, weight, distance) %>%
     dplyr::filter(weight == 1)
 
@@ -223,7 +247,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
       for(i in 1:length(exact_list)) {
 
         group_list_temp <- exact_list[[i]] %>%
-          split.data.frame(., .$group)
+          split.data.frame(f = exact_list[[i]]$group)
 
         elements_temp <- sapply(group_list_temp, nrow)
 
@@ -254,13 +278,14 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
       }
       data_temp <- do.call(rbind.data.frame, exact_list) %>%
         dplyr::arrange(distance, step) %>%
-        dplyr::mutate(step = ceiling(c(1:nrow(.))/3)) %>%
+        dplyr::mutate(step = ceiling(c(1:nrow(input))/3)) %>%
         dplyr::select(ID, step, weight, distance) %>%
         dplyr::filter(weight == 1)
 
       data <- merge(data,
                     data_temp,
-                    by = "ID")
+                    by = "ID",
+                    all.x = TRUE)
 
   } else if(length(elements) == 4) {
 
@@ -270,7 +295,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
       for(i in 1:length(exact_list)) {
 
         group_list_temp <- exact_list[[i]] %>%
-          split.data.frame(., .$group)
+          split.data.frame(f = exact_list[[i]]$group)
 
         elements_temp <- sapply(group_list_temp, nrow)
 
@@ -293,7 +318,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
         rm(distance_matrix)
         rm(distance_mean)
         gc()
-        
+
         group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
         rm(distance_array)
         gc()
@@ -301,7 +326,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
       }
       data_temp <- do.call(rbind.data.frame, exact_list) %>%
         dplyr::arrange(distance, step) %>%
-        dplyr::mutate(step = ceiling(c(1:nrow(.))/4)) %>%
+        dplyr::mutate(step = ceiling(c(1:nrow(input))/4)) %>%
         dplyr::select(ID, step, weight, distance) %>%
         dplyr::filter(weight == 1)
 

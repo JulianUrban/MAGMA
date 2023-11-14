@@ -67,7 +67,7 @@ Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_gift_enrich,
 Plot_MAGMA(Balance = Balance_2x2,
            criterion = c("d_ration", "Adj_d_ratio"))
 }
-}          
+}
 
 }
 \author{

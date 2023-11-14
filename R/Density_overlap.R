@@ -14,9 +14,9 @@
 #' @param group A character specifying the groups for which the density should
 #' be plotted. Can be an independent group comparison (e.g., comparing matched
 #' groups) or the comparison of pre and post matched samples.
-#' @param variable_name A character specifying the name that should appear 
+#' @param variable_name A character specifying the name that should appear
 #' in the plot for variable.
-#' @param group_labels A character vector specifying the labels for the groups 
+#' @param group_labels A character vector specifying the labels for the groups
 #' that should appear in the legend of the plot.
 #' @param group_name A character specifying the name of the grouping variable
 #' that should appear in the title of the legend.
@@ -28,7 +28,7 @@
 #' @author Julian Urban
 #'
 #' @import tidyverse ggplot2 overlapping tibble dplyr tidyselect
-#' 
+#'
 #' @references {Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
 #' 2.1, <https://CRAN.R-project.org/package=overlapping>.}
 #'
@@ -40,31 +40,31 @@
 #' \dontrun{
 #' #Density overlap in Propensity scores for gifted before matching
 #' Density_overlap(Data = MAGMA_sim_data,
-#' variable = "ps_gifted", 
+#' variable = "ps_gifted",
 #' group = "gifted_support",
 #' step_num = NULL,
 #' step_var = NULL,
 #' variable_name = "Propensity Score",
 #' group_labels = c("No Support", "Support"),
 #' group_name = "Gifted Support")
-#' 
+#'
 #'  #Density overlap in Propensity scores for gifted after matching with 250 cases per group.
 #' Density_overlap(Data = MAGMA_sim_data_gifted,
-#' variable = "ps_gifted", 
+#' variable = "ps_gifted",
 #' group = "gifted_support",
 #' step_num = 250,
 #' step_var = "step",
 #' variable_name = "Propensity Score",
 #' group_labels = c("No Support", "Support"),
 #' group_name = "Gifted Support")
-#' 
+#'
 #'#Density overlap in GPA for teacher ability rating before matching
 #' Density_overlap(Data = MAGMA_sim_data,
-#' variable = "GPA_school", 
+#' variable = "GPA_school",
 #' group = "teacher_ability_rating",
 #' variable_name = "School Achievement",
 #' group_labels = c("Low", "Medium", "High"),
-#' group_name = "Rating") 
+#' group_name = "Rating")
 #' }
 #' }
 #'
@@ -95,50 +95,50 @@ Density_overlap <- function(Data, variable, group,
   if(!is.null(step_num) & is.null(step_var) | is.null(step_num) & !is.null(step_var)) {
     stop("step_num and step_var need to be both NULL or both specified!")
   }
-  
+
   if(length(group) == 2) {
     Data <- Data %>%
       dplyr::mutate(group_long = dplyr::case_when(
-        .[group[1]] == unique(Data[group[1]])[1, 1] &
-          .[group[2]] == unique(Data[group[2]])[1, 1] ~ 1,
-        .[group[1]] == unique(Data[group[1]])[1, 1] &
-          .[group[2]] == unique(Data[group[2]])[2, 1] ~ 2,
-        .[group[1]] == unique(Data[group[1]])[2, 1] &
-          .[group[2]] == unique(Data[group[2]])[1, 1] ~ 3,
-        .[group[1]] == unique(Data[group[1]])[2, 1] &
-          .[group[2]] == unique(Data[group[2]])[2, 1] ~ 4
+        !!sym(group[1]) == unique(!!sym(group[1]))[1] &
+          !!sym(group[2]) == unique(!!sym(group[2]))[1] ~ 1,
+        !!sym(group[1]) == unique(!!sym(group[1]))[1] &
+          !!sym(group[2]) == unique(!!sym(group[2]))[2] ~ 2,
+        !!sym(group[1]) == unique(!!sym(group[1]))[2] &
+          !!sym(group[2]) == unique(!!sym(group[2]))[1] ~ 3,
+        !!sym(group[1]) == unique(!!sym(group[1]))[2] &
+          !!sym(group[2]) == unique(!!sym(group[2]))[2] ~ 4
       ))
     group <- "group_long"
     cat("2x2 groups are represented as 4 groups.")
   }
 
-  
+
   if(is.null(variable_name)) {
     names_variable <- variable
   } else {
     names_variable <- variable_name
   }
-  
+
   if(is.null(group_name)) {
     name_group <- group
   } else {
     name_group <- group_name
   }
-  
+
   if(!is.null(step_num) & !is.null(step_var)) {
     Data <- Data %>%
-      dplyr::filter(.[step_var] <= step_num)
+      dplyr::filter(!!sym(step_var) <= step_num)
   }
-  
-  
+
+
   Data[, group] <- as.factor(Data[ ,group])
-  
+
   if(is.null(group_labels)) {
     levels(Data[ , group]) <- c("group 1", "group 2")
   } else {
     levels(Data[ , group]) <- group_labels
   }
-  
+
   Data_plot <- data.frame(var = Data[ , variable],
                           group = Data[ , group])
 
@@ -154,15 +154,15 @@ Density_overlap <- function(Data, variable, group,
                     fill = name_group,
                     color = name_group)
     )
-    
+
 overlap_areas <- split.data.frame(Data, Data[group]) %>%
-  lapply(., function(data) data %>%
+  lapply(FUN = function(data) data %>%
            dplyr::select(tidyselect::all_of(variable)) %>%
            unlist()) %>%
-  overlapping::overlap(., type= "1") %>%
+  overlapping::overlap(type = "1") %>%
   unlist()
 
 print(overlap_areas)
-  
+
 }
 

@@ -1,6 +1,6 @@
 #' Balance extraction
 #'
-#' This function extracts the balance criteria or pairwise effects of a 
+#' This function extracts the balance criteria or pairwise effects of a
 #' Balance_MAGMA result for a specified sample size.
 #'
 #' Based on a previous computed \code{\link{Balance_MAGMA}} object this function
@@ -52,7 +52,7 @@
 #'                                       samplesize = 100,
 #'                                       effects = FALSE)
 #' Balance_100_gifted
-#' 
+#'
 #' #Pairwise Effects
 #' Balance_100_gifted_effects <- Balance_extract(Balance = Balance_gifted_exact,
 #'                                               samplesize = 100,
@@ -80,7 +80,7 @@
 #'                                       samplesize = 125,
 #'                                       effects = FALSE)
 #' Balance_125_2x2
-#' 
+#'
 #' #Pairwise Effects
 #' Balance_125_2x2_effects <- Balance_extract(Balance = Balance_2x2,
 #'                                               samplesize = 125,
@@ -105,12 +105,12 @@ Balance_extract <- function(Balance, samplesize, effects = FALSE) {
                             Balance$d_ratio$d_rate[samplesize],
                             Balance$mean_effect[samplesize],
                             Balance$adjusted_d_ratio[samplesize]) %>%
-        round(., 2) %>%
+        round(digits = 2) %>%
         purrr::set_names("Pillai's Trace",
                   "d-ratio",
                   "mean g",
                   "adj. d-ratio")
-      
+
     } else if(is.matrix(Balance$Pillai)) {
       Balance_criteria <- c(Balance$Pillai[1, samplesize],
                             Balance$Pillai[2, samplesize],
@@ -118,7 +118,7 @@ Balance_extract <- function(Balance, samplesize, effects = FALSE) {
                             Balance$d_ratio$d_rate[samplesize],
                             Balance$mean_effect[samplesize],
                             Balance$adjusted_d_ratio[samplesize]) %>%
-        round(., 2) %>%
+        round(digits = 2) %>%
         purrr::set_names("Pillai's Trace ME 1",
                   "Pillai's Trace ME 2",
                   "Pillai's Trace IA",
@@ -126,13 +126,13 @@ Balance_extract <- function(Balance, samplesize, effects = FALSE) {
                   "mean g",
                   "adj. d-ratio")
     }
-    
-    return(Balance_criteria) 
-    
+
+    return(Balance_criteria)
+
   } else if(effects == TRUE) {
     Balance_effects <- Balance$d_ratio$effects[ , samplesize] %>%
-      round(., 2)
-    return(Balance_effects)  
+      round(digits = 2)
+    return(Balance_effects)
   }
 
 }

@@ -62,29 +62,30 @@ Pillai_iterativ <- function(da, gr, co, st) {
 
   max_step <- da %>%
     dplyr::select(tidyselect::all_of(st)) %>%
-    max(., na.rm = T)
-  iteration = length(co) + 20
+    max(na.rm = T)
+  iteration <- length(co) + 20
 
   if(length(gr) == 1) {
 
   #Creating a vector for Traces
   suppressWarnings(Pillai_temp <- double(length = max_step) %>%
-                     dplyr::recode(., default = NA) %>%
+                     dplyr::recode(default = NA) %>%
                      as.numeric())
 
   #Computing all Traces with increasing sample size
   while (iteration <= max_step){
     Pillai_input <- da %>%
       dplyr::select(tidyselect::all_of(co),
-             IV = gr,
-             It = st) %>%
-      dplyr::filter(It <= iteration)
+                    tidyselect::all_of(gr),
+                    tidyselect::all_of(st)) %>%
+      purrr::set_names(c(co, "IV", "It")) %>%
+      dplyr::filter(!!sym("It") <= iteration)
 
     Pillai_temp[iteration] <- stats::manova(Pillai_DV(Pillai_input, co) ~ IV,
                                             data = Pillai_input) %>%
-      summary(.) %>%
-      .[["stats"]] %>%
-      .[1, 2]
+      summary() %>%
+      `[[`("stats") %>%
+      `[[`(1, 2)
 
     iteration <- iteration + 1
   }
@@ -98,16 +99,16 @@ Pillai_iterativ <- function(da, gr, co, st) {
     while (iteration <= max_step) {
       Pillai_input <- da %>%
         dplyr::select(tidyselect::all_of(co),
-              IV1 = gr[1],
-              IV2 = gr[2],
-               It = st) %>%
-        dplyr::filter(It <= iteration)
+                      tidyselect::all_of(gr),
+                      tidyselect::all_of(st)) %>%
+        purrr::set_names(c(co, "IV1", "IV2", "It")) %>%
+        dplyr::filter(!!sym("It") <= iteration)
 
       Pillai_temp[, iteration] <- Pillai_input %>%
-        stats::manova(Pillai_DV(., co) ~ IV1 + IV2 + IV1 * IV2, data = .) %>%
-        summary(.) %>%
-        .[["stats"]] %>%
-        .[c(1:3), 2]
+        stats::manova(Pillai_DV(input = co) ~ IV1 + IV2 + IV1 * IV2, data = .) %>%
+        summary() %>%
+        `[[`("stats") %>%
+        `[[`(c(1:3), 2)
 
       iteration <- iteration + 1
   }
