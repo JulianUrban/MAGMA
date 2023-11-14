@@ -123,10 +123,10 @@ Pillai <- Pillai_iterativ(da = Data,
 cat("\n", "Pillai's Trace finsihed. Starting to compute d-ratio.")
 
 if(length(group) == 2) {
-  values_1 <- unique(da[group[1]])
-  values_2 <- unique(da[group[2]])
+  values_1 <- unlist(unique(Data[group[1]]))
+  values_2 <- unlist(unique(Data[group[2]]))
 
-  da <- da %>%
+  Data <- Data %>%
     dplyr::mutate(group_d = dplyr::case_when(
       !!sym(group[1]) == values_1[1] &
         !!sym(group[2]) == values_2[1] ~ 1,

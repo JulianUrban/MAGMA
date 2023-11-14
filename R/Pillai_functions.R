@@ -104,11 +104,10 @@ Pillai_iterativ <- function(da, gr, co, st) {
         purrr::set_names(c(co, "IV1", "IV2", "It")) %>%
         dplyr::filter(!!sym("It") <= iteration)
 
-      Pillai_temp[, iteration] <- Pillai_input %>%
-        stats::manova(Pillai_DV(input = co) ~ IV1 + IV2 + IV1 * IV2, data = .) %>%
+      Pillai_temp[, iteration] <- stats::manova(Pillai_DV(Pillai_input, co) ~ IV1 + IV2 + IV1 * IV2, data = Pillai_input) %>%
         summary() %>%
         `[[`("stats") %>%
-        `[[`(c(1:3), 2)
+        `[`(c(1:3), 2)
 
       iteration <- iteration + 1
   }
