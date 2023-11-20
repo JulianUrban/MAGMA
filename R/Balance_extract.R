@@ -26,7 +26,7 @@
 #' all possible pairwise effects.
 #' @export
 #'
-#' @examples{
+#' @examples
 #' \dontrun{
 #' #Defining the names of the metric and binary covariates
 #' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
@@ -68,7 +68,7 @@
 #'
 #'
 #' #Estimating Balance. Covariates same as above
-#' Balance_2x2 <- Balance_MAGMA(data = MAGMA_sim_data_gift_enrich,
+#' Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_gift_enrich,
 #'                              group = c("gifted_support", "enrichment"),
 #'                              covariates = covariates_vector,
 #'                              step = "step") #step created during matching
@@ -86,7 +86,6 @@
 #'                                               samplesize = 125,
 #'                                               effects = TRUE)
 #' Balance_125_2x2_effects
-#' }
 #' }
 #'
 Balance_extract <- function(Balance, samplesize, effects = FALSE) {

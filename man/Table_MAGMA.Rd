@@ -33,7 +33,6 @@ as the sample size itself. With an optional argument you can save a the APA
 table in Word.
 }
 \examples{
-{
 \dontrun{
 #This function bases on a MAGMA function as well as Balance_MAGMA.
 #To run examples, copy them into your console or script.
@@ -71,7 +70,6 @@ Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_gift_enrich,
                              step = "step") #step created during matching
 
 Table_MAGMA(Balance_2x2, "Balance_2x2.docx")
-}
 }
 
 }

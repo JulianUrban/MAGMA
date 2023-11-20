@@ -49,7 +49,6 @@ case MAGMA informs you. Results does not change, but Balance might be
 slightly affected.
 }
 \examples{
-{
 \dontrun{
 #Running this code will take a while
 #Computing two-group Matching for giftedness support
@@ -73,7 +72,6 @@ MAGMA_sim_data_gift_enrich <- MAGMA(Data = MAGMA_sim_data,
                                    dist = "ps_2x2",
                                    cores = 2)
 head(MAGMA_sim_data_gift_enrich)
-}
 }
 
 }

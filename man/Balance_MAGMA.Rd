@@ -49,7 +49,6 @@ Missing data for Pillai's Trace are excluded listwise, while for the other
 balance criteria pairwise exclusion is applied.
 }
 \examples{
-{
 \dontrun{
 #Defining the names of the metric and binary covariates
 covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
@@ -85,18 +84,15 @@ Balance_2x2 <- Balance_MAGMA(Dta = MAGMA_sim_data_gift_enrich,
 str(Balance_2x2)
 
 }
-}
 
 }
 \references{
 {Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). \emph{overlapping: Estimation of Overlapping in Empirical Distributions}. R package version
-2.1, \url{https://CRAN.R-project.org/package=overlapping}.
-William Revelle (2023). \emph{psych: Procedures for Psychological, Psychometric, and Personality Research}. Northwestern University, Evanston,
-Illinois. R package version 2.3.6, \url{https://CRAN.R-project.org/package=psych}.
-Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. Journal of Statistical Software, 36(3), 1-48.
-\doi{10.18637/jss.v036.i03}
+2.1, (\url{https://CRAN.R-project.org/package=overlapping}).
+William Revelle (2023). \emph{psych: Procedures for Psychological, Psychometric, and Personality Research}. Northwestern University, Evanston, Illinois. R package version 2.3.6, (\url{https://CRAN.R-project.org/package=psych}).
+Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. Journal of Statistical Software, 36(3), 1-48. (\doi{10.18637/jss.v036.i03})
 Fisher Z, Tipton E, Zhipeng H (2023). \emph{robumeta: Robust Variance Meta-Regression}. R package version 2.1,
-\url{https://CRAN.R-project.org/package=robumeta}.}
+(\url{https://CRAN.R-project.org/package=robumeta}).}
 }
 \author{
 Julian Urban

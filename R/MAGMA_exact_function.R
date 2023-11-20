@@ -43,7 +43,7 @@
 #' cases. For more information, see Details.
 #' @export
 #'
-#' @examples{
+#' @examples
 #' \dontrun{
 #' #Running this code will take a while
 #' #Computing two-group Matching for giftedness support with exact for enrichment
@@ -70,7 +70,6 @@
 #'                                                 exact = "teacher_ability_rating",
 #'                                                 cores = 2)
 #' head(MAGMA_sim_data_gift_enrich_exact)
-#' }
 #' }
 #'
 MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {

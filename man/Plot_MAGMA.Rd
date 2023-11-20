@@ -27,7 +27,6 @@ This function creates R-Plots using ggplot to show the balance trend over
 sample size.
 }
 \examples{
-{
 \dontrun{
 #This function bases on a MAGMA function as well as Balance_MAGMA.
 #To run examples, copy them into your console or script.
@@ -66,7 +65,6 @@ Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_gift_enrich,
 
 Plot_MAGMA(Balance = Balance_2x2,
            criterion = c("d_ration", "Adj_d_ratio"))
-}
 }
 
 }

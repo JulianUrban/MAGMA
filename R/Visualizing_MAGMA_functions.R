@@ -42,15 +42,13 @@
 #' @export
 #'
 #' @references {Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
-#' 2.1, <https://CRAN.R-project.org/package=overlapping>.
-#' William Revelle (2023). _psych: Procedures for Psychological, Psychometric, and Personality Research_. Northwestern University, Evanston,
-#' Illinois. R package version 2.3.6, <https://CRAN.R-project.org/package=psych>.
-#' Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. Journal of Statistical Software, 36(3), 1-48.
-#' \doi{10.18637/jss.v036.i03}
+#' 2.1, (\url{https://CRAN.R-project.org/package=overlapping}).
+#' William Revelle (2023). _psych: Procedures for Psychological, Psychometric, and Personality Research_. Northwestern University, Evanston, Illinois. R package version 2.3.6, (\url{https://CRAN.R-project.org/package=psych}).
+#' Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. Journal of Statistical Software, 36(3), 1-48. (\doi{10.18637/jss.v036.i03})
 #' Fisher Z, Tipton E, Zhipeng H (2023). _robumeta: Robust Variance Meta-Regression_. R package version 2.1,
-#' <https://CRAN.R-project.org/package=robumeta>.}
+#' (\url{https://CRAN.R-project.org/package=robumeta}).}
 #'
-#' @examples{
+#' @examples
 #' \dontrun{
 #' #Defining the names of the metric and binary covariates
 #' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
@@ -85,7 +83,6 @@
 #'                              step = "step") #step created during matching
 #' str(Balance_2x2)
 #'
-#' }
 #' }
 #'
 Balance_MAGMA <- function(Data, group, covariates, step = "step") {
@@ -211,13 +208,13 @@ cat("\n", "d-ratio finsihed. Starting to compute mean-g.", "\n")
 #' @export
 #'
 #' @references {Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
-#' 2.1, <https://CRAN.R-project.org/package=overlapping>.
-#' William Revelle (2023). _psych: Procedures for Psychological, Psychometric, and Personality Research_. Northwestern University, Evanston, Illinois. R package version 2.3.6, <https://CRAN.R-project.org/package=psych>.
-#' Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. Journal of Statistical Software, 36(3), 1-48. \doi{10.18637/jss.v036.i03}
+#' 2.1, (\url{https://CRAN.R-project.org/package=overlapping}).
+#' William Revelle (2023). _psych: Procedures for Psychological, Psychometric, and Personality Research_. Northwestern University, Evanston, Illinois. R package version 2.3.6, (\url{https://CRAN.R-project.org/package=psych}).
+#' Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. Journal of Statistical Software, 36(3), 1-48. (\doi{10.18637/jss.v036.i03})
 #' Fisher Z, Tipton E, Zhipeng H (2023). _robumeta: Robust Variance Meta-Regression_. R package version 2.1,
-#' <https://CRAN.R-project.org/package=robumeta>.}
+#' (\url{https://CRAN.R-project.org/package=robumeta}).}
 #'
-#' @examples{
+#' @examples
 #' \dontrun{
 #' #Defining covariates for balance estimation
 #' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
@@ -239,7 +236,6 @@ cat("\n", "d-ratio finsihed. Starting to compute mean-g.", "\n")
 #'                                   group = c("gifted_support", "enrichment"),
 #'                                   covariates = covariates_vector)
 #' unbalance_2x2
-#' }
 #' }
 #'
 initial_unbalance <- function(Data, group, covariates) {
@@ -472,7 +468,7 @@ if(length(group) == 2) {
 #' print a Word Document with this table, too.
 #' @export
 #'
-#' @examples{
+#' @examples
 #' \dontrun{
 #' #This function bases on a MAGMA function as well as Balance_MAGMA.
 #' #To run examples, copy them into your console or script.
@@ -510,7 +506,6 @@ if(length(group) == 2) {
 #'                              step = "step") #step created during matching
 #'
 #' Table_MAGMA(Balance_2x2, "Balance_2x2.docx")
-#' }
 #' }
 #'
 Table_MAGMA <- function(Balance, filename = NULL) {
@@ -613,7 +608,7 @@ return(balance_matrix)
 #' @return R Plots showing the balance trend over sample size.
 #' @export
 #'
-#' @examples{
+#' @examples
 #' \dontrun{
 #' #This function bases on a MAGMA function as well as Balance_MAGMA.
 #' #To run examples, copy them into your console or script.
@@ -652,7 +647,6 @@ return(balance_matrix)
 #'
 #' Plot_MAGMA(Balance = Balance_2x2,
 #'            criterion = c("d_ration", "Adj_d_ratio"))
-#' }
 #' }
 #'
 Plot_MAGMA <- function(Balance,

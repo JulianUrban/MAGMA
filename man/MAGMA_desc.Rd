@@ -51,7 +51,6 @@ continuous variables for the overall sample and specified groups. Additional,
 pairwise effects (Cohen's d) is computed.
 }
 \examples{
-{
 \dontrun{
 #Defining covariates
 covariates_gifted <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
@@ -74,7 +73,6 @@ MAGMA_desc(Data = MAGMA_sim_data_gifted,
            step_num = 100,
            step_var = "step")
 
-}
 }
 
 }

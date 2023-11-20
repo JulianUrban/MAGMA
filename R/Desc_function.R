@@ -33,7 +33,7 @@
 #' postmatching samples.
 #' @export
 #'
-#' @examples{
+#' @examples
 #' \dontrun{
 #' #Defining covariates
 #' covariates_gifted <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
@@ -56,7 +56,6 @@
 #'            step_num = 100,
 #'            step_var = "step")
 #'
-#' }
 #' }
 #'
 MAGMA_desc <- function(Data,

@@ -69,7 +69,7 @@ distance_estimator <- function(data, means, variance, cores) {
 #' cases. For more information, see Details.
 #' @export
 #'
-#' @examples{
+#' @examples
 #' \dontrun{
 #' #Running this code will take a while
 #' #Computing two-group Matching for giftedness support
@@ -93,7 +93,6 @@ distance_estimator <- function(data, means, variance, cores) {
 #'                                    dist = "ps_2x2",
 #'                                    cores = 2)
 #' head(MAGMA_sim_data_gift_enrich)
-#' }
 #' }
 #'
 MAGMA <- function(Data, group, dist, cores = 1) {

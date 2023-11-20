@@ -55,7 +55,6 @@ or more groups. It plots the kernel density separately for each group and
 quantifies the amount of overlap.
 }
 \examples{
-{
 \dontrun{
 #Density overlap in Propensity scores for gifted before matching
 Density_overlap(Data = MAGMA_sim_data,
@@ -84,7 +83,6 @@ group = "teacher_ability_rating",
 variable_name = "School Achievement",
 group_labels = c("Low", "Medium", "High"),
 group_name = "Rating")
-}
 }
 
 }

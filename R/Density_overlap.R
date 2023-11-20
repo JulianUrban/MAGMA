@@ -36,7 +36,7 @@
 #' for specified groups and the quantification of this overlap.
 #' @export
 #'
-#' @examples{
+#' @examples
 #' \dontrun{
 #' #Density overlap in Propensity scores for gifted before matching
 #' Density_overlap(Data = MAGMA_sim_data,
@@ -65,7 +65,6 @@
 #' variable_name = "School Achievement",
 #' group_labels = c("Low", "Medium", "High"),
 #' group_name = "Rating")
-#' }
 #' }
 #'
 Density_overlap <- function(Data, variable, group,
