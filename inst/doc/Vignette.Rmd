@@ -1,0 +1,593 @@
+---
+title: "Turn up the Heat! A Tutorial for the MAGMA R-package."
+author: "Julian Urban, Markus Feuchter, Vsevolod Scherrer, Moritz Breit, Franzis Preckel"
+output:  rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Turn up the Heat! A Tutorial for the MAGMA R-package.}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE)
+```
+
+```{r setup, include = FALSE}
+library(MAGMA)
+```
+
+# Summary
+  Balancing quasi-experimental field research for effects of covariates is fundamental for drawing causal inference. Propensity Score Matching deals with this issue but current techniques are restricted to binary treatment variables. Moreover, they provide several solutions without providing a comprehensive framework on choosing the best model. The MAGMA-package addresses these restrictions by offering nearest neighbor matching for two to four groups. It also includes the option to match data of a 2x2 design. In addition, MAGMA includes a framework for evaluating the post-matching balance. This vignette is a tutorial on MAGMA. It demonstrates the main MAGMA functions on an included simulated dataset. In total, this vignette includes a two-group, a three-group, and a 2x2-design which is approximately equivalent to a four-group example. These three examples are conducted in a standard matching process, as well as with exact matching. 
+
+# Introduction
+  Field research as well as observational or non-randomized studies have to deal with a lack of experimental control. One method to control post-hoc for effects of covariates is propensity score matching (PSM; Rosenbaum & Rubin, 1983, 1985). By balancing for the effects of covariates PSM facilitates causal inference. Since causal inference is fundamental in science, PSM is used in many scientific fields such as in organizational (e.g., Li, 2013), educational (e.g., Powell et al., 2020), social science (e.g., Thoemmes & Kim, 2011), and medical research (e.g., Austin, 2014).
+  
+  In PSM we build statistical pairs of individuals of – as example – a treatment group and a control group based on a distance in a specific variable – the propensity score (for a review, see Stuart, 2010). The propensity score itself expresses the conditional probability of belonging to a group (e.g., the treatment group) given a set of covariates (Rosenbaum & Rubin, 1985). Although a plethora of matching techniques exist, a commonly applied method is nearest neighbor matching (Austin, 2014; Jacovidis, 2017). Thus, by matching a treated individual to its non-treated nearest neighbor PSM controls for the effects of covariates.
+
+  The usage of PSM is, nonetheless, restricted due to the following three reasons. First, current techniques are restricted to binary treatment variables (for first approaches, see Imai & van Dyk, 2004; McCaffrey et al., 2013). Second, researchers must successively extract and compare several matching solutions by hand, instead of having access to a full unambiguous display. Third, there is no comprehensive framework for evaluating the quality of matching solution, especially when multiple groups are involved. We addressed these issues with our MAGMA package. For an extensive overview of MAGMA and its balance framework see Preregistration (Feuchter at al., 2023).
+  
+  The aims of this vignette were to provide a tutorial for the MAGMA R-package. This includes examples for all currently available group scenarios, namely two, three, and four groups as well as 2x2 designs. We conducted these examples for standard and exact matching. Moreover, this tutorial contains examples on how to report matching relevant statistics. Lastly, we show how to compute and report balance of PSMs using our developed framework.
+
+# The MAGMA Simulated Dataset
+  We used a simulated data set for all examples. This simulated dataset contains 800 cases and 14 variables. It is available after installing the MAGMA package. Associations between the variables were modeled to increase the usability and comprehensibility of this tutorial, and are, therefore, not representative of real-life phenomena. For information about this simulated dataset use `?MAGMA_sim_data`. Below, is a brief look at the data and its structure. Note that the last three variables are propensity scores estimated using the `twang` package (Ridgeway et al., 2015). For a detailed overview and tutorial on `twang`, see (Ridgeway et al., 2015). The propensity scores serve as distance indicators for all examples. 
+
+```{r data_introduction}
+str(MAGMA_sim_data)
+```
+
+# Two-Group Example
+
+  This is a fictitious two-group example. The independent variable (i.e., the treatment) is `gifted_support`. We are interested in how receiving giftedness support affects the college GPA. However, other variables, such as intelligence are associated with both giftedness support and college GPA. This is because gifted students were chosen to participate in this support program based on their previous achievement or intelligence test results. Therefore, we aim to reduce the effects of these covariates by matching. For this example, the covariates are *high school GPA*, *intelligence*, *motivation*, *sex*, and whether at least one parent has an *academic background*. Note that MAGMA can only consider metric and binary variables for balance estimation.
+
+```{r covariates_gifted}
+covariates_gifted <- c("GPA_school",
+                       "IQ_score",
+                       "Motivation",
+                       "parents_academic",
+                       "sex")
+```
+
+  With this definition, we can estimate descriptive statistics, standardized mean differences, and initial unbalance over all cases in our dataset. To do this we can use the functions `MAGMA_desc ` and `initial_unbalance`. The first function – `MAGMA_desc ` - computes sample size, mean, and standard deviation for the overall sample and the two groups. Moreover, it estimates the standardized mean difference (i.e., Cohen’s d) between the two groups. This function needs the dataset (`MAGMA_sim_data`), the grouping variable (`gifted_support`), and all binary and metric covariates of interest (`covariates_gifted`). The function results in a table that contains these statistics for each covariate.
+  
+  The second function – `initial_unbalance` - estimates the four balance criteria of our balance framework. These criteria are *Pillai's Trace*, *d-ratio*, *mean g*, and *adjusted d-ratio*. For more information, see Feuchter et al. (2022). The function `initial_unbalance` indicates the unbalance in the sample before matching. Therefore, it is necessary to define the dataset (`MAGMA_sim_data`), the grouping variable (`gifted_support`), and all binary and metric covariates of interest (`covariates_gifted`). This results in a vector of length four - the four balance criteria.
+
+```{r unbalance_gifted}
+#Estimate overall and group specific descriptive statistics and Cohen’s d
+descs_gifted_pre <- MAGMA_desc(Data = MAGMA_sim_data,
+                               group = "gifted_support",
+                               covariates = covariates_gifted,
+                               filename = "stats_gifted_pre.docx")
+descs_gifted_pre %>%
+  purrr::set_names(c("Overall N", "Overall Mean", "Overall SD",
+                     "No Support N", "No Support Mean", "No Support SD",
+                     "Support N", "Support Mean", "Support SD",
+                     "d"))
+
+#Estimating the four balance criteria
+unbalance_gifted <- initial_unbalance(Data = MAGMA_sim_data,
+                                      group = "gifted_support",
+                                      covariates = covariates_gifted)
+unbalance_gifted
+```
+  As may be expected from the descriptive statistics, the cases that received giftedness support differed substantially from the cases that did not receive giftedness support on at least some variables. Before we start matching, we check the possibility of eligible matches. Therefore, we estimate and plot the common support in propensity score via the kernel-density (Pastore et al., 2022) and the function `density_overlap`. This function requires the dataset (`MAGMA_sim_data`), the variable for that the overlap should be computed (`ps_gifted`), and the group variable (`gifted_support`). The further arguments of the functions define aesthetics of the plot, namely the name of the variable (`variable_name`), the name of the group (`group_name`), and the labels of the respective groups (`group_labels`).
+
+```{r common_support_gifted}
+#Density overlap in Propensity scores for gifted before matching
+Density_overlap(Data = MAGMA_sim_data,
+                variable = "ps_gifted", 
+                group = "gifted_support",
+                variable_name = "Propensity Score",
+                group_labels = c("No Support", "Support"),
+                group_name = "Gifted Support")
+```
+  As we can see, there is substantial common support between the two groups. After these initial checks, we can conduct the matching. This process is based on the respective propensity score, `ps_gifted`. We first address standard matching and then with exact matching.
+
+## Standard Matching
+  For standard nearest neighbor matching we use the function `MAGMA`. This function has four arguments. The first argument specifies the dataset (`MAGMA_sim_data`). The second argument specifies the name of the grouping variable as a character (`"gifted_support"`). The third argument specifies the name of the distance variable/propensity score as a character (`"ps_gifted"`). The fourth argument is optional. Since MAGMA matching has some computational load, it includes the option of parallel computation. By default, only one CPU core is used. The usage of more cores may reduce the computation time of matching. While this reduction is of only restricted usage in two-group matching, it becomes more helpful for more group matching. If parallel computation is desired, an integer larger than one can be specified for the `cores` argument. If the specified value exceeds the number of available cores, MAGMA will set this argument to the maximum number of available cores.
+  
+  Applying this function results in a dataset that extends the original dataset by three variables. The first, `weight`, indicates whether this case was matched or not. The second, `step`, indicates the iterative step in which a case was matched. More specifically, the cases with the smallest distance are matched first and, thus, receive `1` in the step variable. The matched cases with the second smallest distance receive the `2` and so on. The third variable, `distance` indicates the distance of the matched cases.
+
+```{r standard_2_group_matching}
+#Conducting matching for gifted support
+MAGMA_sim_data_gifted <- MAGMA(Data = MAGMA_sim_data,
+                               group = "gifted_support",
+                               dist = "ps_gifted",
+                               cores = 2)
+str(MAGMA_sim_data_gifted)
+```
+
+### Balance estimation
+  MAGMA matches cases iteratively until all cases of the smallest group are matched. Thus, it is necessary to find the optimal sample size after matching. To do so, `Balance_MAGMA` estimates the four balance criteria for each possible sample size. Note that MAGMA uses a lower limit of at least *n* = 20 per group. To use the function, you need to specify at least your dataset (`MAGMA_sim_data_gifted`), the name of the grouping variable as a character (`"gifted_support"`), and your covariates as a character vector (`covariates_gifted`). Moreover, `Balance_MAGMA` needs the name of the variable that indicates the iterative `step` in which a case was matched. Since the `MAGMA` function names this variable `"step"` this name is the default of the `step` argument.
+  
+  `Balance_MAGMA` returns a list of length four. In the case of a univariate grouping variable, this list contains three numeric vectors and one list of length two. The three vectors comprise Pillai's Trace, mean *g*, and adjusted *d*-ratio over the iteratively increased sample size. The list of length two includes one numeric vector, *d*-ratio, and one matrix. The matrix gives all pairwise *d*'s for all covariates. Both *d*-ratio and pairwise *d*'s are also estimated iteratively over the increased sample size. The example below estimates the balance for the matching and shows the balance criteria and pairwise effects for a group sample size of *n* = 100.
+  
+  This function is augmented by the function `Balance_extract`. This function extracts the Balance criteria (´effects = FALSE`) or the pairwise effects (`effects =TRUE) for a specific sample size per group (`samplesize`) from the results of `Balance_MAGMA`. It returns a vector containing the balance criteria or the pairwise effects respectively.
+
+```{r Balance_standard_2_group_matching}
+#Estimating the four balance criteria iteratively over possible sample sizes
+Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data_gifted,
+                                group = "gifted_support",
+                                covariates = covariates_gifted,
+                                step = "step") 
+
+#Extracting balance criteria for 100 cases per group
+Balance_100_criteria <- Balance_extract(Balance = Balance_gifted,
+                                        samplesize = 100,
+                                        effects = FALSE)
+Balance_100_criteria
+
+#Extracting pairwise effects for 100 cases per group
+Balance_100_effects <- Balance_extract(Balance = Balance_gifted,
+                                       samplesize = 100,
+                                       effects = TRUE)
+Balance_100_effects
+```
+
+### Balance Evaluation
+  After balance estimation the “optimal” sample size to extract remains veiled. Which sample size is "optimal" strongly depends on the specific research aim. For example, the sample size requirements of some statistical procedures may narrow the selection, or as may the need to eliminate a specific pairwise effect. We therefore encourage to adapt the selection of optimal sample size to the specific research aim.
+  
+  A first indicator of such an optimal model is the trend of the balance criteria across the iteratively increased sample size. The function `Plot_MAGMA` visualizes this trend. The one mandatory argument, `Balance`, specifies the object of the balance estimation results. Note that this object must be the result of a `Balance_MAGMA` function. Per default, `Plot_MAGMA` creates plots for all four balance criteria. However, the `criterion` argument enables the plotting of specific balance criteria. Note that running this code will result in a warning. This warning is a result of the specified minimum sample size for balance estimation and can be ignored.
+  
+  The trend of these plots depends strongly on the data. Nonetheless, they can be a good indicator of breakpoint in the sample size-balance associations. `Plot_MAGMA` uses fixed limits for the y-axis. This ensures comparability of these plots and prevents misinterpretation due to a restricted y-axis range. Both *d*-ratio and adjusted *d*-ratio vary between 0 and 1. Although Pillai's Trace has theoretically the same range, we set the limits to 0 and 0.5. Larger values are unlikely and indicate a poor balance. A stricter limit might restrict a comprehensive trend evaluation. For mean *g* we set the limits to 0 and 1. The lower limit 0 corresponds to the theoretical lower limit. The rationale for the upper limit is comparable to that of Pillai's Trace.
+
+```{r Plots_standard_2_group_matching, fig.height = 5, fig.width = 7.5}
+#Plotting balance trend over sample size
+Plot_MAGMA(Balance = Balance_gifted,
+           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio"))
+```
+
+  Besides the trend over sample size, the absolutely best values for each criterion are of interest. The function `Table_MAGMA` extracts these values and returns them in a table in an extra file. More specifically it returns a 4x5 table. In each of the four rows one balance criterion has its optimal value. The five columns present the sample size per group for the matching solution where the respective criterion is optimal, and the four balance criteria values for this sample size per group. In addition to creating a file with a table, the table is printed to the console, too.
+  
+  Similar to `Plot_MAGMA` the first argument `Balance` of `Table-MAGMA` specifies the object of the balance estimation results. The second argument `filename` specifies the desired name of the extra file containing the table. This argument is a character.
+
+```{r Table_standard_2_group_matching}
+Table_MAGMA(Balance = Balance_gifted,
+            filename = "Balance_gifted.docx")
+```
+
+### Post-matching statistics
+  After the decision for a final matching model, we suggest reporting the descriptive statistics and pairwise effects of the selected model. To do this, we can use the same function as we used for reporting pre-matching statistics (`MAGMA_desc`). Additional to the parameters we specified above (`Data`, `covariates`, and `group`), we need to name the step variable (`step_var`) and final sample size per group (`step_num`). As above, this function results in a table with descriptive statistics and pairwise effects (Cohen’s d) of all covariates.
+
+```{r post_matching_standard_2}
+#Computing descriptive statistics and pairwise effects for 100 cases per group
+descs_gifted_post <- MAGMA_desc(Data = MAGMA_sim_data_gifted,
+                               group = "gifted_support",
+                               covariates = covariates_gifted,
+                               step_num = 100,
+                               step_var = "step",
+                               filename = "stats_gifted_post.docx")
+
+#Displaying the table with defined colum names
+descs_gifted_post %>%
+  purrr::set_names(c("Overall N", "Overall Mean", "Overall SD",
+                     "No Support N", "No Support Mean", "No Support SD",
+                     "Support N", "Support Mean", "Support SD",
+                     "d"))
+```
+
+## Exact Matching
+  Unlike in standard matching, only cases sharing the same value on a defined variable can be matched in exact matching. In this example, the variable for exact matching is `enrichment`. This means that cases that participated in afternoon enrichment can only be matched with other cases that participated, and non-participants can only be matched with other non-participants. Reasons for choosing exact matching instead of standard matching may be, for example, a nested data structure. Except for this preselection of possible matches, the process of matching stays the same. The main difference is that we need to use `MAGMA_exact` instead of `MAGMA` to match the data. This function has an additional argument, where the name of the exact variable must be defined as a character (`"enrichment"`). Note that the initial unbalance, descriptive statistics, and density overlap are the same as for standard matching.
+
+```{r exact_2_group_matching}
+MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
+                                           group = "gifted_support",
+                                           dist = "ps_gifted",
+                                           exact = "enrichment",
+                                           cores = 2)
+str(MAGMA_sim_data_gifted_exact)
+```
+
+### Balance Estimation and Visualization
+
+  The steps of balance estimation, visualization, and post matching statistics are the same as for standard matching. Therefore, we summarize these steps. The only change we need to consider is the different data frame that contains the result of the exact matching.
+
+```{r Balance_exact_2_group_matching, fig.height = 5, fig.width = 7.5}
+Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
+                                      group = "gifted_support",
+                                      covariates = covariates_gifted,
+                                      step = "step") 
+
+#Extracting balance criteria for 100 cases per group
+Balance_100_criteria_exact <- Balance_extract(Balance = Balance_gifted_exact,
+                                        samplesize = 100,
+                                        effects = FALSE)
+Balance_100_criteria_exact
+
+#Extracting pairwise effects for 100 cases per group
+Balance_100_effects_exact <- Balance_extract(Balance = Balance_gifted_exact,
+                                       samplesize = 100,
+                                       effects = TRUE)
+Balance_100_effects_exact
+
+#Ploting trend over increasing sample size
+Plot_MAGMA(Balance = Balance_gifted_exact,
+           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio")) 
+
+#Creating table
+Table_MAGMA(Balance = Balance_gifted_exact,
+            filename = "Balance_gifted_exact.docx")
+
+#Computing descriptive statistics and pairwise effects for 100 cases per group
+descs_gifted_post_exact <- MAGMA_desc(Data = MAGMA_sim_data_gifted_exact,
+                               group = "gifted_support",
+                               covariates = covariates_gifted,
+                               step_num = 100,
+                               step_var = "step",
+                               filename = "stats_gifted_post_exact.docx")
+
+#Displaying the table with defined colum names
+descs_gifted_post_exact %>%
+  purrr::set_names(c("Overall N", "Overall Mean", "Overall SD",
+                     "No Support N", "No Support Mean", "No Support SD",
+                     "Support N", "Support Mean", "Support SD",
+                     "d"))
+```
+
+# Three-Group Example
+
+  This is a fictitious three-group example. The independent variable (i.e., the treatment) is `teacher_ability_rating`. We are interested in how teacher-rated student ability, which ranged from below average (BA) to average (A) and above average (AA), affects the college GPA. While the process of matching and balance evaluation is the same as in the two-group example, the grouping variable (`teacher_ability_rating`), and consequently the distance variable/propensity score changes (`ps_tar`). Moreover, we slightly change the covariates by substituting `sex` through `gifted_support`.
+
+```{r covariates_tar}
+covariates_tar <- c("GPA_school",
+                    "IQ_score",
+                    "Motivation",
+                    "parents_academic",
+                    "gifted_support")
+```
+  Due to these changes in grouping variable and covariates, we need to estimate the initial unbalance, descriptive statistics, and area of common support for teacher-rated ability. Note that due to having three groups, the estimation of mean *g* slightly changes. However, this only affects the backend computation, while the code and the display of results are not affected. For more details, see Feuchter et al. (2022).
+
+```{r unbalance_tar}
+#Computing descriptive statistics and all pairwise effects for three groups
+descs_tar_pre <- MAGMA_desc(Data = MAGMA_sim_data,
+                            group = "teacher_ability_rating",
+                            covariates = covariates_tar,
+                            filename = "stats_tar_pre.docx")
+
+descs_tar_pre %>%
+  purrr::set_names(c("Overall N", "Overall Mean", "Overall SD",
+                     "BA N", "BA Support Mean", "BA Support SD",
+                     "A N", "A Mean", "A SD",
+                     "AA N", "AA Mean", "AA SD",
+                     "d BA-A", "d BA-AA", "d A-AA"))
+
+#Estimating and printing initial inbalance for teacher rated ability
+unbalance_tar <- initial_unbalance(Data = MAGMA_sim_data,
+                                   group = "teacher_ability_rating",
+                                   covariates = covariates_tar)
+unbalance_tar
+
+#Estimating and plotting density overlap in teacher rated ability propensity score
+Density_overlap(Data = MAGMA_sim_data,
+                variable = "ps_tar", 
+                group = "teacher_ability_rating",
+                variable_name = "Propensity Score",
+                group_labels = c("Below Average", "Average", "Above Average"),
+                group_name = "Teacher Rated Ability")
+```
+
+## Standard Matching
+  After this check of initial unbalance, descriptive statistics, and common support, we can conduct the standard matching. As mentioned above, we need to adapt the grouping variable and the distance variable/propensity score for this example.
+
+```{r standard_3_group_matching}
+MAGMA_sim_data_tar <- MAGMA(Data = MAGMA_sim_data,
+                            group = "teacher_ability_rating",
+                            dist = "ps_tar",
+                            cores = 2)
+str(MAGMA_sim_data_tar)
+```
+
+### Balance Estimation and Visualization
+
+  We only need to change the specific object names, covariates, grouping variable, and the filename for the table. Otherwise, the process of balance estimation and visualization remains the same.
+
+```{r Balance_3_group_matching, fig.height = 5, fig.width = 7.5}
+Balance_tar <- Balance_MAGMA(Data = MAGMA_sim_data_tar,
+                             group = "teacher_ability_rating",
+                             covariates = covariates_tar,
+                             step = "step") 
+
+#Balance criteria for a 100 cases per group
+Balance_100_tar_criteria <- Balance_extract(Balance = Balance_tar,
+                                            samplesize = 100,
+                                            effects = FALSE)
+Balance_100_tar_criteria
+
+#Extracting pairwise effects for 100 cases per group
+Balance_100_tar_effects <- Balance_extract(Balance = Balance_tar,
+                                           samplesize = 100,
+                                           effects = TRUE)
+Balance_100_tar_effects
+
+#Ploting trend over increasing samle size
+Plot_MAGMA(Balance = Balance_tar,
+           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio")) 
+
+#Creating table
+Table_MAGMA(Balance = Balance_tar,
+            filename = "Balance_tar.docx")
+
+```
+
+### Post-matching statistics
+  Again, after selecting a final model we can report the post-matching descriptive statistics. Therefore, we need to adapt our arguments to this three group example.
+
+```{r post_matching_standard_3}
+#Computing descriptive statistics and pairwise effects for 100 cases per group
+descs_tar_post <- MAGMA_desc(Data = MAGMA_sim_data_tar,
+                            group = "teacher_ability_rating",
+                            covariates = covariates_tar,
+                            step_num = 100,
+                            step_var = "step",
+                            filename = "stats_tar_post.docx")
+
+#Displaying the table with defined colum names
+descs_tar_post %>%
+    purrr::set_names(c("Overall N", "Overall Mean", "Overall SD",
+                       "BA N", "BA Support Mean", "BA Support SD",
+                       "A N", "A Mean", "A SD",
+                       "AA N", "AA Mean", "AA SD",
+                       "d BA-A", "d BA-AA", "d A-AA"))
+```
+
+## Exact Matching
+
+  We use the same covariates as we used for the standard three-group matching. The only change is the use of `sex` as exact variable. Thus, girls will only be matched to girls, and boys will only be matched to other boys across the three groups. Initial unbalance, descriptive statistics, and common support are the same as for standard matching. Attached you find the whole matching, balance estimation, and visualization process.
+
+```{r exact_3_group_matching, fig.height = 5, fig.width = 7.5}
+MAGMA_sim_data_tar_exact <- MAGMA_exact(Data = MAGMA_sim_data,
+                                        group = "teacher_ability_rating",
+                                        dist = "ps_tar",
+                                        exact = "sex",
+                                        cores = 2)
+str(MAGMA_sim_data_tar_exact)
+
+Balance_tar_exact <- Balance_MAGMA(Data = MAGMA_sim_data_tar_exact,
+                                   group = "teacher_ability_rating",
+                                   covariates = covariates_tar,
+                                   step = "step") 
+
+str(Balance_tar_exact)
+
+#Balance criteria for a 100 cases per group
+Balance_100_tar_criteria_exact <- Balance_extract(Balance = Balance_tar_exact,
+                                                  samplesize = 100,
+                                                  effects = FALSE)
+Balance_100_tar_criteria_exact
+
+#Extracting pairwise effects for 100 cases per group
+Balance_100_tar_effects_exact <- Balance_extract(Balance = Balance_tar_exact,
+                                                 samplesize = 100,
+                                                 effects = TRUE)
+Balance_100_tar_effects_exact
+
+#Ploting trend over increasing samle size
+Plot_MAGMA(Balance = Balance_tar_exact,
+           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio")) #Could be omitted
+
+#Creating table
+Table_MAGMA(Balance = Balance_tar_exact,
+            filename = "Balance_tar_exact.docx")
+
+#Computing descriptive statistics and pairwise effects for 100 cases per group
+descs_tar_post_exact <- MAGMA_desc(Data = MAGMA_sim_data_tar_exact,
+                                   group = "teacher_ability_rating",
+                                   covariates = covariates_tar,
+                                   step_num = 100,
+                                   step_var = "step",
+                                   filename = "stats_tar_post_exact.docx")
+
+#Displaying the table with defined colum names
+descs_tar_post_exact %>%
+    purrr::set_names(c("Overall N", "Overall Mean", "Overall SD",
+                       "BA N", "BA Support Mean", "BA Support SD",
+                       "A N", "A Mean", "A SD",
+                       "AA N", "AA Mean", "AA SD",
+                       "d BA-A", "d BA-AA", "d A-AA"))
+```
+
+# 2x2/four-group Example
+
+  In this fictitious 2x2-design example the variables `gifted_support` and `enrichment` are the independent (i.e., the treatment) variables. We are interested in how receiving giftedness support and the participation in afternoon enrichment affect the college GPA. The process of matching and balance evaluation is the same as in the previous examples. The grouping variable consists of two variables, so we use a character vector as input for the grouping variable (`c("gifted_support", "enrichment")`). Consequently, we also adapt the distance variable/propensity score (`ps_2x2`). Moreover, we use the same covariates as in the two-group example. Note that this 2x2 matching is nearly equivalent to a four-group matching using a multinominal variable indicating the four cells of the 2x2 group design. The multinominal variable for this example is `support_enrichment`. Using this variable is – regarding the code – similar to the three group examples, wherefore we focus on the 2x2 design here.
+  
+  Major distinctions between such a multinominal four-group matching and a 2x2 matching occur only in the balance estimation. Because of these changes in grouping variable and covariates, we need to estimate the initial unbalance for the two independent variables `gifted_support` and `enrichment`. The result of the `initial_unbalance` function changes slightly in this two-factorial design. Pillai's Trace is estimated separately for the two main effects and the interaction. As can be seen, *d*-ratio, mean *g*, and adjusted *d*-ratio are the same for a 2x2 or a four-group matching. Changes occur only for Pillai's Trace.  In a first step, we define the covariates and estimate initial unbalance, descriptive statistics, and area of common support.
+
+
+```{r covariates_2x2}
+#Defining the covariates
+covariates_2x2 <- c("GPA_school",
+                    "IQ_score",
+                    "Motivation",
+                    "parents_academic",
+                    "sex")
+
+#Computing descriptive statistics and all pairwise effects
+descs_2x2_pre <- MAGMA_desc(Data = MAGMA_sim_data,
+                            group = c("gifted_support", "enrichment"),
+                            covariates = covariates_2x2,
+                            filename = "stats_2x2_pre.docx")
+
+descs_2x2_pre %>%
+  purrr::set_names(c("Overall N", "Overall Mean", "Overall SD",
+                     "Sup & No En N", "Sup & No En Mean", 
+                     "Sup & No En SD",
+                     "Sup & En N", "Sup & En Mean", "Sup & En SD",
+                     "No Sup & No En N", "No Sup & No En Mean", "No Sup & No En SD",
+                     "No Sup & En N", "No Sup & En Mean", "No Sup & En SD",
+                     "d YesNo-YesYes", "d YesNo-NoNo", "d YesNo-NoYes",
+                     "d YesYes-NoNo", "d YesYes-YNoYes",
+                     "d NoNo-NoYes"))
+
+#Estimating initial unbalance
+unbalance_2x2 <- initial_unbalance(Data = MAGMA_sim_data,
+                                   group = c("gifted_support", "enrichment"),
+                                   covariates = covariates_2x2)
+unbalance_2x2
+
+#Estimating and plotting density overlap in gifted support & enrichment propensity score
+Density_overlap(Data = MAGMA_sim_data,
+                variable = "ps_2x2", 
+                group = c("gifted_support", "enrichment"),
+                variable_name = "Propensity Score",
+                group_labels = c("No Support & No Enrichment",
+                                 "No Support & Enrichment",
+                                 "Support & No Enrichment",
+                                 "Support & Enrichment"),
+                group_name = "Gifted Support & Enrichment")
+```
+
+## Standard Matching
+  After this check of initial unbalance, descriptive statistics, and area of common support we can conduct the matching. As mentioned above, we need to adapt the grouping variable and the distance variable/propensity score for this example. Moreover, conducting a 2x2/four-group matching has some computational load. If a RAM threshold is exceeded, MAGMA computes quasi-systematic matching. Again, this only affects the computational backend and does not affect the user application. Note that in the case of a multifactorial matching, MAGMA returns a fourth variable. This fourth variable is a multinominal version of the two independent variables (`group_long`).
+
+```{r standard_2x2_group_matching}
+MAGMA_sim_data_2x2 <- MAGMA(Data = MAGMA_sim_data,
+                            group = c("gifted_support", "enrichment"),
+                            dist = "ps_2x2",
+                            cores = 2)
+str(MAGMA_sim_data_2x2)
+```
+
+### Balance Estimation and Visualization
+
+  The only difference to the former examples in the process is, that the grouping variable is a character vector of length two. As a result of this, `Plot_MAGMA` displays three Pillai's Trace plots corresponding to the two main effects and the interaction.
+
+```{r Balance_2x2_group_matching, fig.height = 5, fig.width = 7.5}
+Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_2x2,
+                             group = c("gifted_support", "enrichment"),
+                             covariates = covariates_2x2,
+                             step = "step")
+
+#Balance criteria for a 100 cases per group
+Balance_100_2x2_criteria <- Balance_extract(Balance = Balance_2x2,
+                                            samplesize = 100,
+                                            effects = FALSE)
+Balance_100_2x2_criteria
+
+#Extracting pairwise effects for 100 cases per group
+Balance_100_2x2_effects <- Balance_extract(Balance = Balance_2x2,
+                                           samplesize = 100,
+                                           effects = TRUE)
+Balance_100_2x2_effects
+
+#Ploting trend over increasing samle size
+Plot_MAGMA(Balance = Balance_2x2,
+           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio")) 
+
+#Creating table
+Table_MAGMA(Balance = Balance_2x2,
+            filename = "Balance_2x2.docx")
+
+#Computing descriptive statistics and all pairwise effects after matching
+descs_2x2_post <- MAGMA_desc(Data = MAGMA_sim_data_2x2,
+                            group = c("gifted_support", "enrichment"),
+                            covariates = covariates_2x2,
+                            step_num = 100,
+                            step_var = "step",
+                            filename = "stats_post_pre.docx")
+
+descs_2x2_post %>%
+  purrr::set_names(c("Overall N", "Overall Mean", "Overall SD",
+                     "Sup & No En N", "Sup & No En Mean", 
+                     "Sup & No En SD",
+                     "Sup & En N", "Sup & En Mean", "Sup & En SD",
+                     "No Sup & No En N", "No Sup & No En Mean", "No Sup & No En SD",
+                     "No Sup & En N", "No Sup & En Mean", "No Sup & En SD",
+                     "d YesNo-YesYes", "d YesNo-NoNo", "d YesNo-NoYes",
+                     "d YesYes-NoNo", "d YesYes-YNoYes",
+                     "d NoNo-NoYes"))
+
+```
+
+## Exact Matching
+
+  We use the same covariates as we used for the standard 2x2 matching. The only change constitutes the use of `teacher_ability_rating` as exact variable. Below is the whole matching, balance estimation, and visualization process. Initial unbalance, descriptive statistics, and area of common support are the same as for standard matching.
+
+```{r exact_2x2_group_matching, fig.height = 5, fig.width = 7.5}
+MAGMA_sim_data_2x2_exact <- MAGMA_exact(Data = MAGMA_sim_data,
+                                        group = c("gifted_support", "enrichment"),
+                                        dist = "ps_2x2",
+                                        exact = "teacher_ability_rating",
+                                        cores = 2)
+str(MAGMA_sim_data_2x2_exact)
+
+
+#Estimating Balance
+Balance_2x2_exact <- Balance_MAGMA(Data = MAGMA_sim_data_2x2_exact,
+                                   group = c("gifted_support", "enrichment"),
+                                   covariates = covariates_2x2,
+                                   step = "step") #Not necessary to define here
+
+
+#Balance criteria for a 100 cases per group
+Balance_100_2x2_criteria_exact <- Balance_extract(Balance = Balance_2x2_exact,
+                                            samplesize = 100,
+                                            effects = FALSE)
+Balance_100_2x2_criteria_exact
+
+#Extracting pairwise effects for 100 cases per group
+Balance_100_2x2_effects_exact <- Balance_extract(Balance = Balance_2x2_exact,
+                                           samplesize = 100,
+                                           effects = TRUE)
+Balance_100_2x2_effects_exact
+
+#Ploting trend over increasing sample size
+Plot_MAGMA(Balance = Balance_2x2_exact,
+           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio")) #Could be omitted
+
+#Creating table
+Table_MAGMA(Balance = Balance_2x2_exact,
+            filename = "Balance_2x2_exact.docx")
+
+#Computing descriptive statistics and all pairwise effects post matching
+descs_2x2_post <- MAGMA_desc(Data = MAGMA_sim_data_2x2_exact,
+                            group = c("gifted_support", "enrichment"),
+                            covariates = covariates_2x2,
+step_num = 100,
+                            step_var = "step",
+                            filename = "stats_2x2_post.docx")
+
+descs_2x2_post %>%
+  purrr::set_names(c("Overall N", "Overall Mean", "Overall SD",
+                     "Sup & No En N", "Sup & No En Mean", 
+                     "Sup & No En SD",
+                     "Sup & En N", "Sup & En Mean", "Sup & En SD",
+                     "No Sup & No En N", "No Sup & No En Mean", "No Sup & No En SD",
+                     "No Sup & En N", "No Sup & En Mean", "No Sup & En SD",
+                     "d YesNo-YesYes", "d YesNo-NoNo", "d YesNo-NoYes",
+                     "d YesYes-NoNo", "d YesYes-YNoYes",
+                     "d NoNo-NoYes"))
+
+```
+
+
+# References
+Austin, P. C. (2014). A comparison of 12 algorithms for matching on the propensity score. Statistics in Medicine, 33(6), 1057–1069. <https://doi.org/10.1002/sim.6004>
+
+Feuchter, M. D., Urban, J., Scherrer, V., Breit, M., & Preckel, F. (2022). Introduction and Demonstration of the Many-Group Matching (MAGMA)-Algorithm: Matching Solutions for Two or More Groups. <https://doi.org/10.17605/OSF.IO/AEDXB>
+
+Imai, K., & van Dyk, D. A. (2004). Causal Inference With General Treatment Regimes. Journal of the American Statistical Association, 99(467), 854–866. <https://doi.org/10.1198/016214504000001187>
+
+Jacovidis, J. N. (2017). Evaluating the performance of propensity score matching methods: A simulation study [Doctoral Dissertation]. James Madison University.
+
+Li, M. (2013). Using the Propensity Score Method to Estimate Causal Effects. Organizational Research Methods, 16(2), 188–226. <https://doi.org/10.1177/1094428112447816>
+
+McCaffrey, D. F [Daniel F.], Griffin, B. A [Beth Ann], Almirall, D., Slaughter, M. E., Ramchand, R., & Burgette, L. F [Lane F.] (2013). A tutorial on propensity score estimation for multiple treatments using generalized boosted models. Statistics in Medicine, 32(19), 3388–3414. <https://doi.org/10.1002/sim.5753>
+
+Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
+ 2.1. <https://CRAN.R-project.org/package=overlapping>
+ 
+Powell, M. G., Hull, D. M., & Beaujean, A. A. (2020). Propensity Score Matching for Education Data: Worked Examples. The Journal of Experimental Education, 88(1), 145–164. <https://doi.org/10.1080/00220973.2018.1541850>
+
+Ridgeway, G., McCaffrey, D. F [D. F.], Morral, A. R., Cefalu, M., Burgette, L. F [L. F.], Pane, J. D., & Griffin, B. A [B. A.]. (2015). Toolkit for Weighting and Analysis of Nonequivalent Groups: A tutorial for the twang package. Rand. 
+
+Rosenbaum, P. R., & Rubin, D. B. (1983). The central role of the propensity score in observational studies for causal effects. Biometrika, 70(1), 41–55. <https://doi.org/10.1093/biomet/70.1.41>
+
+Rosenbaum, P. R., & Rubin, D. B. (1985). Constructing a Control Group Using Multivariate Matched Sampling Methods That Incorporate the Propensity Score. The American Statistician, 39(1), 33–38.
+
+Stuart, E. A. (2010). Matching methods for causal inference: A review and a look forward. Statistical Science : A Review Journal of the Institute of Mathematical Statistics, 25(1), 1–21. <https://doi.org/10.1214/09-STS313>
+
+Thoemmes, F. J., & Kim, E. S. (2011). A Systematic Review of Propensity Score Methods in the Social Sciences. Multivariate Behavioral Research, 46(1), 90–118. <https://doi.org/10.1080/00273171.2011.540475>
+
+
