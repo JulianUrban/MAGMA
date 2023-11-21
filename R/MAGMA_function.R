@@ -299,7 +299,7 @@ MAGMA <- function(Data, group, dist, cores = 1) {
                       all.x = TRUE)
       } else {
         cores <- 2
-        cat("\n", "Large Number of groups with large group sizes. Computing quasi-systematic matching. Cores were reduced to 2 to simplify node comumunication despite high RAM usage.")
+        cat("\n", "Large Number of groups with large group sizes. Computing quasi-systematic matching. Cores were reduced to 2 to simplify node communication despite high RAM usage.")
 
         number_split_groups <- ceiling(sqrt(prod(elements) / 1.0e+09)) + 1
 
@@ -397,7 +397,7 @@ MAGMA <- function(Data, group, dist, cores = 1) {
                       all.x = TRUE)
       } else {
         cores <- 2
-        cat("\n", "Large Number of groups with large group sizes. Computing quasi-systematic matching. Cores were reduced to 2 to simplify node comumunication despite high RAM usage.")
+        cat("\n", "Large Number of groups with large group sizes. Computing quasi-systematic matching. Cores were reduced to 2 to simplify node communication despite high RAM usage.")
 
         number_split_groups <- ceiling(sqrt(prod(elements) / 1.0e+09)) + 1
         if(number_split_groups == 1) {
@@ -528,7 +528,7 @@ MAGMA <- function(Data, group, dist, cores = 1) {
 
     } else {
       cores <- 2
-      cat("\n", "Large Number of groups with large group sizes. Computing quasi-systematic matching. Cores were reduced to 2 to simplify node comumunication despite high RAM usage.")
+      cat("\n", "Large Number of groups with large group sizes. Computing quasi-systematic matching. Cores were reduced to 2 to simplify node communication despite high RAM usage.")
 
       number_split_groups <- ceiling(sqrt(prod(elements) / 1.0e+09)) + 1
       if(number_split_groups == 1) {

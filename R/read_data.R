@@ -6,7 +6,7 @@
 #' @format A data frame with 14 variables of 800 cases.
 #' \itemize{
 #' \item{ID}{ Individual ID for each case}
-#' \item{sex}{ Binary variable indicating gender of a participant}
+#' \item{gender}{ Binary variable indicating gender of a participant}
 #' \item{gifted_support}{ Binary variable that specifies whether a case received
 #' giftedness support (1) or nor (0)}
 #' \item{teacher_ability_rating}{ Three-step ordinal variable ranging from 1 to

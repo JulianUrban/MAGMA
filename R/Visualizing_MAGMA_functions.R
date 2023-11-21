@@ -117,7 +117,7 @@ Pillai <- Pillai_iterativ(da = Data,
                          st = step)
 
 
-cat("\n", "Pillai's Trace finsihed. Starting to compute d-ratio.")
+cat("\n", "Pillai's Trace finished. Starting to compute d-ratio.")
 
 if(length(group) == 2) {
   values_1 <- unlist(unique(Data[group[1]]))
@@ -150,7 +150,7 @@ if(length(group) == 2) {
   ########################
   ########mean g#########
   ########################
-cat("\n", "d-ratio finsihed. Starting to compute mean-g.", "\n")
+cat("\n", "d-ratio finished. Starting to compute mean-g.", "\n")
   group_number <- Data %>%
     dplyr::select(tidyselect::all_of(group)) %>%
     table() %>%
@@ -162,7 +162,7 @@ cat("\n", "d-ratio finsihed. Starting to compute mean-g.", "\n")
   ########################
   ###likelihhod g < .20###
   ########################
-  cat("mean-g finsihed. Starting to compute adjusted d-ratio.")
+  cat("mean-g finished. Starting to compute adjusted d-ratio.")
   adj_d_ratio_20 <- adj_d_ratio(input = d_effects)
 
   #####################
@@ -172,7 +172,7 @@ cat("\n", "d-ratio finsihed. Starting to compute mean-g.", "\n")
                d_ratio = d_effects,
                mean_effect = mean_g,
                adjusted_d_ratio = adj_d_ratio_20)
-  cat("\n", "finsihed balance estimation")
+  cat("\n", "finished. balance estimation")
   return(output)
 }
 
@@ -677,6 +677,9 @@ Plot_MAGMA <- function(Balance,
     }
 
     if(is.matrix(Balance$Pillai)) {
+      effects <- c("Main Effect 1",
+                   "Main Effect 2",
+                   "Interaction")
       for(i in 1:nrow(Balance$Pillai))
       print(Balance$Pillai[i, ] %>%
               unlist() %>%
@@ -688,7 +691,10 @@ Plot_MAGMA <- function(Balance,
               ggplot2::scale_y_continuous(limits = c(0, .5),
                                  breaks = seq(0, .5, .05)) +
               ggplot2::labs(y = "Pillai`s Trace", x ="\nN per group",
-                   title = "Pillai`s Trace values for different sample sizes"))
+                   title = paste("Pillai`s Trace values for",
+                                 effects[i],
+                                 "different sample sizes",
+                                 sep = " ")))
     }
 
   }
