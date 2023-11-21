@@ -693,7 +693,7 @@ Plot_MAGMA <- function(Balance,
               ggplot2::labs(y = "Pillai`s Trace", x ="\nN per group",
                    title = paste("Pillai`s Trace values for",
                                  effects[i],
-                                 "different sample sizes",
+                                 "for different sample sizes",
                                  sep = " ")))
     }
 
