@@ -20,7 +20,7 @@ Density_overlap(
 plotting as well as the specified grouping variable.}
 
 \item{variable}{A character naming the variable for that the density should
-be plotted.}
+be plotted (e.g., "ps_gifted").}
 
 \item{group}{A character specifying the groups for which the density should
 be plotted. Can be an independent group comparison (e.g., comparing matched
@@ -87,7 +87,7 @@ group_name = "Rating")
 
 }
 \references{
-{Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). \emph{overlapping: Estimation of Overlapping in Empirical Distributions}. R package version
+{Pastore, M., Loro, P.A.D., Mingione, M., Calcagni, A. (2022). \emph{overlapping: Estimation of Overlapping in Empirical Distributions}. R package version
 2.1, \url{https://CRAN.R-project.org/package=overlapping}.}
 }
 \author{

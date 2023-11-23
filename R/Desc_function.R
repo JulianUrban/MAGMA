@@ -13,17 +13,15 @@
 #' continuous variables for that the descriptive statistics should be computed.
 #' @param group A character (vector) specifying the groups for which
 #' differentiated statistics should be computed.
-#' @param step_num Optional argument. If no value is specified, pre matching
-#' statistics are computed. For post matching statistics the exact needs to be
-#' defined via the step arguments. step_num is an integer specifying the number
-#' of cases that should be included per group in this post matching comparison.
-#' Is based on the step variable of MAGMA.
-#' @param step_var Optional argument. If no value is specified, pre matching
-#' statistics are computed. For post matching statistics the exact needs to be
-#' defined via the step arguments. A Character specifying the name of the step
-#' variable in the data set.
-#' @param filename Optional argument.  A character specifying the filename that
-#' the resulting Word document with the Table should have.
+#' @param step_num An integer specifying the number of cases that should be
+#' included per group in this post matching comparison (e.g., 100). If no value
+#' is specified, pre matching statistics are computed. Is based on the step
+#' variable of MAGMA. Optional argument.
+#' @param step_var A Character specifying the name of the step
+#' variable in the data set. If no value is specified, pre matching
+#' statistics are computed. Optional argument.
+#' @param filename A character specifying the filename that
+#' the resulting Word document with the Table should have. Optional argument.
 #'
 #' @author Julian Urban
 #'
@@ -77,7 +75,7 @@ MAGMA_desc <- function(Data,
   }
 
   if(!is.numeric(step_num) & !is.null(step_num)) {
-    stop("step_num needs to be a numeric or null!")
+    stop("step_num needs to be a numeric / integer or null!")
   }
 
   if(!is.null(step_num) & is.null(step_var) | is.null(step_num) & !is.null(step_var)) {
@@ -85,12 +83,12 @@ MAGMA_desc <- function(Data,
   }
 
   if(!is.character(step_var) & !is.null(step_var)) {
-    stop("step_var needs to be a numeric or null!")
+    stop("step_var needs to be a character or null!")
   }
 
   if(!is.null(step_num)) {
     if(step_num >= max(Data[step_var], na.rm = T)) {
-      stop("Step eceeded max step. Results equals to MAGMA_desc_post.")
+      stop("Step exceeded max step. Results equal to MAGMA_desc_post.")
     }
     Data <- Data %>%
       dplyr::filter(!!sym(step_var) <= step_num)

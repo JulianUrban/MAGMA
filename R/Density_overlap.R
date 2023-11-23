@@ -10,7 +10,7 @@
 #' @param Data A data frame that contains the desired variable for density
 #' plotting as well as the specified grouping variable.
 #' @param variable A character naming the variable for that the density should
-#' be plotted.
+#' be plotted (e.g., "ps_gifted").
 #' @param group A character specifying the groups for which the density should
 #' be plotted. Can be an independent group comparison (e.g., comparing matched
 #' groups) or the comparison of pre and post matched samples.
@@ -29,7 +29,7 @@
 #'
 #' @import tidyverse ggplot2 overlapping tibble dplyr tidyselect
 #'
-#' @references {Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
+#' @references {Pastore, M., Loro, P.A.D., Mingione, M., Calcagni, A. (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
 #' 2.1, <https://CRAN.R-project.org/package=overlapping>.}
 #'
 #' @return A Plot showing the kernel density for a specified variable separated

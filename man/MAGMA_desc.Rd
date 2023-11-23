@@ -23,19 +23,17 @@ continuous variables for that the descriptive statistics should be computed.}
 \item{group}{A character (vector) specifying the groups for which
 differentiated statistics should be computed.}
 
-\item{step_num}{Optional argument. If no value is specified, pre matching
-statistics are computed. For post matching statistics the exact needs to be
-defined via the step arguments. step_num is an integer specifying the number
-of cases that should be included per group in this post matching comparison.
-Is based on the step variable of MAGMA.}
+\item{step_num}{An integer specifying the number of cases that should be
+included per group in this post matching comparison (e.g., 100). If no value
+is specified, pre matching statistics are computed. Is based on the step
+variable of MAGMA. Optional argument.}
 
-\item{step_var}{Optional argument. If no value is specified, pre matching
-statistics are computed. For post matching statistics the exact needs to be
-defined via the step arguments. A Character specifying the name of the step
-variable in the data set.}
+\item{step_var}{A Character specifying the name of the step
+variable in the data set. If no value is specified, pre matching
+statistics are computed. Optional argument.}
 
-\item{filename}{Optional argument.  A character specifying the filename that
-the resulting Word document with the Table should have.}
+\item{filename}{A character specifying the filename that
+the resulting Word document with the Table should have. Optional argument.}
 }
 \value{
 A table of descriptive statistics and pairwise effects for pre- or

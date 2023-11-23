@@ -41,11 +41,11 @@
 #' pairwise effects with respect to group sample size.
 #' @export
 #'
-#' @references {Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
+#' @references {Pastore, M., Loro, P.A.D., Mingione, M., Calcagni, A. (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
 #' 2.1, (\url{https://CRAN.R-project.org/package=overlapping}).
-#' William Revelle (2023). _psych: Procedures for Psychological, Psychometric, and Personality Research_. Northwestern University, Evanston, Illinois. R package version 2.3.6, (\url{https://CRAN.R-project.org/package=psych}).
+#' Revelle, W. (2023). _psych: Procedures for Psychological, Psychometric, and Personality Research_. Northwestern University, Evanston, Illinois. R package version 2.3.6, (\url{https://CRAN.R-project.org/package=psych}).
 #' Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. Journal of Statistical Software, 36(3), 1-48. (\doi{10.18637/jss.v036.i03})
-#' Fisher Z, Tipton E, Zhipeng H (2023). _robumeta: Robust Variance Meta-Regression_. R package version 2.1,
+#' Fisher, Z., Tipton, E., Zhipeng, H. (2023). _robumeta: Robust Variance Meta-Regression_. R package version 2.1,
 #' (\url{https://CRAN.R-project.org/package=robumeta}).}
 #'
 #' @examples
@@ -207,11 +207,11 @@ cat("\n", "d-ratio finished. Starting to compute mean-g.", "\n")
 #' criteria for the unmatched sample.
 #' @export
 #'
-#' @references {Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
+#' @references {Pastore, M., Loro, P.A.D., Mingione, M., Calcagni, A. (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
 #' 2.1, (\url{https://CRAN.R-project.org/package=overlapping}).
-#' William Revelle (2023). _psych: Procedures for Psychological, Psychometric, and Personality Research_. Northwestern University, Evanston, Illinois. R package version 2.3.6, (\url{https://CRAN.R-project.org/package=psych}).
+#' Revelle, W. (2023). _psych: Procedures for Psychological, Psychometric, and Personality Research_. Northwestern University, Evanston, Illinois. R package version 2.3.6, (\url{https://CRAN.R-project.org/package=psych}).
 #' Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. Journal of Statistical Software, 36(3), 1-48. (\doi{10.18637/jss.v036.i03})
-#' Fisher Z, Tipton E, Zhipeng H (2023). _robumeta: Robust Variance Meta-Regression_. R package version 2.1,
+#' Fisher, Z., Tipton, E., Zhipeng, H. (2023). _robumeta: Robust Variance Meta-Regression_. R package version 2.1,
 #' (\url{https://CRAN.R-project.org/package=robumeta}).}
 #'
 #' @examples
@@ -527,7 +527,7 @@ Table_MAGMA <- function(Balance, filename = NULL) {
     dplyr::transmute(Criterion_optimized = c("Best Pillai",
                                       "Best d-ratio",
                                       "Best mean g",
-                                      "adjusted d-ratio"), #Row names for table
+                                      "Best adj. d-ratio"), #Row names for table
               #Extractig vakues for all three "optimal" models as well as their n er group
               Pillai_Trace = round(Balance$Pillai[index_optimal], 2),
               d_ratio = round(Balance$d_ratio$d_rate[index_optimal], 2),
@@ -556,7 +556,7 @@ Table_MAGMA <- function(Balance, filename = NULL) {
                                         "Best Pillai IA",
                                         "Best d-ratio",
                                         "Best mean g",
-                                        "adjusted d-ratio"), #Row names for table
+                                        "Best adj. d-ratio"), #Row names for table
                 #Extractig vakues for all three "optimal" models as well as their n er group
                 Pillai_Trace_ME1 = round(Balance$Pillai[1, index_optimal], 2),
                 Pillai_Trace_ME2 = round(Balance$Pillai[2, index_optimal], 2),
