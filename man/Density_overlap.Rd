@@ -19,30 +19,30 @@ Density_overlap(
 \item{Data}{A data frame that contains the desired variable for density
 plotting as well as the specified grouping variable.}
 
-\item{variable}{A character naming the variable for that the density should
-be plotted (e.g., "ps_gifted").}
+\item{variable}{A character specifying the variable for which the density
+should be plotted (e.g., "ps_gifted").}
 
 \item{group}{A character specifying the groups for which the density should
 be plotted. Can be an independent group comparison (e.g., comparing matched
 groups) or the comparison of pre and post matched samples.}
 
-\item{variable_name}{A character specifying the name that should appear
-in the plot for variable.}
+\item{variable_name}{A character specifying the name to appear
+in the plot for the variable.}
 
 \item{group_labels}{A character vector specifying the labels for the groups
-that should appear in the legend of the plot.}
+to ppear in the legend of the plot.}
 
 \item{group_name}{A character specifying the name of the grouping variable
-that should appear in the title of the legend.}
+to appear in the title of the legend.}
 
-\item{step_num}{An integer specifying the number of cases that should be included
+\item{step_num}{An integer specifying the number of cases to be included
 per group in this post matching comparison. Is based on the step variable of
 MAGMA.}
 
-\item{step_var}{A Character specifying the name of the step variable.}
+\item{step_var}{A character specifying the name of the step variable.}
 }
 \value{
-A Plot showing the kernel density for a specified variable separated
+A plot showing the kernel density for a specified variable separately
 for specified groups and the quantification of this overlap.
 }
 \description{
@@ -56,7 +56,13 @@ quantifies the amount of overlap.
 }
 \examples{
 \dontrun{
-#Density overlap in Propensity scores for gifted before matching
+# Estimating density overlap using the data set 'MAGMA_sim_data
+# Estimating density overlap for 'ps_gifted' (propensity scores for
+# giftedness support)
+# Defining plot aesthetics with 'group', 'variable_name', "group_lables',
+# and 'group_name'
+# Estimating pre-matching density overlap by not specifying 'step_num' and
+# 'step_var'
 Density_overlap(Data = MAGMA_sim_data,
 variable = "ps_gifted",
 group = "gifted_support",
@@ -66,7 +72,15 @@ variable_name = "Propensity Score",
 group_labels = c("No Support", "Support"),
 group_name = "Gifted Support")
 
- #Density overlap in Propensity scores for gifted after matching with 250 cases per group.
+
+# Estimating density overlap using the matched data set
+#'MAGMA_sim_data_gifted'
+# Estimating density overlap for 'ps_gifted' (propensity scores for
+# giftedness support)
+# Defining plot aesthetics with 'group', 'variable_name', 'group_lables',
+# and 'group_name'
+# Estimating post-matching overlap for 250 cases per group ('step_num')
+# Name of the step variable is 'step'
 Density_overlap(Data = MAGMA_sim_data_gifted,
 variable = "ps_gifted",
 group = "gifted_support",
@@ -76,7 +90,13 @@ variable_name = "Propensity Score",
 group_labels = c("No Support", "Support"),
 group_name = "Gifted Support")
 
-#Density overlap in GPA for teacher ability rating before matching
+# Estimating density overlap using the data set 'MAGMA_sim_data
+# Estimating density overlap for 'teacher_ability_rating' (ability rated
+# from teacher as below average, average, or above average)
+# Defining plot aesthetics with 'group', 'variable_name', 'group_lables',
+# and 'group_name'
+# Estimating pre-matching density overlap by not specifying 'step_num' and
+# 'step_var'
 Density_overlap(Data = MAGMA_sim_data,
 variable = "GPA_school",
 group = "teacher_ability_rating",

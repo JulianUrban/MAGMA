@@ -77,7 +77,7 @@ unbalance_gifted
   As may be expected from the descriptive statistics, the cases that received giftedness support differed substantially from the cases that did not receive giftedness support on at least some covariates. Before we start matching, we check the possibility of eligible matches. Therefore, we estimate and plot the common support in propensity score via the kernel-density (Pastore et al., 2022) and the function `density_overlap`. This function requires the dataset (`MAGMA_sim_data`), the variable for which the overlap should be computed (`ps_gifted`), and the grouping variable (`gifted_support`). The remaining arguments of the functions define aesthetics of the plot, namely the name of the variable (`variable_name`), the name of the group (`group_name`), and the labels of the respective groups (`group_labels`). The function returns a density plot and a value expressing the overlapping area.
 
 ```{r common_support_gifted, fig.height = 5, fig.width = 7.5}
-# Density overlap in Propensity scores for gifted before matching
+# Density overlap in propensity scores for gifted before matching
 Density_overlap(Data = MAGMA_sim_data,
                 variable = "ps_gifted", 
                 group = "gifted_support",
@@ -93,7 +93,7 @@ Density_overlap(Data = MAGMA_sim_data,
   Applying this function results in a dataset that extends the original dataset by three variables. The first, `weight`, indicates whether this case was matched or not. The second, `step`, indicates the iterative step in which a case was matched. More specifically, the cases with the smallest Mahalanobis distance are matched first and, thus, receive `1` in the step variable. The matched cases with the second smallest distance receive the `2` and so on. The `step` variable is essential to compare and extract different matching solutions. The third variable, `distance` indicates the propensity score distance of the matched cases.
 
 ```{r standard_2_group_matching}
-#Conducting matching for gifted support
+# Conducting matching for gifted support
 MAGMA_sim_data_gifted <- MAGMA(Data = MAGMA_sim_data,
                                group = "gifted_support",
                                dist = "ps_gifted",
@@ -109,19 +109,19 @@ str(MAGMA_sim_data_gifted)
   This function is augmented by the function `Balance_extract`. This function extracts the balance criteria (`effects = FALSE`) or the pairwise effects (`effects = TRUE`) for a specific sample size per group (`samplesize`) from the results of `Balance_MAGMA`. It returns a vector containing the balance criteria or the pairwise effects respectively.
 
 ```{r Balance_standard_2_group_matching}
-#Estimating the four balance criteria iteratively over possible sample sizes
+# Estimating the four balance criteria iteratively over possible sample sizes
 Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data_gifted,
                                 group = "gifted_support",
                                 covariates = covariates_gifted,
                                 step = "step") 
 
-#Extracting balance criteria for 100 cases per group
+# Extracting balance criteria for 100 cases per group
 Balance_100_criteria <- Balance_extract(Balance = Balance_gifted,
                                         samplesize = 100,
                                         effects = FALSE)
 Balance_100_criteria
 
-#Extracting pairwise effects for 100 cases per group
+# Extracting pairwise effects for 100 cases per group
 Balance_100_effects <- Balance_extract(Balance = Balance_gifted,
                                        samplesize = 100,
                                        effects = TRUE)
@@ -136,7 +136,7 @@ Balance_100_effects
   The trend of these plots depends strongly on the data. Nonetheless, they can be a good indicator of breakpoints in the sample size-balance associations. `Plot_MAGMA` uses fixed limits for the y-axis. This ensures comparability of these plots and prevents misinterpretation due to a restricted y-axis range. Both *d*-ratio and adjusted *d*-ratio vary between 0 and 1. Although Pillai's Trace has theoretically the same range, we set the limits to 0 and 0.5. Larger values are unlikely and indicate a poor balance. A stricter limit might restrict a comprehensive trend evaluation. For mean *g* we set the limits to 0 and 1. The lower limit 0 corresponds to the theoretical lower limit. The rationale for the upper limit is comparable to that of Pillai's Trace.
 
 ```{r Plots_standard_2_group_matching, fig.height = 5, fig.width = 7.5}
-#Plotting balance trend over sample size
+# Plotting balance trend over sample size
 Plot_MAGMA(Balance = Balance_gifted,
            criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio"))
 ```
@@ -154,15 +154,15 @@ Table_MAGMA(Balance = Balance_gifted,
   After the decision for a final matching model, we suggest reporting the descriptive statistics and pairwise effects of the selected model. To do this, we can use the same function as we used for reporting pre-matching statistics (`MAGMA_desc`). Additional to the parameters we specified above (`Data`, `covariates`, and `group`), we need to name the step variable (`step_var`) and final sample size per group (`step_num`). As above, this function results in a table with descriptive statistics and pairwise effects (Cohen’s d) of all covariates.
 
 ```{r post_matching_standard_2}
-#Computing descriptive statistics and pairwise effects for 100 cases per group
+# Computing descriptive statistics and pairwise effects for 100 cases per group
 descs_gifted_post <- MAGMA_desc(Data = MAGMA_sim_data_gifted,
-                               group = "gifted_support",
-                               covariates = covariates_gifted,
-                               step_num = 100,
-                               step_var = "step",
-                               filename = "stats_gifted_post.docx")
+                                group = "gifted_support",
+                                covariates = covariates_gifted,
+                                step_num = 100,
+                                step_var = "step",
+                                filename = "stats_gifted_post.docx")
 
-#Displaying the table with defined colum names
+# Displaying the table with defined colum names
 descs_gifted_post %>%
   purrr::set_names(c("Overall N", "Overall Mean", "Overall SD",
                      "No Support N", "No Support Mean", "No Support SD",
@@ -204,7 +204,7 @@ Balance_100_effects_exact <- Balance_extract(Balance = Balance_gifted_exact,
                                        effects = TRUE)
 Balance_100_effects_exact
 
-# Ploting trend over increasing sample size
+# Plotting trend over increasing sample size
 Plot_MAGMA(Balance = Balance_gifted_exact,
            criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio")) 
 
@@ -292,7 +292,7 @@ Balance_tar <- Balance_MAGMA(Data = MAGMA_sim_data_tar,
                              covariates = covariates_tar,
                              step = "step") 
 
-# Balance criteria for a 100 cases per group
+# Balance criteria for 100 cases per group
 Balance_100_tar_criteria <- Balance_extract(Balance = Balance_tar,
                                             samplesize = 100,
                                             effects = FALSE)
@@ -304,7 +304,7 @@ Balance_100_tar_effects <- Balance_extract(Balance = Balance_tar,
                                            effects = TRUE)
 Balance_100_tar_effects
 
-# Ploting trend over increasing samle size
+# Plotting trend over increasing sample size
 Plot_MAGMA(Balance = Balance_tar,
            criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio")) 
 
@@ -354,7 +354,7 @@ Balance_tar_exact <- Balance_MAGMA(Data = MAGMA_sim_data_tar_exact,
 
 str(Balance_tar_exact)
 
-# Balance criteria for a 100 cases per group
+# Balance criteria for 100 cases per group
 Balance_100_tar_criteria_exact <- Balance_extract(Balance = Balance_tar_exact,
                                                   samplesize = 100,
                                                   effects = FALSE)
@@ -366,7 +366,7 @@ Balance_100_tar_effects_exact <- Balance_extract(Balance = Balance_tar_exact,
                                                  effects = TRUE)
 Balance_100_tar_effects_exact
 
-# Ploting trend over increasing samle size
+# Plotting trend over increasing sample size
 Plot_MAGMA(Balance = Balance_tar_exact,
            criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio")) #Could be omitted
 
@@ -462,7 +462,7 @@ Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_2x2,
                              covariates = covariates_2x2,
                              step = "step")
 
-# Balance criteria for a 100 cases per group
+# Balance criteria for 100 cases per group
 Balance_100_2x2_criteria <- Balance_extract(Balance = Balance_2x2,
                                             samplesize = 100,
                                             effects = FALSE)
@@ -474,7 +474,7 @@ Balance_100_2x2_effects <- Balance_extract(Balance = Balance_2x2,
                                            effects = TRUE)
 Balance_100_2x2_effects
 
-# Ploting trend over increasing samle size
+# Plotting trend over increasing sample size
 Plot_MAGMA(Balance = Balance_2x2,
            criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio")) 
 
@@ -523,7 +523,7 @@ Balance_2x2_exact <- Balance_MAGMA(Data = MAGMA_sim_data_2x2_exact,
                                    step = "step") #Not necessary to define here
 
 
-# Balance criteria for a 100 cases per group
+# Balance criteria for 100 cases per group
 Balance_100_2x2_criteria_exact <- Balance_extract(Balance = Balance_2x2_exact,
                                             samplesize = 100,
                                             effects = FALSE)
@@ -535,7 +535,7 @@ Balance_100_2x2_effects_exact <- Balance_extract(Balance = Balance_2x2_exact,
                                            effects = TRUE)
 Balance_100_2x2_effects_exact
 
-# Ploting trend over increasing sample size
+# Plotting trend over increasing sample size
 Plot_MAGMA(Balance = Balance_2x2_exact,
            criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio")) #Could be omitted
 

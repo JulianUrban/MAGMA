@@ -11,10 +11,11 @@ MAGMA_exact(Data, group, dist, exact, cores = 1)
 distance variable. Data needs to be specified in your environment.}
 
 \item{group}{A character specifying the name of
-your grouping variable in data. Note that MAGMA can only match your data for
-a maximum of 4 groups. For matching over two groups (e.g., 2x2 Design) is
-possible by specifying group as a character vector with a length of two. In
-this case each or the 2 grouping variables can only have two levels.}
+your grouping variable in the data. Note that MAGMA can only match your data
+for a maximum of 4 groups. Matching over two grouping variables (e.g., 2x2
+Design) is possible by specifying group as a character vector with a length
+of two. In this case, each or the 2 grouping variables can only have two
+levels.}
 
 \item{dist}{A character specifying the name of your distance
 variable in data.}
@@ -34,14 +35,14 @@ cases. For more information, see Details.
 }
 \description{
 This function conducts exact many group matching for 2 to 4 groups. Exact
-means, that only cases with the same value on the exact variable can be
+means that only cases with the same value on the exact variable can be
 matched. It augments the original data set by relevant MAGMA variables.
 For details, see below.
 }
 \details{
 This function conducts nearest neighbor exact many group matching. It is
-applicable for 2 to 4 groups or a 2x2 Design. As output, this function
-augment your original data by the variables \emph{weight}, \emph{step}, \emph{distance},
+applicable for two to four groups or a 2x2 design. As output, this function
+augments your original data by the variables \emph{weight}, \emph{step}, \emph{distance},
 and \emph{ID}. Weight indicates whether a case was matched. Step specifies the
 iteration in which a case was matched. It also shows which cases were
 matched together. Distance indicates the mean difference within a match.
@@ -54,8 +55,13 @@ matching, see \code{\link{MAGMA}}
 }
 \examples{
 \dontrun{
-#Running this code will take a while
-#Computing two-group Matching for giftedness support with exact for enrichment
+# Running this code will take a while
+# Two-group exact matching using the data set 'MAGMA_sim_data'
+# Matching variable 'gifted_support' (received giftedness support yes or no)
+# 'MAGMA_sim_data_gifted_exact' contains the result of the matching
+# Exact matching for 'enrichment' (participated in enrichment or not)
+# Students that participated can only be matched with other
+# students that participated and vice versa
 MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
                                            group = "gifted_support",
                                            dist = "ps_gifted",
@@ -63,16 +69,31 @@ MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
                                            cores = 2)
 head(MAGMA_sim_data_gifted_exact)
 
-#Conducting three-group matching for teacher ability rating exact for
-#sex. Cores per default = 1
+# Conducting three-group matching using the data set 'MAGMA_sim_data'
+# Matching variable 'teacher_ability_rating' (ability rated from teacher as
+# below average, average, or above average)
+# 'MAGMA_sim_data_tar_exact' contains the result of the matching
+# Exact matching for gender (male or female)
+# Male students can only be matched to male students, female students can only
+# be matched to female students
+# Cores per default = 1
 MAGMA_sim_data_tar_exact<- MAGMA_exact(Data = MAGMA_sim_data,
                                        group = "teacher_ability_rating",
                                        dist = "ps_tar",
-                                       exact = "sex")
+                                       exact = "gender")
 head(MAGMA_sim_data_tar_exact)
 
-#Computing 2x2 Matching for giftedness support and enrichment equivalent to
-#a four group matching with exact MAGMA_exact for teacher rated ability
+# 2x2 matching using the data set 'MAGMA_sim_data'
+# Matching variables are 'gifted_support' (received giftedness support yes
+# or no) and 'enrichment' (participated in enrichment or not)
+# 'MAGMA_sim_data_gift_enrich_exact' contains the result of the matching
+# 2x2 matching is equal to four-group matching
+# Exact matching for for teacher rated ability (ability rated from teacher as
+# below average, average, or above average)
+# Below average students can only be matched to other below average rated
+# students, average rated students can be matched with other average rated
+# students, and above average rated students can only be matched to other
+# above average rated students
 MAGMA_sim_data_gift_enrich_exact <- MAGMA_exact(Data = MAGMA_sim_data,
                                                 group = c("gifted_support", "enrichment"),
                                                 dist = "ps_2x2",

@@ -7,19 +7,19 @@
 Balance_extract(Balance, samplesize, effects = FALSE)
 }
 \arguments{
-\item{Balance}{A result of Balance_MAGMA. Compare the function
-\code{\link{Balance_MAGMA}}.}
+\item{Balance}{A result of Balance_MAGMA. See the function
+\code{\link{Balance_MAGMA}} for details.}
 
 \item{samplesize}{An integer indicating the sample size for which the balance
 criteria or pairwise effects should be extracted.}
 
 \item{effects}{Indicates whether balance criteria or pairwise effects should
-be extracted. The default \emph{FALSE} returns the balance criteria, while \emph{TRUE}
-leads to the extraction of the pairwise effects.}
+be extracted. The default value \emph{FALSE} returns the balance criteria, while
+\emph{TRUE} leads to the extraction of pairwise effects.}
 }
 \value{
-Depends on effects argument. If \emph{FALSE} it returns in a vector
-containing the balance criteria. If \emph{TRUE} it returns a vector containing
+Depends on the effects argument. If \emph{FALSE}, it returns in a vector
+containing the balance criteria. If \emph{TRUE}, it returns a vector containing
 all possible pairwise effects.
 }
 \description{
@@ -27,17 +27,22 @@ This function extracts the balance criteria or pairwise effects of a
 Balance_MAGMA result for a specified sample size.
 }
 \details{
-Based on a previous computed \code{\link{Balance_MAGMA}} object this function
-enables the extraction of balance criteria or pairwise effects for each
-desired sample size. Thus, checking the balance for each possible sample size
-independently is possible.
+Given a previous computed \code{\link{Balance_MAGMA}} object, this function
+enables the extraction of balance criteria or pairwise effects for any
+desired sample size. This makes it possible to independently check the
+balance for each possible sample size.
 }
 \examples{
 \dontrun{
-#Defining the names of the metric and binary covariates
+# Define the names of the metric and binary covariates
 covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 
-#Matching data set for giftedness support with exact matching for enrichment.
+# Two-group exact matching using the data set 'MAGMA_sim_data'
+# Matching variable 'gifted_support' (received giftedness support yes or no)
+# 'MAGMA_sim_data_gifted_exact' contains the result of the matching
+# Exact matching for 'enrichment' (participated in enrichment or not)
+# Students that participated can only be matched with other
+# students that participated and vice versa
 MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
                                            group = "gifted_support",
                                            dist = "ps_gifted",
@@ -45,49 +50,53 @@ MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
                                            cores = 2)
 
 
-#Estimating Balance
-Balance_gifted_exact <- Balance_MAGMA(data = MAGMA_sim_data_gifted_exact,
+# Estimating balance
+Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
                                       group = "gifted_support",
                                       covariates = covariates_vector,
-                                      step = "step") #step created during matching
+                                      step = "step") # Step created during matching
 str(Balance_gifted_exact)
 
-#Balance criteria for a 100 cases per group
-#Balance criteria
+# Balance criteria for 100 cases per group
+# Balance criteria
 Balance_100_gifted <- Balance_extract(Balance = Balance_gifted_exact,
                                       samplesize = 100,
                                       effects = FALSE)
 Balance_100_gifted
 
-#Pairwise Effects
+# Pairwise effects
 Balance_100_gifted_effects <- Balance_extract(Balance = Balance_gifted_exact,
                                               samplesize = 100,
                                               effects = TRUE)
 Balance_100_gifted_effects
 
-#Computing 2x2 Matching for giftedness support and enrichment equivalent to
-#a four group matching
+
+# 2x2 matching using the data set 'MAGMA_sim_data'
+# Matching variables are 'gifted_support' (received giftedness support yes
+# or no) and 'enrichment' (participated in enrichment or not)
+# 'MAGMA_sim_data_gift_enrich' contains the result of the matching
+# 2x2 matching is equivalent to four-group matching
 MAGMA_sim_data_gift_enrich <- MAGMA(Data = MAGMA_sim_data,
                                    group = c("gifted_support", "enrichment"),
                                    dist = "ps_2x2",
                                    cores = 2)
 
 
-#Estimating Balance. Covariates same as above
+# Estimating balance. Covariates same as above
 Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_gift_enrich,
                              group = c("gifted_support", "enrichment"),
                              covariates = covariates_vector,
-                             step = "step") #step created during matching
+                             step = "step") # Step created during matching
 str(Balance_2x2)
 
-#Balance criteria for a 125 cases per group
-#Balance criteria
+# Balance criteria for 125 cases per group
+# Balance criteria
 Balance_125_2x2 <- Balance_extract(Balance = Balance_2x2,
                                       samplesize = 125,
                                       effects = FALSE)
 Balance_125_2x2
 
-#Pairwise Effects
+# Pairwise effects
 Balance_125_2x2_effects <- Balance_extract(Balance = Balance_2x2,
                                               samplesize = 125,
                                               effects = TRUE)

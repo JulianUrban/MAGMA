@@ -1,23 +1,23 @@
 #' MAGMA_desc
 #'
-#' This function provides pre- and post matching descriptive statistics and
+#' This function provides pre- and post-matching descriptive statistics and
 #' effects.
 #'
 #' This function enables the computation of descriptive statistics of
 #' continuous variables for the overall sample and specified groups. Additional,
-#' pairwise effects (Cohen's d) is computed.
+#' pairwise effects (Cohen's d) are computed.
 #'
 #' @param Data A data frame that contains the desired variable for density
 #' plotting as well as the specified grouping variable.
-#' @param covariates A character vector naming the variable names of the
-#' continuous variables for that the descriptive statistics should be computed.
+#' @param covariates A character vector specifying the variable names of the
+#' continuous variables for which the descriptive statistics should be computed.
 #' @param group A character (vector) specifying the groups for which
 #' differentiated statistics should be computed.
-#' @param step_num An integer specifying the number of cases that should be
+#' @param step_num An integer specifying the number of cases to be
 #' included per group in this post matching comparison (e.g., 100). If no value
-#' is specified, pre matching statistics are computed. Is based on the step
+#' is specified, pre-matching statistics are computed. Is based on the step
 #' variable of MAGMA. Optional argument.
-#' @param step_var A Character specifying the name of the step
+#' @param step_var A character specifying the name of the step
 #' variable in the data set. If no value is specified, pre matching
 #' statistics are computed. Optional argument.
 #' @param filename A character specifying the filename that
@@ -28,26 +28,35 @@
 #' @import tidyverse psych purrr janitor flextable dplyr tidyselect
 #'
 #' @return A table of descriptive statistics and pairwise effects for pre- or
-#' postmatching samples.
+#' post-matching samples.
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' #Defining covariates
+#' # Defining covariates
 #' covariates_gifted <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 #'
-#' #Estimating pre matching descriptive statistics and pairwise effects
+#' # Estimating pre-matching descriptive statistics and pairwise effects using
+#' # the data set 'MAGMA_sim_data'
+#' # Estimating statistics for grouping variable 'gifted support' (received
+#' # giftedness support yes or no)
 #' MAGMA_desc(Data = MAGMA_sim_data,
 #'            covariates = covariates_gifted,
 #'            group =  "gifted_support")
 #'
-#' #Matching the data for gifted support
+#' # Two-group exact matching using the data set 'MAGMA_sim_data'
+#' # Matching variable 'gifted_support' (received giftedness support yes or no)
+#' # 'MAGMA_sim_data_gifted' contains the result of the matching
 #' MAGMA_sim_data_gifted <- MAGMA(Data = MAGMA_sim_data,
 #'                                group = "gifted_support",
 #'                                dist = "ps_gifted",
 #'                                cores = 2)
 #'
-#' #Estimating post matching descriptive statistics and pairwise effects
+#' # Estimating post-matching descriptive statistics and pairwise effects using
+#' # the data set 'MAGMA_sim_data'
+#' # Estimating statistics for grouping variable 'gifted support' (received
+#' # giftedness support yes or no)
+#' # Estimating statistics for 100 cases per group
 #' MAGMA_desc(Data = MAGMA_sim_data_gifted,
 #'            covariates = covariates_gifted,
 #'            group =  "gifted_support"
