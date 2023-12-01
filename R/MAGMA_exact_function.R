@@ -242,6 +242,8 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
     rm(distance_mean)
     gc()
 
+    cat("\n", "Distance computation finished. Starting matching")
+
     group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
     rm(distance_array)
     gc()
@@ -291,6 +293,8 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
         rm(distance_mean)
         gc()
 
+        cat("\n", "Distance computation finished. Starting matching")
+
         group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
         rm(distance_array)
         gc()
@@ -338,6 +342,8 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
         rm(distance_matrix)
         rm(distance_mean)
         gc()
+
+        cat("\n", "Distance computation finished. Starting matching")
 
         group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
         rm(distance_array)

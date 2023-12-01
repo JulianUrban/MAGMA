@@ -102,7 +102,7 @@ Balance_MAGMA <- function(Data, group, covariates, step = "step") {
   #Prüfen ob data korrekt ist
   #TODO: tbl class > 1
   if (!is.data.frame(Data) && !tibble::is_tibble(Data)) {
-    stop("Class data needs to be list, data frame, or tibble!")
+    stop("data needs to be list, data frame, or tibble!")
   }
 
   if(!is.character(group) | length(group) > 2) {
@@ -117,7 +117,7 @@ Balance_MAGMA <- function(Data, group, covariates, step = "step") {
     stop("step needs to be a character of length 1!")
   }
 
-cat("Start estimating Pillai's Trace.")
+cat("\n", "Start estimating Pillai's Trace.")
 
   ########################
   #####Pillai's Trace#####
@@ -174,7 +174,7 @@ cat("\n", "d-ratio finished. Starting to compute mean-g.", "\n")
   ########################
   ###likelihhod g < .20###
   ########################
-  cat("Mean g finished. Starting to compute adjusted d-ratio.")
+  cat("\n", "Mean g finished. Starting to compute adjusted d-ratio.")
   adj_d_ratio_20 <- adj_d_ratio(input = d_effects)
 
   #####################
