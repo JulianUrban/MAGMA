@@ -87,14 +87,14 @@ mean_g_meta <- function(input, number_groups) {
                      as.numeric()
 
   if (number_groups == 2) {
-    cat("\n", "mean g was computed using random effects meta-analysis with metafor.")
+    cat("\n", "Mean g was computed using random effects meta-analysis with metafor.")
     for (i in starting_number:ncol(g)) {
       ma_input <- cbind(g[, i], variance_g[, i])
       mean_g[i] <- metafor::rma(ma_input[, 1],
                                 ma_input[, 2])[["b"]]
           }
   } else {
-    cat("\n", "mean g was computed using robust variance meta-analysis with robumeta.")
+    cat("\n", "Mean g was computed using robust variance meta-analysis with robumeta.")
     number_covariates <- 1/2 * ((number_groups - 1)^2 + (number_groups - 1))
     for (i in starting_number:ncol(g)) {
       ma_input <- cbind(g[, i],

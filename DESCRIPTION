@@ -1,7 +1,7 @@
 Package: MAGMA
 Title: MAny-Group MAtching
-Version: 0.9
-Authors@R: c(person("Julian", "Urban", email = "julian.urban@uni-trier.de", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-8886-4724")),
+Version: 1.0
+Authors@R: c(person("Julian", "Urban", email = "urbanj@uni-trier.de", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-8886-4724")),
     person("Markus D.", "Feuchter", role = c("aut")),
     person("Vsevolod", "Scherrer", role = c("aut")),
     person("Moritz L.", "Breit", role = c("aut")),
@@ -20,7 +20,8 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
-Author: Julian Urban [aut, cre], Markus D. Feuchter [aut], Vsevolod Scherrer [aut], Moritz Breit [aut], Franzis Preckel [aut]
+Author: Julian Urban [aut, cre], Markus D. Feuchter [aut], Vsevolod Scherrer [aut], Moritz L. Breit [aut], Franzis Preckel [aut]
 Maintainer: Julian Urban <urbanj@uni-trier.de>
+BugReports: https://github.com/JulianUrban/MAGMA/issues
 
 
