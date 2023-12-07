@@ -39,9 +39,9 @@
 #' @import tidyverse parallel doParallel foreach tibble dplyr tidyselect stats
 #' @return Your input data frame of valid cases augmented with matching
 #' relevant variables, namely *weight*, *step*, *distance*, and *ID*. In case
-#' of missing values on the distance or group variable, MAGMA excludes them for
-#' the matching process. The returned data set does not contain those excluded
-#' cases. For more information, see Details.
+#' of missing values on the distance or group variable, MAGMA_exact excludes
+#' them for the matching process. The returned data set does not contain those 
+#' excluded cases. For more information, see Details.
 #' @export
 #'
 #' @examples

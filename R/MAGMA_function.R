@@ -2,7 +2,7 @@
 #'
 #' estimates distance in MAGMA_3.
 #'
-#' This function is an inner function of MAGMA_3. It estimates the distance
+#' This function is an inner function of MAGMA. It estimates the distance
 #' of all possible matches.
 #'
 #' @param data A matrix containing all possible combinations.

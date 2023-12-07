@@ -11,7 +11,7 @@ initial_unbalance(Data, group, covariates)
 \emph{covariates} of interest.}
 
 \item{group}{A character specifying the name of
-your grouping variable in data. Note that MAGMA can only match your data for
+your grouping variable in data. Note that MGMA can only match your data for
 a maximum of 4 groups. For matching over two grouping variables (e.g., 2x2
 design) is possible by specifying group as a character vector with a length
 of two. In this case each or the two grouping variables can only have two
@@ -25,13 +25,13 @@ A numeric vector of length 4 containing the balance
 criteria for the unmatched sample.
 }
 \description{
-This function computes all four balance criteria of MAGMA, namely
+This function computes all four balance criteria of MGMA, namely
 \emph{Pillai's Trace}, \emph{d-ratiO}, \emph{mean g}, and \emph{adjusted d-ratio} for the
 unmatched data set. This enables comparison of initial unbalance with
 the balance after matching.
 }
 \details{
-This function computes all four Balance criteria of MAGMA, namely Pillai's
+This function computes all four Balance criteria of MGMA, namely Pillai's
 Trace, d-ratio, mean g, and adjusted d-ratio for the overall samples.
 Missing data for Pillai's Trace are excluded listwise, while for the other
 balance criteria pairwise exclusion is applied.

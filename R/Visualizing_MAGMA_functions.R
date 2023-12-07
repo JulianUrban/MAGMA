@@ -1,12 +1,12 @@
 #' Balance estimation
 #'
-#' This function computes all four balance criteria of MAGMA, namely
+#' This function computes all four balance criteria of MGMA, namely
 #' *Pillai's Trace*, *d-ratio*, *mean g*, and *adjusted d-ratio*. The
 #' estimation onvolves both binary and metric variables. Balance
 #' estimation is performed across various sample sizes. See Details for more
 #' information.
 #'
-#' This function computes all four balance criteria of MAGMA, namely Pillai's
+#' This function computes all four balance criteria of MGMA, namely Pillai's
 #' Trace, d-ratio, mean g, and adjusted d-ratio. This is an iterative process
 #' including more cases with each iteration according to the step variable.
 #' Thus, starting with cases having a small within-match distance, larger
@@ -19,7 +19,7 @@
 #' balance criteria pairwise exclusion is applied.
 #'
 #' @param Data A data frame containing at least the *grouping* variable, the
-#' *step* variable from the main MAGMA-function (or other matching algorithms),
+#' *step* variable from the main MGMA-function (or other matching algorithms),
 #'  and all *covariates* of interest.
 #' @param group A character specifying the name of
 #' your grouping variable in data. Note that MAGMA can only match your data for
@@ -31,7 +31,7 @@
 #' metric covariates of interest.
 #' @param step A character specifying the step variable of the matching. Per
 #' default, it is set to *step*, which corresponds the resulting
-#' name of the main MAGMA function.
+#' name of the main MGMA function.
 #'
 #'
 #' @author Julian Urban
@@ -190,12 +190,12 @@ cat("\n", "d-ratio finished. Starting to compute mean-g.", "\n")
 
 #' Initial unbalance estimation
 #'
-#' This function computes all four balance criteria of MAGMA, namely
+#' This function computes all four balance criteria of MGMA, namely
 #' *Pillai's Trace*, *d-ratiO*, *mean g*, and *adjusted d-ratio* for the
 #' unmatched data set. This enables comparison of initial unbalance with
 #' the balance after matching.
 #'
-#' This function computes all four Balance criteria of MAGMA, namely Pillai's
+#' This function computes all four Balance criteria of MGMA, namely Pillai's
 #' Trace, d-ratio, mean g, and adjusted d-ratio for the overall samples.
 #' Missing data for Pillai's Trace are excluded listwise, while for the other
 #' balance criteria pairwise exclusion is applied.
@@ -203,7 +203,7 @@ cat("\n", "d-ratio finished. Starting to compute mean-g.", "\n")
 #' @param Data A data frame containing at least the *grouping* variable and all
 #'  *covariates* of interest.
 #' @param group A character specifying the name of
-#' your grouping variable in data. Note that MAGMA can only match your data for
+#' your grouping variable in data. Note that MGMA can only match your data for
 #' a maximum of 4 groups. For matching over two grouping variables (e.g., 2x2
 #' design) is possible by specifying group as a character vector with a length
 #' of two. In this case each or the two grouping variables can only have two
