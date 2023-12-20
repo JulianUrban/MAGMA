@@ -13,15 +13,16 @@ and all \emph{covariates} of interest.}
 
 \item{group}{A character specifying the name of
 your grouping variable in data. Note that MAGMA can only match your data for
-a maximum of 4 groups. For matching over two groups (e.g., 2x2 Design) is
-possible by specifying group as a character vector with a length of two. In
-this case each or the 2 grouping variables can only have two levels.}
+a maximum of four groups. For matching over two grouping variables (e.g., 2x2
+design) is possible by specifying group as a character vector with a length
+of two. In this case, each of the two grouping variables can only have two
+levels.}
 
 \item{covariates}{A character vector listing the names of all binary and
 metric covariates of interest.}
 
-\item{step}{A character naming the step variable of the matching. Per
-default it specifies the name as \emph{step}, which corresponds the resulting
+\item{step}{A character specifying the step variable of the matching. Per
+default, it is set to \emph{step}, which corresponds the resulting
 name of the main MAGMA function.}
 }
 \value{
@@ -29,19 +30,19 @@ A list of length four containing all balance criteria and all
 pairwise effects with respect to group sample size.
 }
 \description{
-This function computes all four Balance criteria of MAGMA, namely
-\emph{Pillai's Trace}, \emph{d-ratio}, \emph{mean g}, and \emph{adjusted d-ratio}. It can
-consider binary and metric variables for balance estimation. Balance
-Estimation is conducted over a varying sample size. See Details for more
+This function computes all four balance criteria of MAGMA, namely
+\emph{Pillai's Trace}, \emph{d-ratio}, \emph{mean g}, and \emph{adjusted d-ratio}. The
+estimation onvolves both binary and metric variables. Balance
+estimation is performed across various sample sizes. See Details for more
 information.
 }
 \details{
-This function computes all four Balance criteria of MAGMA, namely Pillai's
+This function computes all four balance criteria of MAGMA, namely Pillai's
 Trace, d-ratio, mean g, and adjusted d-ratio. This is an iterative process
 including more cases with each iteration according to the step variable.
-Thus, starting with cases having a small within match distance, larger
-distances are included with increasing iterations. As minimum the function
-specifies a n >= 20 per group. This does not imply, that balance criteria
+Thus, starting with cases having a small within-match distance, larger
+distances are included with increasing iterations. As a minimum the function
+specifies n >= 20 per group. This does not imply that balance criteria
 with such a small sample size can be estimated consistently. For Pillai's
 Trace a higher minimum sample size can be possible. It depends on the number
 of covariates to ensure a positive model identification.
@@ -49,12 +50,16 @@ Missing data for Pillai's Trace are excluded listwise, while for the other
 balance criteria pairwise exclusion is applied.
 }
 \examples{
-{
 \dontrun{
-#Defining the names of the metric and binary covariates
+# Defining the names of the metric and binary covariates
 covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 
-#Matching data set for giftedness support with exact matching for enrichment.
+# Two-group exact matching using the data set 'MAGMA_sim_data'
+# Matching variable 'gifted_support' (received giftedness support yes or no)
+# 'MAGMA_sim_data_gifted_exact' contains the result of the matching
+# Exact matching for 'enrichment' (participated in enrichment or not)
+# Students that participated can only be matched with other
+# students that participated and vice versa
 MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
                                            group = "gifted_support",
                                            dist = "ps_gifted",
@@ -62,41 +67,44 @@ MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
                                            cores = 2)
 
 
-#Estimating Balance
+# Estimating balance
 Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
                                       group = "gifted_support",
                                       covariates = covariates_vector,
-                                      step = "step") #step created during matching
+                                      step = "step") # step created during matching
 str(Balance_gifted_exact)
 
-#Computing 2x2 Matching for giftedness support and enrichment equivalent to
-#a four group matching
+# 2x2 matching using the data set 'MAGMA_sim_data'
+# Matching variables are 'gifted_support' (received giftedness support yes
+# or no) and 'enrichment' (participated in enrichment or not)
+# 'MAGMA_sim_data_gift_enrich' contains the result of the matching
+# 2x2 matching is equivalent to four-group matching
 MAGMA_sim_data_gift_enrich <- MAGMA(Data = MAGMA_sim_data,
                                    group = c("gifted_support", "enrichment"),
                                    dist = "ps_2x2",
                                    cores = 2)
 
 
-#Estimating Balance. Covariates same as above
-Balance_2x2 <- Balance_MAGMA(Dta = MAGMA_sim_data_gift_enrich,
+# Estimating balance. Covariates same as above
+Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_gift_enrich,
                              group = c("gifted_support", "enrichment"),
                              covariates = covariates_vector,
-                             step = "step") #step created during matching
+                             step = "step") # step created during matching
 str(Balance_2x2)
 
-}
 }
 
 }
 \references{
-{Pastore M, Loro PAD, Mingione M, Calcagni' A (2022). \emph{overlapping: Estimation of Overlapping in Empirical Distributions}. R package version
-2.1, \url{https://CRAN.R-project.org/package=overlapping}.
-William Revelle (2023). \emph{psych: Procedures for Psychological, Psychometric, and Personality Research}. Northwestern University, Evanston,
-Illinois. R package version 2.3.6, \url{https://CRAN.R-project.org/package=psych}.
-Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. Journal of Statistical Software, 36(3), 1-48.
-\doi{10.18637/jss.v036.i03}
-Fisher Z, Tipton E, Zhipeng H (2023). \emph{robumeta: Robust Variance Meta-Regression}. R package version 2.1,
-\url{https://CRAN.R-project.org/package=robumeta}.}
+{Pastore, M., Loro, P.A.D., Mingione, M., Calcagni, A. (2022). \emph{overlapping: Estimation of Overlapping in Empirical Distributions}. R package version
+2.1, (\url{https://CRAN.R-project.org/package=overlapping}).
+
+Revelle, W. (2023). \emph{psych: Procedures for Psychological, Psychometric, and Personality Research}. Northwestern University, Evanston, Illinois. R package version 2.3.6, (\url{https://CRAN.R-project.org/package=psych}).
+
+Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. Journal of Statistical Software, 36(3), 1-48. (\doi{10.18637/jss.v036.i03})
+
+Fisher, Z., Tipton, E., Zhipeng, H. (2023). \emph{robumeta: Robust Variance Meta-Regression}. R package version 2.1,
+(\url{https://CRAN.R-project.org/package=robumeta}).}
 }
 \author{
 Julian Urban

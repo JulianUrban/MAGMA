@@ -11,10 +11,11 @@ MAGMA(Data, group, dist, cores = 1)
 distance variable. Data needs to be specified in your environment.}
 
 \item{group}{A character specifying the name of
-your grouping variable in data. Note that MAGMA can only match your data for
-a maximum of 4 groups. For matching over two groups (e.g., 2x2 Design) is
-possible by specifying group as a character vector with a length of two. In
-this case each or the 2 grouping variables can only have two levels.}
+your grouping variable in the data. Note that MAGMA can only match your data
+for a maximum of 4 groups. Matching over two grouping variables (e.g., 2x2
+Design) is possible by specifying group as a character vector with a length
+of two. In this case, each or the 2 grouping variables can only have two
+levels.}
 
 \item{dist}{A character specifying the name of your distance
 variable in data.}
@@ -31,49 +32,56 @@ cases. For more information, see Details.
 }
 \description{
 This function conducts many group matching for 2 to 4 groups. It augments
-the original data set by relevant MAGMA variables. For details, see below.
+the original data set by the relevant MAGMA variables. For details, see
+below.
 }
 \details{
 This function conducts nearest neighbor many group matching. It is
-applicable for 2 to 4 groups or a 2x2 Design. As output, this function
-augment your original data by the variables \emph{weight}, \emph{step}, \emph{distance},
+applicable for two to four groups or a 2x2 design. As output, this function
+augments your original data by the variables \emph{weight}, \emph{step}, \emph{distance},
 and \emph{ID}. Weight indicates whether a case was matched. Step specifies the
 iteration in which a case was matched. It also shows which cases were matched
 together. Distance indicates the mean difference within a match. Since
 matches with a lower distance are matched in an earlier iteration, step and
 distance are strongly correlated.
-This function has some CPU and RAM load. In most four group applications and
-three group applications with large sample size, RAM may be not sufficient.
+This function has some CPU and RAM load. In most four-group applications and
+three-group applications with large sample size, RAM may be not sufficient.
 Therefore MAGMA switches to random quasi-systematic matching. If this is the
-case MAGMA informs you. Results does not change, but Balance might be
-slightly affected.
+case, MAGMA informs you. The output of the function does not change, but
+balance might be slightly affected.
 }
 \examples{
-{
 \dontrun{
-#Running this code will take a while
-#Computing two-group Matching for giftedness support
-MAGMA_sim_data_gifted<- MAGMA(Data = MAGMA_sim_data,
+# Running this code will take a while
+# Two-group exact matching using the data set 'MAGMA_sim_data'
+# Matching variable 'gifted_support' (received giftedness support yes or no)
+# 'MAGMA_sim_data_gifted' contains the result of the matching
+MAGMA_sim_data_gifted <- MAGMA(Data = MAGMA_sim_data,
                                 group = "gifted_support",
                                 dist = "ps_gifted",
                                 cores = 2)
 head(MAGMA_sim_data_gifted)
 
-#Conducting three-group matching for teacher ability rating. Cores per
-#default = 1
+# Two-group exact matching using the data set 'MAGMA_sim_data'
+# Matching variable 'teacher_ability_rating' (ability rated from teacher as
+# below average, average, or above average)
+# MAGMA_sim_data_tar' contains the result of the matching
+# Cores per default = 1
 MAGMA_sim_data_tar <- MAGMA(Data = MAGMA_sim_data,
                             group = "teacher_ability_rating",
                             dist = "ps_tar")
 head(MAGMA_sim_data_tar)
 
-#Computing 2x2 Matching for giftedness support and enrichment equivalent to
-#a four group matching
+# 2x2 matching using the data set 'MAGMA_sim_data'
+# Matching variables are 'gifted_support' (received giftedness support yes
+# or no) and 'enrichment' (participated in enrichment or not)
+# 'MAGMA_sim_data_gift_enrich' contains the result of the matching
+# 2x2 matching is equal to four-group matching
 MAGMA_sim_data_gift_enrich <- MAGMA(Data = MAGMA_sim_data,
                                    group = c("gifted_support", "enrichment"),
                                    dist = "ps_2x2",
                                    cores = 2)
 head(MAGMA_sim_data_gift_enrich)
-}
 }
 
 }

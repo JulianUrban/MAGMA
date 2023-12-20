@@ -14,67 +14,15 @@
 #'
 #'
 J_group_size <- function(group_size) {
-  J <- tibble::tibble(N = c(1:group_size),
-            J = NA) %>%
-    dplyr::transmute(J = 1 - (3/(4 * (2 * N - 2) - 1)))
+  J <- tibble::tibble(c(1:group_size),
+            NA) %>%
+    purrr::set_names(c("N", "J")) %>%
+    dplyr::mutate(J = 1 - (3/(4 * (2 * N - 2) - 1)))
   J <- as.numeric(J$J)
   return(J)
 }
 
 
-#' multiply
-#'
-#' inner function of mean_g.
-#'
-#' This function multiplies two numerics.
-#'
-#' @param x A numeric
-#' @param y A numeric
-#'
-#' @author Julian Urban
-#'
-#' @return A product.
-#'
-#'
-multiply <- function(x, y) {
-  x * y
-}
-
-#' multiply for variance
-#'
-#' inner function of mean_g.
-#'
-#' This function multiplies a numeric with another squared numeric.
-#'
-#' @param x A numeric
-#' @param y A numeric
-#'
-#' @author Julian Urban
-#'
-#' @return A product.
-#'
-multiply_variance <-function(x, y) {
-  x * y^2
-}
-
-
-
-#' inner variance
-#'
-#' inner function of mean_g.
-#'
-#' This function computed the variance of a Cohen's d.
-#'
-#' @param d_square The squared Cohen's d.
-#' @param size_per_group Specifies the group size.
-#'
-#' @author Julian Urban
-#'
-#' @return A numeric specifying the variance of an effect.
-#'
-inner_variance <- function(d_square, size_per_group) {
-  d_square/(4 * size_per_group) + 2 * size_per_group/size_per_group^2
-}
 
 #' mean standardized effect
 #'
@@ -101,29 +49,33 @@ mean_g_meta <- function(input, number_groups) {
     stop("input needs to be an inner d object!")
   }
   if (!is.numeric(number_groups) | number_groups < 2) {
-    stop("number of groups needs to be an integer of at least two!") #Check that number of groups is an integer
+    stop("number_groups needs to be an integer of at least two!") #Check that number of groups is an integer
   }
   J <- J_group_size(ncol(input$effects))
   suppressMessages({
-  g <- input$effects %>%
-    t() %>%
-    tibble::as_tibble(., .name_repair = "minimal") %>%
-    sapply(., multiply, J) %>%
-    tibble::as_tibble(., .name_repair = "minimal") %>%
-    t() %>%
-    abs() %>%
-    tibble::as_tibble(., .name_repair = "minimal")
+    g <- input$effects %>%
+      t() %>%
+      tibble::as_tibble(.name_repair = "minimal") %>%
+      dplyr::mutate(dplyr::across(.cols = everything(),
+                                  .fns = ~.x * J,
+                                  .names = "{.col}")) %>%
+      t() %>%
+      abs() %>%
+      tibble::as_tibble(.name_repair = "minimal")
 
   size_per_group <- c(1:ncol(input$effects))
-  variance_g <- input$effects^2 %>% #improve code, avoid t()
+
+  variance_g <- input$effects^2 %>%
     t() %>%
-    tibble::as_tibble(., .name_repair = "minimal") %>%
-    sapply(., inner_variance, size_per_group) %>%
-    tibble::as_tibble(., .name_repair = "minimal") %>%
-    sapply(., multiply_variance, J) %>%
-    tibble::as_tibble(., .name_repair = "minimal") %>%
-    t()%>%
-    tibble::as_tibble(., .name_repair = "minimal")
+    tibble::as_tibble(.name_repair = "minimal") %>%
+    dplyr::mutate(dplyr::across(.cols = everything(),
+                                .fns = ~.x/(4 * size_per_group) + 2 * size_per_group/size_per_group^2,
+                                .names = "{.col}")) %>%
+    dplyr::mutate(dplyr::across(.cols = everything(),
+                                .fns = ~.x * J^2,
+                                .names = "{.col}")) %>%
+    t() %>%
+    tibble::as_tibble(.name_repair = "minimal")
   })
 
   #meta-analysis can not tak NAs as input. Defining starting value for analysis
@@ -135,15 +87,14 @@ mean_g_meta <- function(input, number_groups) {
                      as.numeric()
 
   if (number_groups == 2) {
-    print("mean g was computed using random effects meta-analysis with metafor.")
+    cat("\n", "Mean g was computed using random effects meta-analysis with metafor.")
     for (i in starting_number:ncol(g)) {
       ma_input <- cbind(g[, i], variance_g[, i])
       mean_g[i] <- metafor::rma(ma_input[, 1],
-                                ma_input[, 2]) %>%
-        .[["b"]]
+                                ma_input[, 2])[["b"]]
           }
   } else {
-    print("mean g was computed using robust variance meta-analysis with robumeta.")
+    cat("\n", "Mean g was computed using robust variance meta-analysis with robumeta.")
     number_covariates <- 1/2 * ((number_groups - 1)^2 + (number_groups - 1))
     for (i in starting_number:ncol(g)) {
       ma_input <- cbind(g[, i],
@@ -151,8 +102,7 @@ mean_g_meta <- function(input, number_groups) {
                       rep(c(1:number_covariates),
                           nrow(g)/number_covariates)) #create nesting variable
       mean_g[i] <- robumeta::robu(ma_input[, 1] ~ 1, var.eff.size = ma_input[, 2],
-                        studynum = ma_input[, 3], data = ma_input) %>%
-        .[["b.r"]]}
+                        studynum = ma_input[, 3], data = ma_input)[["b.r"]]}
   }
   return(mean_g)
 }

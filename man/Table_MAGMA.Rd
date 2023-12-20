@@ -11,36 +11,40 @@ Table_MAGMA(Balance, filename = NULL)
 \code{\link{Balance_MAGMA}}.}
 
 \item{filename}{Optional argument.  A character specifying the filename that
-the resulting Word document with the Table should have.}
+the resulting Word document with the table should have.}
 }
 \value{
-A 4x5 APA Table showing the four balance
-criteria and the respective sample size per group for four scenarios. In
-each of these scenario one balance criteria has its optimal value. It can
-print a Word Document with this table, too.
+A 4x5 APA table showing the four balance
+criteria and the respective sample sizes per group for four scenarios. In
+each of these scenarios, one balance criteria has its optimal value. It can
+print a Word Document with this table.
 }
 \description{
 This function prints an APA Table of the Balance criteria. It displays the
-balance criteria for four different sample sizes per group. In each scenario
+balance criteria for four different sample sizes per group. In each scenario,
 one balance criteria has its optimal value. Thus, the table is a 4x5 table
 showing the four balance criteria and the respective sample size per group
 for the four scenarios.
 }
 \details{
 This function creates an APA Table including the optimal models for each
-balance criterion, the other criteria for this sample size per group as well
-as the sample size itself. With an optional argument you can save a the APA
-table in Word.
+balance criterion, the other criteria for the respective sample size per
+group as well as the sample size itself. With an optional argument you can
+save a the APA table in Word.
 }
 \examples{
-{
 \dontrun{
-#This function bases on a MAGMA function as well as Balance_MAGMA.
-#To run examples, copy them into your console or script.
-#Defining the names of the metric and binary covariates
+# This function bases on a MAGMA function as well as Balance_MAGMA
+# To run examples, copy them into your console or script
+# Defining the names of the metric and binary covariates
 covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 
-#Matching data set for giftedness support with exact matching for enrichment.
+# Two-group exact matching using the data set 'MAGMA_sim_data'
+# Matching variable 'gifted_support' (received giftedness support yes or no)
+# 'MAGMA_sim_data_gifted_exact' contains the result of the matching
+# Exact matching for 'enrichment' (participated in enrichment or not)
+# Students that participated can only be matched with other
+# students that participated and vice versa
 MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
                                            group = "gifted_support",
                                            dist = "ps_gifted",
@@ -48,7 +52,7 @@ MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
                                            cores = 2)
 
 
-#Estimating Balance
+# Estimating balance
 Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
                                       group = "gifted_support",
                                       covariates = covariates_vector,
@@ -56,22 +60,24 @@ Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
 
 Table_MAGMA(Balance_gifted_exact, "Balance_gifted_exact.docx")
 
-#Computing 2x2 Matching for giftedness support and enrichment equivalent to
-#a four group matching
+# 2x2 matching using the data set 'MAGMA_sim_data'
+# Matching variables are 'gifted_support' (received giftedness support yes
+# or no) and 'enrichment' (participated in enrichment or not)
+# 'MAGMA_sim_data_gift_enrich' contains the result of the matching
+# 2x2 matching is equivalent to four-group matching
 MAGMA_sim_data_gift_enrich <- MAGMA(Data = MAGMA_sim_data,
                                    group = c("gifted_support", "enrichment"),
                                    dist = "ps_2x2",
                                    cores = 2)
 
 
-#Estimating Balance. Covariates same as above
+# Estimating Balance. Covariates same as above
 Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_gift_enrich,
                              group = c("gifted_support", "enrichment"),
                              covariates = covariates_vector,
                              step = "step") #step created during matching
 
 Table_MAGMA(Balance_2x2, "Balance_2x2.docx")
-}
 }
 
 }

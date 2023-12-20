@@ -20,21 +20,25 @@ a plot should be created. Default is all criteria.}
 R Plots showing the balance trend over sample size.
 }
 \description{
-Plots for Balance with respect to sample size.
+Plots for balance with respect to sample size.
 }
 \details{
 This function creates R-Plots using ggplot to show the balance trend over
 sample size.
 }
 \examples{
-{
 \dontrun{
-#This function bases on a MAGMA function as well as Balance_MAGMA.
-#To run examples, copy them into your console or script.
-#Defining the names of the metric and binary covariates
+# This function bases on a MAGMA function as well as Balance_MAGMA
+# To run examples, copy them into your console or script
+# Defining the names of the metric and binary covariates
 covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
 
-#Matching data set for giftedness support with exact matching for enrichment.
+# Two-group exact matching using the data set 'MAGMA_sim_data'
+# Matching variable 'gifted_support' (received giftedness support yes or no)
+# 'MAGMA_sim_data_gifted_exact' contains the result of the matching
+# Exact matching for 'enrichment' (participated in enrichment or not)
+# Students that participated can only be matched with other
+# students that participated and vice versa
 MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
                                            group = "gifted_support",
                                            dist = "ps_gifted",
@@ -42,7 +46,7 @@ MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
                                            cores = 2)
 
 
-#Estimating Balance
+# Estimating balance
 Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
                                       group = "gifted_support",
                                       covariates = covariates_vector,
@@ -50,15 +54,18 @@ Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
 
 Plot_MAGMA(Balance = Balance_gifted_exact) #Using default to plot all criteria
 
-#Computing 2x2 Matching for giftedness support and enrichment equivalent to
-#a four group matching
+# 2x2 matching using the data set 'MAGMA_sim_data'
+# Matching variables are 'gifted_support' (received giftedness support yes
+# or no) and 'enrichment' (participated in enrichment or not)
+# 'MAGMA_sim_data_gift_enrich' contains the result of the matching
+# 2x2 matching is equivalent to four-group matching
 MAGMA_sim_data_gift_enrich <- MAGMA(Data = MAGMA_sim_data,
                                    group = c("gifted_support", "enrichment"),
                                    dist = "ps_2x2",
                                    cores = 2)
 
 
-#Estimating Balance. Covariates same as above
+# Estimating balance. Covariates same as above
 Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_gift_enrich,
                              group = c("gifted_support", "enrichment"),
                              covariates = covariates_vector,
@@ -67,7 +74,6 @@ Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_gift_enrich,
 Plot_MAGMA(Balance = Balance_2x2,
            criterion = c("d_ration", "Adj_d_ratio"))
 }
-}          
 
 }
 \author{

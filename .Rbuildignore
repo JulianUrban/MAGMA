@@ -1,2 +1,13 @@
 MAGMA\.Rproj$
 \.Rproj\.user$
+^\.Rproj\.user$
+^vignettes/.Balance_2_x_2\.rds$
+^vignettes/.Balance_2_x_2_exact\.rds$
+^vignettes/.Balance_tar\.rds$
+^vignettes/.Balance_tar_exact\.rds$
+^vignettes/.data_2_x_2_exact_matched\.rds$
+^vignettes/.data_2_x_2_matched\.rds$
+^vignettes/.data_tar_matched\.rds$
+^vignettes/.data_tar_exact_matched\.rds$
+
+

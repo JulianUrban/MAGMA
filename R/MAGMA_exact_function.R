@@ -1,13 +1,13 @@
 #' MAGMA exact
 #'
 #' This function conducts exact many group matching for 2 to 4 groups. Exact
-#' means, that only cases with the same value on the exact variable can be
+#' means that only cases with the same value on the exact variable can be
 #' matched. It augments the original data set by relevant MAGMA variables.
 #' For details, see below.
 #'
 #' This function conducts nearest neighbor exact many group matching. It is
-#' applicable for 2 to 4 groups or a 2x2 Design. As output, this function
-#' augment your original data by the variables *weight*, *step*, *distance*,
+#' applicable for two to four groups or a 2x2 design. As output, this function
+#' augments your original data by the variables *weight*, *step*, *distance*,
 #' and *ID*. Weight indicates whether a case was matched. Step specifies the
 #' iteration in which a case was matched. It also shows which cases were
 #' matched together. Distance indicates the mean difference within a match.
@@ -22,10 +22,11 @@
 #' @param Data A data frame or tibble containing at least your grouping and
 #' distance variable. Data needs to be specified in your environment.
 #' @param group A character specifying the name of
-#' your grouping variable in data. Note that MAGMA can only match your data for
-#' a maximum of 4 groups. For matching over two groups (e.g., 2x2 Design) is
-#' possible by specifying group as a character vector with a length of two. In
-#' this case each or the 2 grouping variables can only have two levels.
+#' your grouping variable in the data. Note that MAGMA can only match your data
+#' for a maximum of 4 groups. Matching over two grouping variables (e.g., 2x2
+#' Design) is possible by specifying group as a character vector with a length
+#' of two. In this case, each or the 2 grouping variables can only have two
+#' levels.
 #' @param dist A character specifying the name of your distance
 #' variable in data.
 #' @param exact A character specifying the name of the exact variable.
@@ -38,15 +39,20 @@
 #' @import tidyverse parallel doParallel foreach tibble dplyr tidyselect stats
 #' @return Your input data frame of valid cases augmented with matching
 #' relevant variables, namely *weight*, *step*, *distance*, and *ID*. In case
-#' of missing values on the distance or group variable, MAGMA excludes them for
-#' the matching process. The returned data set does not contain those excluded
-#' cases. For more information, see Details.
+#' of missing values on the distance or group variable, MAGMA_exact excludes
+#' them for the matching process. The returned data set does not contain those 
+#' excluded cases. For more information, see Details.
 #' @export
 #'
-#' @examples{
+#' @examples
 #' \dontrun{
-#' #Running this code will take a while
-#' #Computing two-group Matching for giftedness support with exact for enrichment
+#' # Running this code will take a while
+#' # Two-group exact matching using the data set 'MAGMA_sim_data'
+#' # Matching variable 'gifted_support' (received giftedness support yes or no)
+#' # 'MAGMA_sim_data_gifted_exact' contains the result of the matching
+#' # Exact matching for 'enrichment' (participated in enrichment or not)
+#' # Students that participated can only be matched with other
+#' # students that participated and vice versa
 #' MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
 #'                                            group = "gifted_support",
 #'                                            dist = "ps_gifted",
@@ -54,23 +60,37 @@
 #'                                            cores = 2)
 #' head(MAGMA_sim_data_gifted_exact)
 #'
-#' #Conducting three-group matching for teacher ability rating exact for
-#' #sex. Cores per default = 1
+#' # Conducting three-group matching using the data set 'MAGMA_sim_data'
+#' # Matching variable 'teacher_ability_rating' (ability rated from teacher as
+#' # below average, average, or above average)
+#' # 'MAGMA_sim_data_tar_exact' contains the result of the matching
+#' # Exact matching for gender (male or female)
+#' # Male students can only be matched to male students, female students can only
+#' # be matched to female students
+#' # Cores per default = 1
 #' MAGMA_sim_data_tar_exact<- MAGMA_exact(Data = MAGMA_sim_data,
 #'                                        group = "teacher_ability_rating",
 #'                                        dist = "ps_tar",
-#'                                        exact = "sex")
+#'                                        exact = "gender")
 #' head(MAGMA_sim_data_tar_exact)
 #'
-#' #Computing 2x2 Matching for giftedness support and enrichment equivalent to
-#' #a four group matching with exact MAGMA_exact for teacher rated ability
+#' # 2x2 matching using the data set 'MAGMA_sim_data'
+#' # Matching variables are 'gifted_support' (received giftedness support yes
+#' # or no) and 'enrichment' (participated in enrichment or not)
+#' # 'MAGMA_sim_data_gift_enrich_exact' contains the result of the matching
+#' # 2x2 matching is equal to four-group matching
+#' # Exact matching for for teacher rated ability (ability rated from teacher as
+#' # below average, average, or above average)
+#' # Below average students can only be matched to other below average rated
+#' # students, average rated students can be matched with other average rated
+#' # students, and above average rated students can only be matched to other
+#' # above average rated students
 #' MAGMA_sim_data_gift_enrich_exact <- MAGMA_exact(Data = MAGMA_sim_data,
 #'                                                 group = c("gifted_support", "enrichment"),
 #'                                                 dist = "ps_2x2",
 #'                                                 exact = "teacher_ability_rating",
 #'                                                 cores = 2)
 #' head(MAGMA_sim_data_gift_enrich_exact)
-#' }
 #' }
 #'
 MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
@@ -99,7 +119,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
   max_cores <- parallel::detectCores()
 
   if(cores > max_cores) {
-    warning("specified cores exceeds available cores. Proceeding with all available cores.")
+    warning("Specified cores exceeds available cores. Proceeding with all available cores.")
     cores <- max_cores
   }
 
@@ -107,23 +127,47 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
   #Creating data set with relevant variables
   if(length(group) == 1) {
     data <- Data %>%
-      dplyr::filter(as.logical(!is.na(.[group])),
-             as.logical(!is.na(.[dist]))) %>%
-      dplyr::mutate( ID = c(1:nrow(Data)))
-  } else {
+      dplyr::filter(as.logical(!is.na(!!sym(group))),
+                    as.logical(!is.na(!!sym(dist)))) %>%
+      dplyr::mutate(ID = row_number())
+  }  else {
     values_1 <- unlist(unique(Data[group[1]]))
     values_2 <- unlist(unique(Data[group[2]]))
-    data <- Data %>%
-      dplyr::filter(as.logical(!is.na(.[group[1]])),
-             as.logical(!is.na(.[group[2]])),
-             as.logical(!is.na(.[dist]))) %>%
-      dplyr::mutate(ID = c(1:nrow(Data)),
-             group_long = dplyr::case_when(
-               as.logical(Data[group[1]] == values_1[1] & Data[group[2]] == values_2[1]) ~ 1,
-               as.logical(Data[group[1]] == values_1[1] & Data[group[2]] == values_2[2]) ~ 2,
-               as.logical(Data[group[2]] == values_1[2] & Data[group[2]] == values_2[1]) ~ 3,
-               as.logical(Data[group[1]] == values_1[2] & Data[group[2]] == values_2[2]) ~ 4
-             ))
+
+    if(length(dist) == 1) {
+      data <- Data %>%
+        dplyr::filter(!is.na(!!sym(group[1])),
+                      !is.na(!!sym(group[2])),
+                      !is.na(!!sym(dist))) %>%
+        dplyr::mutate(ID = row_number(),
+                      group_long = dplyr::case_when(
+                        !!sym(group[1]) == values_1[1] &
+                          !!sym(group[2]) == values_2[1] ~ 1,
+                        !!sym(group[1]) == values_1[1] &
+                          !!sym(group[2]) == values_2[2] ~ 2,
+                        !!sym(group[1]) == values_1[2] &
+                          !!sym(group[2]) == values_2[1] ~ 3,
+                        !!sym(group[1]) == values_1[2] &
+                          !!sym(group[2]) == values_2[2] ~ 4
+                      ))
+    } else {
+      data <- Data %>%
+        dplyr::filter(!is.na(!!sym(group[1])),
+                      !is.na(!!sym(group[2])),
+                      !is.na(!!sym(dist[1])),
+                      !is.na(!!sym(dist[2]))) %>%
+        dplyr::mutate(ID = row_number(),
+                      group_long = dplyr::case_when(
+                        !!sym(group[1]) == values_1[1] &
+                          !!sym(group[2]) == values_2[1] ~ 1,
+                        !!sym(group[1]) == values_1[1] &
+                          !!sym(group[2]) == values_2[2] ~ 2,
+                        !!sym(group[1]) == values_1[2] &
+                          !!sym(group[2]) == values_2[1] ~ 3,
+                        !!sym(group[1]) == values_1[2] &
+                          !!sym(group[2]) == values_2[2] ~ 4
+                      ))
+    }
   }
 
 
@@ -146,7 +190,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
 
   colnames(input) <- c("ID", "group", "distance_ps","exact")
   input <- input %>%
-    tibble::as_tibble(.) %>%
+    tibble::as_tibble() %>%
     dplyr::group_by(group) %>%
     dplyr::mutate(group_id = dplyr::row_number()) %>%
     dplyr::ungroup() %>%
@@ -154,7 +198,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
            step = NA,
            distance = NA)
 
-  cat("input correctly identified")
+  cat("\n","Input correctly identified!")
 
   #######################
   #distance estimation##
@@ -164,7 +208,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
   elements <- input %>%
     dplyr::group_by(group) %>%
     dplyr::summarise(max(group_id)) %>%
-    .[, 2] %>%
+    `[`(, 2) %>%
     unlist()
 
   if(length(elements) == 2) {
@@ -174,7 +218,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
     for(i in 1:length(exact_list)) {
 
     group_list_temp <- exact_list[[i]] %>%
-      split.data.frame(., .$group)
+      split.data.frame(f = exact_list[[i]]$group)
 
     elements_temp <- sapply(group_list_temp, nrow)
 
@@ -198,16 +242,20 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
     rm(distance_mean)
     gc()
 
+    if (i == 1) {
+      cat("\n", "Distance computation finished. Starting matching")
+    }
+
     group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
     rm(distance_array)
     gc()
-    
+
     exact_list[[i]] <- do.call(rbind.data.frame, group_list_temp)
     }
 
   data_temp <- do.call(rbind.data.frame, exact_list) %>%
     dplyr::arrange(distance, step) %>%
-    dplyr::mutate(step = ceiling(c(1:nrow(.))/2)) %>%
+    dplyr::mutate(step = ceiling(c(1:nrow(input))/2)) %>%
     dplyr::select(ID, step, weight, distance) %>%
     dplyr::filter(weight == 1)
 
@@ -223,7 +271,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
       for(i in 1:length(exact_list)) {
 
         group_list_temp <- exact_list[[i]] %>%
-          split.data.frame(., .$group)
+          split.data.frame(f = exact_list[[i]]$group)
 
         elements_temp <- sapply(group_list_temp, nrow)
 
@@ -247,6 +295,10 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
         rm(distance_mean)
         gc()
 
+        if (i == 1) {
+          cat("\n", "Distance computation finished. Starting matching")
+        }
+
         group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
         rm(distance_array)
         gc()
@@ -254,13 +306,14 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
       }
       data_temp <- do.call(rbind.data.frame, exact_list) %>%
         dplyr::arrange(distance, step) %>%
-        dplyr::mutate(step = ceiling(c(1:nrow(.))/3)) %>%
+        dplyr::mutate(step = ceiling(c(1:nrow(input))/3)) %>%
         dplyr::select(ID, step, weight, distance) %>%
         dplyr::filter(weight == 1)
 
       data <- merge(data,
                     data_temp,
-                    by = "ID")
+                    by = "ID",
+                    all.x = TRUE)
 
   } else if(length(elements) == 4) {
 
@@ -270,7 +323,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
       for(i in 1:length(exact_list)) {
 
         group_list_temp <- exact_list[[i]] %>%
-          split.data.frame(., .$group)
+          split.data.frame(f = exact_list[[i]]$group)
 
         elements_temp <- sapply(group_list_temp, nrow)
 
@@ -293,7 +346,11 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
         rm(distance_matrix)
         rm(distance_mean)
         gc()
-        
+
+        if (i == 1) {
+          cat("\n", "Distance computation finished. Starting matching")
+        }
+
         group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
         rm(distance_array)
         gc()
@@ -301,7 +358,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
       }
       data_temp <- do.call(rbind.data.frame, exact_list) %>%
         dplyr::arrange(distance, step) %>%
-        dplyr::mutate(step = ceiling(c(1:nrow(.))/4)) %>%
+        dplyr::mutate(step = ceiling(c(1:nrow(input))/4)) %>%
         dplyr::select(ID, step, weight, distance) %>%
         dplyr::filter(weight == 1)
 
@@ -312,6 +369,6 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
     stop("Specify a grouping variable that distinguishes 2, 3, or 4 groups or represent a 2x2 Design!")
   }
 
-  cat("\n", "matching complete!")
+  cat("\n", "Matching complete!")
   return(data)
 }
