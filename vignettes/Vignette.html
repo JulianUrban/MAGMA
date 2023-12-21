@@ -13,7 +13,7 @@
 <meta name="author" content="Julian Urban, Markus D. Feuchter, Vsevolod Scherrer, Moritz L. Breit, and Franzis Preckel" />
 
 
-<title>Turn up the Heat! A Tutorial for the MGMA R-package.</title>
+<title>Turn up the Heat! A Tutorial for the MAGMA R-package.</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -337,7 +337,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 
-<h1 class="title toc-ignore">Turn up the Heat! A Tutorial for the MGMA
+<h1 class="title toc-ignore">Turn up the Heat! A Tutorial for the MAGMA
 R-package.</h1>
 <h4 class="author">Julian Urban, Markus D. Feuchter, Vsevolod Scherrer,
 Moritz L. Breit, and Franzis Preckel</h4>
@@ -351,17 +351,17 @@ is fundamental for drawing causal inference. Propensity Score Matching
 addresses this issue but current techniques are restricted to binary
 treatment variables. Moreover, they offer a variety of solutions without
 providing a comprehensive framework on choosing the best model. The
-MGMA-package addresses these restrictions by providing nearest neighbor
-matching for up to four groups using the Many-group-Matching (MAGMA)
-algorithm. It also includes the option to match data of a 2x2 design. In
-addition, MGMA provides a framework for evaluating the post-matching
-balance. This vignette is a tutorial on MGMA. It explains and
-illustrates the main MGMA functions with an included simulated dataset.
-In total, this vignette includes a two-group, a three-group, and a
-2x2-design, which is equivalent to a four-group example. These three
-grouping scenarios are illustrated in a standard matching process, as
-well as with exact matching, where only cases sharing the same value on
-a variable can be matched.</p>
+MAGMA R-package addresses these restrictions by providing nearest
+neighbor matching for up to four groups using the Many-group-Matching
+(MAGMA) algorithm. It also includes the option to match data of a 2x2
+design. In addition, MAGMA provides a framework for evaluating the
+post-matching balance. This vignette is a tutorial on MAGMA. It explains
+and illustrates the main MAGMA functions with an included simulated
+dataset. In total, this vignette includes a two-group, a three-group,
+and a 2x2-design, which is equivalent to a four-group example. These
+three grouping scenarios are illustrated in a standard matching process,
+as well as with exact matching, where only cases sharing the same value
+on a variable can be matched.</p>
 </div>
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
@@ -393,9 +393,9 @@ hand, instead of having access to a comprehensive, unambiguous overview
 of possible matching solutions. Third, there is no comprehensive
 framework for evaluating the quality of matching solutions, especially
 when multiple groups are involved. We addressed these issues with our
-MGMA package. For an extensive overview of MGMA and its balance
+MAGMA package. For an extensive overview of MAGMA and its balance
 framework, see Feuchter at al. (2022).</p>
-<p>The aims of this vignette are to provide a tutorial for the MGMA
+<p>The aims of this vignette are to provide a tutorial for the MAGMA
 R-package. This includes examples for all currently available group
 scenarios, namely two, three, and four groups, as well as 2x2 designs.
 We conducted these examples for standard and exact matching. Moreover,
@@ -407,7 +407,7 @@ individual PSM solutions, using our newly developed framework.</p>
 <h1>The MAGMA Simulated Dataset</h1>
 <p>We used a simulated data set for all examples. This simulated dataset
 contains 800 cases and 14 variables. It is available after installing
-the MGMA package. Associations between the variables were modeled to
+the MAGMA package. Associations between the variables were modeled to
 increase the usability and comprehensibility of this tutorial, and are,
 therefore, not representative of specific real-life phenomena. For
 information about this simulated dataset, use
@@ -458,7 +458,7 @@ results. Therefore, we aim to reduce differences on these covariates
 between the two groups by PSM. For this example, the covariates are
 <em>high school GPA</em>, <em>intelligence</em>, <em>motivation</em>,
 <em>gender</em>, and whether at least one parent has an <em>academic
-background</em>. Note that MGMA can only consider metric and binary
+background</em>. Note that MAGMA can only consider metric and binary
 variables for balance estimation.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>covariates_gifted <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;GPA_school&quot;</span>,</span>
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>                       <span class="st">&quot;IQ_score&quot;</span>,</span>
@@ -615,10 +615,10 @@ matched cases.</p>
 <span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a><span class="co">#&gt;  $ distance              : num  4.55e-08 3.88e-06 5.06e-01 1.43e-06 3.27e-08 ...</span></span></code></pre></div>
 <div id="balance-estimation" class="section level3">
 <h3>Balance Estimation</h3>
-<p>MGMA matches cases iteratively until all cases of the smallest group
+<p>MAGMA matches cases iteratively until all cases of the smallest group
 are matched. Thus, it is necessary to find the optimal sample size after
 matching. To do so, <code>Balance_MAGMA</code> estimates the four
-balance criteria for each possible sample size. Note that MGMA uses a
+balance criteria for each possible sample size. Note that MAGMA uses a
 lower limit of at least <em>n</em> = 20 per group. To use the function,
 you need to specify at least your (matched) dataset
 (<code>MAGMA_sim_data_gifted</code>), the name of the grouping variable
