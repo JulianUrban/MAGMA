@@ -6,7 +6,7 @@
 \title{MAGMA simulated data set}
 \format{
 A data frame with 14 variables of 800 cases.
-\itemize{
+\describe{
 \item{ID}{: Individual ID for each case}
 \item{gender}{: Binary variable indicating gender of a participant}
 \item{gifted_support}{: Binary variable that specifies whether a case received

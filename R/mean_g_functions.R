@@ -10,6 +10,7 @@
 #' @author Julian Urban
 #'
 #' @import tidyverse
+#' @importFrom purrr set_names
 #' @return A vector of J's in dependency of sample size.
 #'
 #'
@@ -36,14 +37,16 @@ J_group_size <- function(group_size) {
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych metafor robumeta
-#'
+#' @import tidyverse metafor robumeta
+#' @importFrom psych describe
+#' @importFrom rlang is_list
+#' 
 #' @return A vector containing the mean g in dependency of sample size.
 #'
 #'
 mean_g_meta <- function(input, number_groups) {
   #Check, that input is an inner d object: addapting for more possibilites
-  if (!is_list(input) &&
+  if (!rlang::is_list(input) &&
       length(input) != 2 &&
       names(input) != c("d_rate", "effects")) {
     stop("input needs to be an inner d object!")

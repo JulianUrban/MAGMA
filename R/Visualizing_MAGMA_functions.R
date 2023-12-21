@@ -36,7 +36,9 @@
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych metafor robumeta tibble dplyr tidyselect
+#' @import tidyverse metafor robumeta tibble dplyr tidyselect
+#' @importFrom psych describe
+#' @importFrom rlang sym
 #'
 #' @return A list of length four containing all balance criteria and all
 #' pairwise effects with respect to group sample size.
@@ -137,14 +139,14 @@ if(length(group) == 2) {
 
   Data <- Data %>%
     dplyr::mutate(group_d = dplyr::case_when(
-      !!sym(group[1]) == values_1[1] &
-        !!sym(group[2]) == values_2[1] ~ 1,
-      !!sym(group[1]) == values_1[1] &
-        !!sym(group[2]) == values_2[2] ~ 2,
-      !!sym(group[1]) == values_1[2] &
-        !!sym(group[2]) == values_2[1] ~ 3,
-      !!sym(group[1]) == values_1[2] &
-        !!sym(group[2]) == values_2[2] ~ 4
+      !!rlang::sym(group[1]) == values_1[1] &
+        !!rlang::sym(group[2]) == values_2[1] ~ 1,
+      !!rlang::sym(group[1]) == values_1[1] &
+        !!rlang::sym(group[2]) == values_2[2] ~ 2,
+      !!rlang::sym(group[1]) == values_1[2] &
+        !!rlang::sym(group[2]) == values_2[1] ~ 3,
+      !!rlang::sym(group[1]) == values_1[2] &
+        !!rlang::sym(group[2]) == values_2[2] ~ 4
     ))
 
   group <- "group_d"
@@ -181,9 +183,9 @@ cat("\n", "d-ratio finished. Starting to compute mean-g.", "\n")
   ###Output creation###
   ######################
   output <- list(Pillai = Pillai,
-               d_ratio = d_effects,
-               mean_effect = mean_g,
-               adjusted_d_ratio = adj_d_ratio_20)
+                 d_ratio = d_effects,
+                 mean_effect = mean_g,
+                 adjusted_d_ratio = adj_d_ratio_20)
   cat("\n", "Adjusted d-ratio finished.")
   cat("\n", "Balance estimation finished.")
   return(output)
@@ -214,7 +216,11 @@ cat("\n", "d-ratio finished. Starting to compute mean-g.", "\n")
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych metafor robumeta tibble dplyr tidyselect
+#' @import tidyverse metafor robumeta tibble dplyr tidyselect
+#' @importFrom psych describe
+#' @importFrom purrr set_names
+#' @importFrom rlang sym
+#' @importFrom stats pnorm
 #'
 #' @return A numeric vector of length 4 containing the balance
 #' criteria for the unmatched sample.
@@ -317,14 +323,14 @@ if(length(group) == 2) {
 
   Data <- Data %>%
     dplyr::mutate(group_d = dplyr::case_when(
-      !!sym(group[1]) == values_1[1] &
-        !!sym(group[2]) == values_2[1] ~ 1,
-      !!sym(group[1]) == values_1[1] &
-        !!sym(group[2]) == values_2[2] ~ 2,
-      !!sym(group[1]) == values_1[2] &
-        !!sym(group[2]) == values_2[1] ~ 3,
-      !!sym(group[1]) == values_1[2] &
-        !!sym(group[2]) == values_2[2] ~ 4
+      !!rlang::sym(group[1]) == values_1[1] &
+        !!rlang::sym(group[2]) == values_2[1] ~ 1,
+      !!rlang::sym(group[1]) == values_1[1] &
+        !!rlang::sym(group[2]) == values_2[2] ~ 2,
+      !!rlang::sym(group[1]) == values_1[2] &
+        !!rlang::sym(group[2]) == values_2[1] ~ 3,
+      !!rlang::sym(group[1]) == values_1[2] &
+        !!rlang::sym(group[2]) == values_2[2] ~ 4
     ))
 
   group <- "group_d"
@@ -427,7 +433,7 @@ if(length(group) == 2) {
   ###adj. d ratioo########
   ########################
 
-  adj_d_ratio <- purrr::map2_dbl(effect_g, var_g, pnorm, q = .20) %>%
+  adj_d_ratio <- purrr::map2_dbl(effect_g, var_g, stats::pnorm, q = .20) %>%
     matrix(ncol = ncol(effect_g), nrow = nrow(effect_g)) %>%
     sum() / (ncol(effect_g) * nrow(effect_g))
 
@@ -483,7 +489,12 @@ if(length(group) == 2) {
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse janitor flextable
+#' @import tidyverse
+#' @importFrom janitor adorn_title
+#' @importFrom flextable flextable
+#' @importFrom flextable autofit
+#' @importFrom flextable save_as_docx
+#' @importFrom rlang is_list
 #'
 #' @return A 4x5 APA table showing the four balance
 #' criteria and the respective sample sizes per group for four scenarios. In
@@ -541,7 +552,7 @@ if(length(group) == 2) {
 #'
 Table_MAGMA <- function(Balance, filename = NULL) {
   #Check input
-  if (!is_list(Balance)) {
+  if (!rlang::is_list(Balance)) {
     stop("Balance needs to be a Balance_MAGMA object!")
   }
   #Creating index vector of models with optimalized criteria
@@ -635,6 +646,7 @@ return(balance_matrix)
 #' @author Julian Urban
 #'
 #' @import tidyverse ggplot2
+#' @importFrom rlang is_list
 #'
 #' @return R Plots showing the balance trend over sample size.
 #' @export
@@ -694,7 +706,7 @@ Plot_MAGMA <- function(Balance,
                                      "mean_g",
                                      "Adj_d_ratio")) {
   #Check input
-  if (!is_list(Balance)) {
+  if (!rlang::is_list(Balance)) {
     stop("Balance needs to be a Balance_MAGMA object!")
   }
 

@@ -14,13 +14,15 @@
 #' @author Julian Urban
 #'
 #' @import tidyverse parallel doParallel foreach
+#' @importFrom stats mahalanobis
+#' 
 #' @return A matrix of distance for each case of each possible match.
 #'
 #'
 distance_estimator <- function(data, means, variance, cores) {
   cl <- parallel::makeCluster(cores)
   doParallel::registerDoParallel(cl, cores = cores)
-  distance_matrix <- foreach(inp = data, .combine = cbind) %dopar%
+  distance_matrix <- foreach::foreach(inp = data, .combine = cbind) %dopar%
     stats::mahalanobis(inp, center = means, cov = variance)
   parallel::stopCluster(cl)
   return(distance_matrix)
@@ -63,7 +65,12 @@ distance_estimator <- function(data, means, variance, cores) {
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse parallel doParallel foreach dplyr tibble tidyselect purrr stats
+#' @import tidyverse parallel doParallel foreach dplyr tibble tidyselect
+#' @importFrom purrr set_names
+#' @importFrom stats var
+#' @importFrom stats runif
+#' @importFrom rlang sym
+#' 
 #' @return Your input data frame augmented with matching
 #' relevant variables, namely *weight*, *step*, *distance*, and *ID*. In case
 #' of missing values on the distance or group variable, MAGMA excludes them for
@@ -135,45 +142,45 @@ MAGMA <- function(Data, group, dist, cores = 1) {
   #Creating data set with relevant variables
   if(length(group) == 1) {
     data <- Data %>%
-      dplyr::filter(as.logical(!is.na(!!sym(group))),
-                    as.logical(!is.na(!!sym(dist)))) %>%
-      dplyr::mutate(ID = row_number())
+      dplyr::filter(as.logical(!is.na(!!rlang::sym(group))),
+                    as.logical(!is.na(!!rlang::sym(dist)))) %>%
+      dplyr::mutate(ID = dplyr::row_number())
   }  else {
     values_1 <- unlist(unique(Data[group[1]]))
     values_2 <- unlist(unique(Data[group[2]]))
 
     if(length(dist) == 1) {
       data <- Data %>%
-        dplyr::filter(!is.na(!!sym(group[1])),
-                      !is.na(!!sym(group[2])),
-                      !is.na(!!sym(dist))) %>%
-        dplyr::mutate(ID = row_number(),
+        dplyr::filter(!is.na(!!rlang::sym(group[1])),
+                      !is.na(!!rlang::sym(group[2])),
+                      !is.na(!!rlang::sym(dist))) %>%
+        dplyr::mutate(ID = dplyr::row_number(),
                       group_long = dplyr::case_when(
-                        !!sym(group[1]) == values_1[1] &
-                          !!sym(group[2]) == values_2[1] ~ 1,
-                        !!sym(group[1]) == values_1[1] &
-                          !!sym(group[2]) == values_2[2] ~ 2,
-                        !!sym(group[1]) == values_1[2] &
-                          !!sym(group[2]) == values_2[1] ~ 3,
-                        !!sym(group[1]) == values_1[2] &
-                          !!sym(group[2]) == values_2[2] ~ 4
+                        !!rlang::sym(group[1]) == values_1[1] &
+                          !!rlang::sym(group[2]) == values_2[1] ~ 1,
+                        !!rlang::sym(group[1]) == values_1[1] &
+                          !!rlang::sym(group[2]) == values_2[2] ~ 2,
+                        !!rlang::sym(group[1]) == values_1[2] &
+                          !!rlang::sym(group[2]) == values_2[1] ~ 3,
+                        !!rlang::sym(group[1]) == values_1[2] &
+                          !!rlang::sym(group[2]) == values_2[2] ~ 4
                       ))
     } else {
       data <- Data %>%
-        dplyr::filter(!is.na(!!sym(group[1])),
-                      !is.na(!!sym(group[2])),
-                      !is.na(!!sym(dist[1])),
-                      !is.na(!!sym(dist[2]))) %>%
-        dplyr::mutate(ID = row_number(),
+        dplyr::filter(!is.na(!!rlang::sym(group[1])),
+                      !is.na(!!rlang::sym(group[2])),
+                      !is.na(!!rlang::sym(dist[1])),
+                      !is.na(!!rlang::sym(dist[2]))) %>%
+        dplyr::mutate(ID = dplyr::row_number(),
                       group_long = dplyr::case_when(
-                        !!sym(group[1]) == values_1[1] &
-                          !!sym(group[2]) == values_2[1] ~ 1,
-                        !!sym(group[1]) == values_1[1] &
-                          !!sym(group[2]) == values_2[2] ~ 2,
-                        !!sym(group[1]) == values_1[2] &
-                          !!sym(group[2]) == values_2[1] ~ 3,
-                        !!sym(group[1]) == values_1[2] &
-                          !!sym(group[2]) == values_2[2] ~ 4
+                        !!rlang::sym(group[1]) == values_1[1] &
+                          !!rlang::sym(group[2]) == values_2[1] ~ 1,
+                        !!rlang::sym(group[1]) == values_1[1] &
+                          !!rlang::sym(group[2]) == values_2[2] ~ 2,
+                        !!rlang::sym(group[1]) == values_1[2] &
+                          !!rlang::sym(group[2]) == values_2[1] ~ 3,
+                        !!rlang::sym(group[1]) == values_1[2] &
+                          !!rlang::sym(group[2]) == values_2[2] ~ 4
                       ))
     }
   }

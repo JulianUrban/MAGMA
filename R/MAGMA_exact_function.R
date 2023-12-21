@@ -36,7 +36,10 @@
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse parallel doParallel foreach tibble dplyr tidyselect stats
+#' @import tidyverse parallel doParallel foreach dplyr tibble tidyselect
+#' @importFrom stats var
+#' @importFrom rlang sym
+#' 
 #' @return Your input data frame of valid cases augmented with matching
 #' relevant variables, namely *weight*, *step*, *distance*, and *ID*. In case
 #' of missing values on the distance or group variable, MAGMA_exact excludes
@@ -127,45 +130,45 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
   #Creating data set with relevant variables
   if(length(group) == 1) {
     data <- Data %>%
-      dplyr::filter(as.logical(!is.na(!!sym(group))),
-                    as.logical(!is.na(!!sym(dist)))) %>%
-      dplyr::mutate(ID = row_number())
+      dplyr::filter(as.logical(!is.na(!!rlang::sym(group))),
+                    as.logical(!is.na(!!rlang::sym(dist)))) %>%
+      dplyr::mutate(ID = dplyr::row_number())
   }  else {
     values_1 <- unlist(unique(Data[group[1]]))
     values_2 <- unlist(unique(Data[group[2]]))
 
     if(length(dist) == 1) {
       data <- Data %>%
-        dplyr::filter(!is.na(!!sym(group[1])),
-                      !is.na(!!sym(group[2])),
-                      !is.na(!!sym(dist))) %>%
-        dplyr::mutate(ID = row_number(),
+        dplyr::filter(!is.na(!!rlang::sym(group[1])),
+                      !is.na(!!rlang::sym(group[2])),
+                      !is.na(!!rlang::sym(dist))) %>%
+        dplyr::mutate(ID = dplyr::row_number(),
                       group_long = dplyr::case_when(
-                        !!sym(group[1]) == values_1[1] &
-                          !!sym(group[2]) == values_2[1] ~ 1,
-                        !!sym(group[1]) == values_1[1] &
-                          !!sym(group[2]) == values_2[2] ~ 2,
-                        !!sym(group[1]) == values_1[2] &
-                          !!sym(group[2]) == values_2[1] ~ 3,
-                        !!sym(group[1]) == values_1[2] &
-                          !!sym(group[2]) == values_2[2] ~ 4
+                        !!rlang::sym(group[1]) == values_1[1] &
+                          !!rlang::sym(group[2]) == values_2[1] ~ 1,
+                        !!rlang::sym(group[1]) == values_1[1] &
+                          !!rlang::sym(group[2]) == values_2[2] ~ 2,
+                        !!rlang::sym(group[1]) == values_1[2] &
+                          !!rlang::sym(group[2]) == values_2[1] ~ 3,
+                        !!rlang::sym(group[1]) == values_1[2] &
+                          !!rlang::sym(group[2]) == values_2[2] ~ 4
                       ))
     } else {
       data <- Data %>%
-        dplyr::filter(!is.na(!!sym(group[1])),
-                      !is.na(!!sym(group[2])),
-                      !is.na(!!sym(dist[1])),
-                      !is.na(!!sym(dist[2]))) %>%
-        dplyr::mutate(ID = row_number(),
+        dplyr::filter(!is.na(!!rlang::sym(group[1])),
+                      !is.na(!!rlang::sym(group[2])),
+                      !is.na(!!rlang::sym(dist[1])),
+                      !is.na(!!rlang::sym(dist[2]))) %>%
+        dplyr::mutate(ID = dplyr::row_number(),
                       group_long = dplyr::case_when(
-                        !!sym(group[1]) == values_1[1] &
-                          !!sym(group[2]) == values_2[1] ~ 1,
-                        !!sym(group[1]) == values_1[1] &
-                          !!sym(group[2]) == values_2[2] ~ 2,
-                        !!sym(group[1]) == values_1[2] &
-                          !!sym(group[2]) == values_2[1] ~ 3,
-                        !!sym(group[1]) == values_1[2] &
-                          !!sym(group[2]) == values_2[2] ~ 4
+                        !!rlang::sym(group[1]) == values_1[1] &
+                          !!rlang::sym(group[2]) == values_2[1] ~ 1,
+                        !!rlang::sym(group[1]) == values_1[1] &
+                          !!rlang::sym(group[2]) == values_2[2] ~ 2,
+                        !!rlang::sym(group[1]) == values_1[2] &
+                          !!rlang::sym(group[2]) == values_2[1] ~ 3,
+                        !!rlang::sym(group[1]) == values_1[2] &
+                          !!rlang::sym(group[2]) == values_2[2] ~ 4
                       ))
     }
   }

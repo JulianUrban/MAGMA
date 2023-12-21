@@ -12,7 +12,9 @@
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych tibble tidyselect
+#' @import tidyverse tibble tidyselect
+#' @importFrom rlang sym
+#' 
 #' @return A list of length two. The first element is a matrix including all
 #' pairwise effects. The second is a vector expressing d-ratio
 #' in dependency of sample size.
@@ -46,14 +48,14 @@ inner_d <- function(da, gr, co, st) {
 
     da <- da %>%
       dplyr::mutate(group_d = dplyr::case_when(
-        !!sym(gr[1]) == values_1[1] &
-          !!sym(gr[2]) == values_2[1] ~ 1,
-        !!sym(gr[1]) == values_1[1] &
-          !!sym(gr[2]) == values_2[2] ~ 2,
-        !!sym(gr[1]) == values_1[2] &
-          !!sym(gr[2]) == values_2[1] ~ 3,
-        !!sym(gr[1]) == values_1[2] &
-          !!sym(gr[2]) == values_2[2] ~ 4
+        !!rlang::sym(gr[1]) == values_1[1] &
+          !!rlang::sym(gr[2]) == values_2[1] ~ 1,
+        !!rlang::sym(gr[1]) == values_1[1] &
+          !!rlang::sym(gr[2]) == values_2[2] ~ 2,
+        !!rlang::sym(gr[1]) == values_1[2] &
+          !!rlang::sym(gr[2]) == values_2[1] ~ 3,
+        !!rlang::sym(gr[1]) == values_1[2] &
+          !!rlang::sym(gr[2]) == values_2[2] ~ 4
       ))
 
     gr <- "group_d"
@@ -112,10 +114,10 @@ inner_d <- function(da, gr, co, st) {
     d_iteration <- double(nrow(d_matrix))
     suppressWarnings({
     group_stats <- da %>%
-      dplyr::filter(!!sym(st) <= iteration) %>%
-      dplyr::select(!!sym(gr),
+      dplyr::filter(!!rlang::sym(st) <= iteration) %>%
+      dplyr::select(!!rlang::sym(gr),
                     tidyselect::all_of(co)) %>%
-      dplyr::group_by(!!sym(gr)) %>%
+      dplyr::group_by(!!rlang::sym(gr)) %>%
       dplyr::summarise_at(.vars = co,
                           .funs = c(mean, var),
                           na.rm = T)
@@ -155,14 +157,18 @@ inner_d <- function(da, gr, co, st) {
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych tibble
+#' @import tidyverse tibble
+#' @importFrom purrr map2
+#' @importFrom purrr map2_dbl
+#' @importFrom rlang is_list
+#' 
 #' @return A vector containing the adjusted d-ratio in dependency of
 #' sample size.
 #'
 #'
 adj_d_ratio <- function(input) {
 
-  if (!is_list(input) &&
+  if (!rlang::is_list(input) &&
       length(input) != 2 &&
       names(input) != c("d_rate", "effects")) {
     stop("input needs to be an inner d object!")

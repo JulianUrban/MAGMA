@@ -19,7 +19,9 @@
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse purrr
+#' @import tidyverse
+#' @importFrom purrr set_names
+#' @importFrom rlang is_list
 #'
 #' @return Depends on the effects argument. If *FALSE*, it returns in a vector
 #' containing the balance criteria. If *TRUE*, it returns a vector containing
@@ -99,7 +101,7 @@
 #'
 Balance_extract <- function(Balance, samplesize, effects = FALSE) {
   #Check input
-  if (!is_list(Balance)) {
+  if (!rlang::is_list(Balance)) {
     stop("Balance needs to be a Balance_MAGMA object!")
   }
   if (samplesize > length(Balance$adjusted_d_ratio)) {
