@@ -96,7 +96,8 @@ match_iterative <- function(distance_input, output_list, rep_elements) {
 #' @param rep_element sample sizes per group
 #' @param name_ps names of PS in data
 #'
-#' @import tidyverse dplyr purrr
+#' @import tidyverse dplyr 
+#' @importFrom purrr map
 #'
 #' @return the input for distance estimation
 #'

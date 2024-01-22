@@ -8,7 +8,7 @@ Balance_MAGMA(Data, group, covariates, step = "step")
 }
 \arguments{
 \item{Data}{A data frame containing at least the \emph{grouping} variable, the
-\emph{step} variable from the main MGMA-function (or other matching algorithms),
+\emph{step} variable from the main MAGMA-function (or other matching algorithms),
 and all \emph{covariates} of interest.}
 
 \item{group}{A character specifying the name of
@@ -23,21 +23,21 @@ metric covariates of interest.}
 
 \item{step}{A character specifying the step variable of the matching. Per
 default, it is set to \emph{step}, which corresponds the resulting
-name of the main MGMA function.}
+name of the main MAGMA function.}
 }
 \value{
 A list of length four containing all balance criteria and all
 pairwise effects with respect to group sample size.
 }
 \description{
-This function computes all four balance criteria of MGMA, namely
+This function computes all four balance criteria of MAGMA, namely
 \emph{Pillai's Trace}, \emph{d-ratio}, \emph{mean g}, and \emph{adjusted d-ratio}. The
 estimation onvolves both binary and metric variables. Balance
 estimation is performed across various sample sizes. See Details for more
 information.
 }
 \details{
-This function computes all four balance criteria of MGMA, namely Pillai's
+This function computes all four balance criteria of MAGMA, namely Pillai's
 Trace, d-ratio, mean g, and adjusted d-ratio. This is an iterative process
 including more cases with each iteration according to the step variable.
 Thus, starting with cases having a small within-match distance, larger

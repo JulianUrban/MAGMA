@@ -28,6 +28,7 @@
 #' @author Julian Urban
 #'
 #' @import tidyverse ggplot2 overlapping tibble dplyr tidyselect
+#' @importFrom rlang sym
 #'
 #' @references {Pastore, M., Loro, P.A.D., Mingione, M., Calcagni, A. (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
 #' 2.1, <https://CRAN.R-project.org/package=overlapping>.}
@@ -118,14 +119,14 @@ Density_overlap <- function(Data, variable, group,
   if(length(group) == 2) {
     Data <- Data %>%
       dplyr::mutate(group_long = dplyr::case_when(
-        !!sym(group[1]) == unique(!!sym(group[1]))[1] &
-          !!sym(group[2]) == unique(!!sym(group[2]))[1] ~ 1,
-        !!sym(group[1]) == unique(!!sym(group[1]))[1] &
-          !!sym(group[2]) == unique(!!sym(group[2]))[2] ~ 2,
-        !!sym(group[1]) == unique(!!sym(group[1]))[2] &
-          !!sym(group[2]) == unique(!!sym(group[2]))[1] ~ 3,
-        !!sym(group[1]) == unique(!!sym(group[1]))[2] &
-          !!sym(group[2]) == unique(!!sym(group[2]))[2] ~ 4
+        !!rlang::sym(group[1]) == unique(!!rlang::sym(group[1]))[1] &
+          !!rlang::sym(group[2]) == unique(!!rlang::sym(group[2]))[1] ~ 1,
+        !!rlang::sym(group[1]) == unique(!!rlang::sym(group[1]))[1] &
+          !!rlang::sym(group[2]) == unique(!!rlang::sym(group[2]))[2] ~ 2,
+        !!rlang::sym(group[1]) == unique(!!rlang::sym(group[1]))[2] &
+          !!rlang::sym(group[2]) == unique(!!rlang::sym(group[2]))[1] ~ 3,
+        !!rlang::sym(group[1]) == unique(!!rlang::sym(group[1]))[2] &
+          !!rlang::sym(group[2]) == unique(!!rlang::sym(group[2]))[2] ~ 4
       ))
     group <- "group_long"
     cat("2x2 groups are represented as 4 groups.")
@@ -146,7 +147,7 @@ Density_overlap <- function(Data, variable, group,
 
   if(!is.null(step_num) & !is.null(step_var)) {
     Data <- Data %>%
-      dplyr::filter(!!sym(step_var) <= step_num)
+      dplyr::filter(!!rlang::sym(step_var) <= step_num)
   }
 
 

@@ -4,7 +4,7 @@
 #' as example in the vignette and the help pages.
 #'
 #' @format A data frame with 14 variables of 800 cases.
-#' \itemize{
+#' \describe{
 #' \item{ID}{: Individual ID for each case}
 #' \item{gender}{: Binary variable indicating gender of a participant}
 #' \item{gifted_support}{: Binary variable that specifies whether a case received
@@ -28,7 +28,7 @@
 #' \item{ps_2x2}{: Propensity score of twangs mnps function for
 #' support_enrichment}
 #' \item{ps_gifted}{: Propensity score of twangs ps function for gifted support}
-#'  }
+#' }
 #' @source Simulated data
 #'
 "MAGMA_sim_data"

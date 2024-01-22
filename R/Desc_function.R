@@ -25,7 +25,15 @@
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych purrr janitor flextable dplyr tidyselect
+#' @import tidyverse dplyr tidyselect
+#' @importFrom purrr set_names
+#' @importFrom purrr map2_dfc
+#' @importFrom psych describe
+#' @importFrom janitor adorn_title
+#' @importFrom flextable flextable
+#' @importFrom flextable autofit
+#' @importFrom flextable save_as_docx
+#' @importFrom rlang sym
 #'
 #' @return A table of descriptive statistics and pairwise effects for pre- or
 #' post-matching samples.
@@ -100,20 +108,20 @@ MAGMA_desc <- function(Data,
       stop("Step exceeded max step. Results equal to MAGMA_desc_post.")
     }
     Data <- Data %>%
-      dplyr::filter(!!sym(step_var) <= step_num)
+      dplyr::filter(!!rlang::sym(step_var) <= step_num)
   }
 
   if(length(group) == 2) {
     Data <- Data %>%
       dplyr::mutate(group_long = dplyr::case_when(
-        !!sym(group[1]) == unique(!!sym(group[1]))[1] &
-          !!sym(group[2]) == unique(!!sym(group[2]))[1] ~ 1,
-        !!sym(group[1]) == unique(!!sym(group[1]))[1] &
-          !!sym(group[2]) == unique(!!sym(group[2]))[2] ~ 2,
-        !!sym(group[1]) == unique(!!sym(group[1]))[2] &
-          !!sym(group[2]) == unique(!!sym(group[2]))[1] ~ 3,
-        !!sym(group[1]) == unique(!!sym(group[1]))[2] &
-          !!sym(group[2]) == unique(!!sym(group[2]))[2] ~ 4
+        !!rlang::sym(group[1]) == unique(!!rlang::sym(group[1]))[1] &
+          !!rlang::sym(group[2]) == unique(!!rlang::sym(group[2]))[1] ~ 1,
+        !!rlang::sym(group[1]) == unique(!!rlang::sym(group[1]))[1] &
+          !!rlang::sym(group[2]) == unique(!!rlang::sym(group[2]))[2] ~ 2,
+        !!rlang::sym(group[1]) == unique(!!rlang::sym(group[1]))[2] &
+          !!rlang::sym(group[2]) == unique(!!rlang::sym(group[2]))[1] ~ 3,
+        !!rlang::sym(group[1]) == unique(!!rlang::sym(group[1]))[2] &
+          !!rlang::sym(group[2]) == unique(!!rlang::sym(group[2]))[2] ~ 4
       ))
     group <- "group_long"
     cat("2x2 groups are represented as 4 groups.")
@@ -124,18 +132,19 @@ MAGMA_desc <- function(Data,
     dplyr::select(tidyselect::all_of(group),
                   tidyselect::all_of(covariates)) %>%
     psych::describe() %>%
-    dplyr::select(n, mean, sd) %>%
     tibble::as_tibble() %>%
     round(digits = 2)
+  descs_overall <- descs_overall[c("n", "mean", "sd")]
 
   descs_group <- Data %>%
     dplyr::select(tidyselect::all_of(group),
                   tidyselect::all_of(covariates)) %>%
     split.data.frame(f = Data[group]) %>%
-    lapply(FUN = function(data)
-      psych::describe(data) %>%
-        dplyr::select(n, mean, sd) %>%
+    lapply(FUN = function(data) {
+      stats <- psych::describe(data) %>%
         round(digits = 2)
+      stats <- stats[c("n", "mean", "sd")]
+    }
     ) %>%
     do.call(what = cbind.data.frame) %>%
     purrr::set_names(paste(rep(
@@ -195,25 +204,29 @@ MAGMA_desc <- function(Data,
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse purrr dplyr tidyselect
+#' @import tidyverse dplyr tidyselect
+#' @importFrom purrr set_names
+#' @importFrom rlang sym
 #'
 #' @return A vector of pairwise Cohen'ds.
 #'
 #'
 cohen_d <- function(Data, index_1, index_2) {
-  Data %>%
+  Data_temp <- Data %>%
     dplyr::select(tidyselect::starts_with(index_1),
-                  tidyselect::starts_with(index_2)) %>%
-    dplyr::mutate(mean_diff = !!sym(paste(index_1, "mean", sep = " ")) - !!sym(paste(index_2, "mean", sep = " ")),
-                  pooled_sd = sqrt(
-                    ((!!sym(paste(index_1, "n", sep = " ")) - 1) * !!sym(paste(index_1, "sd", sep = " ")) *  !!sym(paste(index_1, "sd", sep = " ")) +
-                       (!!sym(paste(index_2, "n", sep = " ")) - 1) * !!sym(paste(index_2, "sd", sep = " ")) *  !!sym(paste(index_2, "sd", sep = " "))) /
-                      (!!sym(paste(index_1, "n", sep = " ")) + !!sym(paste(index_2, "n", sep = " ")))
-                  ),
-                  d = mean_diff/pooled_sd) %>%
-    dplyr::select(d) %>%
-    purrr::set_names(paste("d",
-                           index_1,
-                           index_2,
-                           sep = "_"))
+                  tidyselect::starts_with(index_2))
+  
+  Mean_diff <- Data_temp[paste(index_1, "mean", sep = " ")] - Data_temp[paste(index_2, "mean", sep = " ")]
+  Pooled_sd <- sqrt(
+    ((Data_temp[paste(index_1, "n", sep = " ")] - 1) * Data_temp[paste(index_1, "sd", sep = " ")]^2 + 
+      (Data_temp[paste(index_2, "n", sep = " ")] - 1) * Data_temp[paste(index_2, "sd", sep = " ")]^2) / 
+      ((Data_temp[paste(index_1, "n", sep = " ")] - 1) + (Data_temp[paste(index_2, "n", sep = " ")] - 1))
+  )
+  
+  d <- Mean_diff / Pooled_sd
+  colnames(d) <- paste("d",
+                       index_1,
+                       index_2,
+                       sep = "_")
+  return(d)
 }

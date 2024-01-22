@@ -1,12 +1,12 @@
 #' Balance estimation
 #'
-#' This function computes all four balance criteria of MGMA, namely
+#' This function computes all four balance criteria of MAGMA, namely
 #' *Pillai's Trace*, *d-ratio*, *mean g*, and *adjusted d-ratio*. The
 #' estimation onvolves both binary and metric variables. Balance
 #' estimation is performed across various sample sizes. See Details for more
 #' information.
 #'
-#' This function computes all four balance criteria of MGMA, namely Pillai's
+#' This function computes all four balance criteria of MAGMA, namely Pillai's
 #' Trace, d-ratio, mean g, and adjusted d-ratio. This is an iterative process
 #' including more cases with each iteration according to the step variable.
 #' Thus, starting with cases having a small within-match distance, larger
@@ -19,7 +19,7 @@
 #' balance criteria pairwise exclusion is applied.
 #'
 #' @param Data A data frame containing at least the *grouping* variable, the
-#' *step* variable from the main MGMA-function (or other matching algorithms),
+#' *step* variable from the main MAGMA-function (or other matching algorithms),
 #'  and all *covariates* of interest.
 #' @param group A character specifying the name of
 #' your grouping variable in data. Note that MAGMA can only match your data for
@@ -31,12 +31,14 @@
 #' metric covariates of interest.
 #' @param step A character specifying the step variable of the matching. Per
 #' default, it is set to *step*, which corresponds the resulting
-#' name of the main MGMA function.
+#' name of the main MAGMA function.
 #'
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych metafor robumeta tibble dplyr tidyselect
+#' @import tidyverse metafor robumeta tibble dplyr tidyselect
+#' @importFrom psych describe
+#' @importFrom rlang sym
 #'
 #' @return A list of length four containing all balance criteria and all
 #' pairwise effects with respect to group sample size.
@@ -137,14 +139,14 @@ if(length(group) == 2) {
 
   Data <- Data %>%
     dplyr::mutate(group_d = dplyr::case_when(
-      !!sym(group[1]) == values_1[1] &
-        !!sym(group[2]) == values_2[1] ~ 1,
-      !!sym(group[1]) == values_1[1] &
-        !!sym(group[2]) == values_2[2] ~ 2,
-      !!sym(group[1]) == values_1[2] &
-        !!sym(group[2]) == values_2[1] ~ 3,
-      !!sym(group[1]) == values_1[2] &
-        !!sym(group[2]) == values_2[2] ~ 4
+      !!rlang::sym(group[1]) == values_1[1] &
+        !!rlang::sym(group[2]) == values_2[1] ~ 1,
+      !!rlang::sym(group[1]) == values_1[1] &
+        !!rlang::sym(group[2]) == values_2[2] ~ 2,
+      !!rlang::sym(group[1]) == values_1[2] &
+        !!rlang::sym(group[2]) == values_2[1] ~ 3,
+      !!rlang::sym(group[1]) == values_1[2] &
+        !!rlang::sym(group[2]) == values_2[2] ~ 4
     ))
 
   group <- "group_d"
@@ -181,21 +183,22 @@ cat("\n", "d-ratio finished. Starting to compute mean-g.", "\n")
   ###Output creation###
   ######################
   output <- list(Pillai = Pillai,
-               d_ratio = d_effects,
-               mean_effect = mean_g,
-               adjusted_d_ratio = adj_d_ratio_20)
-  cat("\n", "Adjusted d-ratio finished. balance estimation")
+                 d_ratio = d_effects,
+                 mean_effect = mean_g,
+                 adjusted_d_ratio = adj_d_ratio_20)
+  cat("\n", "Adjusted d-ratio finished.")
+  cat("\n", "Balance estimation finished.")
   return(output)
 }
 
 #' Initial unbalance estimation
 #'
-#' This function computes all four balance criteria of MGMA, namely
+#' This function computes all four balance criteria of MAGMA, namely
 #' *Pillai's Trace*, *d-ratiO*, *mean g*, and *adjusted d-ratio* for the
 #' unmatched data set. This enables comparison of initial unbalance with
 #' the balance after matching.
 #'
-#' This function computes all four Balance criteria of MGMA, namely Pillai's
+#' This function computes all four Balance criteria of MAGMA, namely Pillai's
 #' Trace, d-ratio, mean g, and adjusted d-ratio for the overall samples.
 #' Missing data for Pillai's Trace are excluded listwise, while for the other
 #' balance criteria pairwise exclusion is applied.
@@ -203,7 +206,7 @@ cat("\n", "d-ratio finished. Starting to compute mean-g.", "\n")
 #' @param Data A data frame containing at least the *grouping* variable and all
 #'  *covariates* of interest.
 #' @param group A character specifying the name of
-#' your grouping variable in data. Note that MGMA can only match your data for
+#' your grouping variable in data. Note that MAGMA can only match your data for
 #' a maximum of 4 groups. For matching over two grouping variables (e.g., 2x2
 #' design) is possible by specifying group as a character vector with a length
 #' of two. In this case each or the two grouping variables can only have two
@@ -213,7 +216,11 @@ cat("\n", "d-ratio finished. Starting to compute mean-g.", "\n")
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych metafor robumeta tibble dplyr tidyselect
+#' @import tidyverse metafor robumeta tibble dplyr tidyselect
+#' @importFrom psych describe
+#' @importFrom purrr set_names
+#' @importFrom rlang sym
+#' @importFrom stats pnorm
 #'
 #' @return A numeric vector of length 4 containing the balance
 #' criteria for the unmatched sample.
@@ -279,10 +286,11 @@ initial_unbalance <- function(Data, group, covariates) {
   if(length(group) == 1) {
     Pillai_input <- Data %>%
       dplyr::select(tidyselect::all_of(covariates),
-                    tidyselect::all_of(group)) %>%
-      purrr::set_names(c(covariates, "IV"))
+                    tidyselect::all_of(group))
+    
+    formula <- paste0("cbind(", paste(covariates, collapse = ","), ") ~ as.factor(", group, ")")
 
-      Pillai <- stats::manova(Pillai_DV(Pillai_input, covariates) ~ IV,
+      Pillai <- stats::manova(stats::as.formula(formula),
                               data = Pillai_input) %>%
         summary() %>%
         `[[`("stats") %>%
@@ -293,10 +301,13 @@ initial_unbalance <- function(Data, group, covariates) {
     Pillai_input <- Data %>%
       dplyr::select(tidyselect::all_of(covariates),
                     tidyselect::all_of(group[1]),
-                    tidyselect::all_of(group[2])) %>%
-      purrr::set_names(c(covariates, "IV_1", "IV_2"))
+                    tidyselect::all_of(group[2]))
+    
+    formula <- paste0("cbind(", paste(covariates, collapse = ","), ") ~ as.factor(", group[1],
+                      ") + as.factor(", group[2],
+                      ") + ", group[1], "*", group[2])
 
-    Pillai <- stats::manova(Pillai_DV(Pillai_input, covariates) ~ IV_1 + IV_2 + IV_1 * IV_2,
+    Pillai <- stats::manova(stats::as.formula(formula),
                      data = Pillai_input) %>%
       summary() %>%
       `[[`("stats") %>%
@@ -316,14 +327,14 @@ if(length(group) == 2) {
 
   Data <- Data %>%
     dplyr::mutate(group_d = dplyr::case_when(
-      !!sym(group[1]) == values_1[1] &
-        !!sym(group[2]) == values_2[1] ~ 1,
-      !!sym(group[1]) == values_1[1] &
-        !!sym(group[2]) == values_2[2] ~ 2,
-      !!sym(group[1]) == values_1[2] &
-        !!sym(group[2]) == values_2[1] ~ 3,
-      !!sym(group[1]) == values_1[2] &
-        !!sym(group[2]) == values_2[2] ~ 4
+      !!rlang::sym(group[1]) == values_1[1] &
+        !!rlang::sym(group[2]) == values_2[1] ~ 1,
+      !!rlang::sym(group[1]) == values_1[1] &
+        !!rlang::sym(group[2]) == values_2[2] ~ 2,
+      !!rlang::sym(group[1]) == values_1[2] &
+        !!rlang::sym(group[2]) == values_2[1] ~ 3,
+      !!rlang::sym(group[1]) == values_1[2] &
+        !!rlang::sym(group[2]) == values_2[2] ~ 4
     ))
 
   group <- "group_d"
@@ -332,9 +343,9 @@ if(length(group) == 2) {
 
 
   group_stats <- Data %>%
-    dplyr::select(IV = tidyselect::all_of(group),
+    dplyr::select(tidyselect::all_of(group),
                   tidyselect::all_of(covariates)) %>%
-    dplyr::group_by(IV) %>%
+    dplyr::group_by(!!rlang::sym(group)) %>%
     dplyr::summarise_at(.vars = covariates,
                         .funs = psych::describe) %>%
     as.list() %>%
@@ -366,8 +377,7 @@ if(length(group) == 2) {
     value_1 <- pairwise_matrix[j, 1]
     value_2 <- pairwise_matrix[j, 2]
     for(i in seq_along(group_stats)) {
-      temp_stats <- group_stats[[i]] %>%
-        dplyr::select(n, mean, sd)
+      temp_stats <- group_stats[[i]][c("n", "mean", "sd")]
       mean_diff <- (temp_stats[value_1, 2] - temp_stats[value_2, 2])
       pooled_sd <- sqrt(
         ((temp_stats[value_1, 1] - 1) * temp_stats[value_1, 3]^2 +
@@ -390,8 +400,7 @@ if(length(group) == 2) {
     value_1 <- pairwise_matrix[j, 1]
     value_2 <- pairwise_matrix[j, 2]
     for(i in seq_along(group_stats)) {
-      temp_n <- group_stats[[i]] %>%
-        dplyr::select(n) %>%
+      temp_n <- group_stats[[i]]["n"] %>%
         unlist()
       n_matrix[j, i] <- sum(temp_n)
       var_matrix[j, i] <- d_effect[j, i]^2/(2 * sum(temp_n)) +
@@ -426,7 +435,7 @@ if(length(group) == 2) {
   ###adj. d ratioo########
   ########################
 
-  adj_d_ratio <- purrr::map2_dbl(effect_g, var_g, pnorm, q = .20) %>%
+  adj_d_ratio <- purrr::map2_dbl(effect_g, var_g, stats::pnorm, q = .20) %>%
     matrix(ncol = ncol(effect_g), nrow = nrow(effect_g)) %>%
     sum() / (ncol(effect_g) * nrow(effect_g))
 
@@ -482,7 +491,12 @@ if(length(group) == 2) {
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse janitor flextable
+#' @import tidyverse
+#' @importFrom janitor adorn_title
+#' @importFrom flextable flextable
+#' @importFrom flextable autofit
+#' @importFrom flextable save_as_docx
+#' @importFrom rlang is_list
 #'
 #' @return A 4x5 APA table showing the four balance
 #' criteria and the respective sample sizes per group for four scenarios. In
@@ -540,7 +554,7 @@ if(length(group) == 2) {
 #'
 Table_MAGMA <- function(Balance, filename = NULL) {
   #Check input
-  if (!is_list(Balance)) {
+  if (!rlang::is_list(Balance)) {
     stop("Balance needs to be a Balance_MAGMA object!")
   }
   #Creating index vector of models with optimalized criteria
@@ -562,10 +576,11 @@ Table_MAGMA <- function(Balance, filename = NULL) {
               Pillai_Trace = round(Balance$Pillai[index_optimal], 2),
               d_ratio = round(Balance$d_ratio$d_rate[index_optimal], 2),
               mean_g = round(Balance$mean_effect[index_optimal], 2),
-              adjusted_d_ratio = round(Balance$adjusted_d_ratio[index_optimal], 2),
-              n_per_group = index_optimal) %>%
-    #Ordering table after n per group
-    dplyr::arrange(., n_per_group)
+              adjusted_d_ratio = round(Balance$adjusted_d_ratio[index_optimal], 2))
+  
+  balance_matrix$n_per_group <- index_optimal
+  # Ordering table after n per group
+  balance_matrix <- balance_matrix[order(balance_matrix$n_per_group), ]
   })
   }
 
@@ -593,10 +608,11 @@ Table_MAGMA <- function(Balance, filename = NULL) {
                 Pillai_Trace_IA = round(Balance$Pillai[3, index_optimal], 2),
                 d_ratio = Balance$d_ratio$d_rate[index_optimal],
                 mean_g = round(Balance$mean_effect[index_optimal], 2),
-                adjusted_d_ratio = round(Balance$adjusted_d_ratio[index_optimal], 2),
-                n_per_group = index_optimal) %>%
-      #Ordering table after n per group
-      dplyr::arrange(., n_per_group)
+                adjusted_d_ratio = round(Balance$adjusted_d_ratio[index_optimal], 2))
+                
+    balance_matrix$n_per_group <- index_optimal
+    # Ordering table after n per group
+    balance_matrix <- balance_matrix[order(balance_matrix$n_per_group), ]
     })
   }
 
@@ -634,6 +650,7 @@ return(balance_matrix)
 #' @author Julian Urban
 #'
 #' @import tidyverse ggplot2
+#' @importFrom rlang is_list
 #'
 #' @return R Plots showing the balance trend over sample size.
 #' @export
@@ -693,7 +710,7 @@ Plot_MAGMA <- function(Balance,
                                      "mean_g",
                                      "Adj_d_ratio")) {
   #Check input
-  if (!is_list(Balance)) {
+  if (!rlang::is_list(Balance)) {
     stop("Balance needs to be a Balance_MAGMA object!")
   }
 
@@ -701,12 +718,13 @@ Plot_MAGMA <- function(Balance,
   if (any(criterion == "Pillai")) {
 
     if(!is.matrix(Balance$Pillai)) {
-    print(Balance$Pillai %>%
-            unlist() %>%
-            tibble::as_tibble(.name_repair = "minimal") %>%
-            dplyr::mutate(N = dplyr::row_number()) %>%
-            ggplot2::ggplot() +
-            ggplot2::geom_point(aes(x = N, y = value)) +
+    Balance_temp <- Balance$Pillai %>%
+        unlist() %>%
+        tibble::as_tibble(.name_repair = "minimal")
+    Balance_temp$N <- c(1:nrow(Balance_temp))
+    
+    print(ggplot2::ggplot() +
+            ggplot2::geom_point(aes(x = Balance_temp$N, y = Balance_temp$value)) +
             ggplot2::theme(panel.background = element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, .5),
                                breaks = seq(0, .5, .05)) +
@@ -718,13 +736,15 @@ Plot_MAGMA <- function(Balance,
       effects <- c("Main Effect 1",
                    "Main Effect 2",
                    "Interaction")
-      for(i in 1:nrow(Balance$Pillai))
-      print(Balance$Pillai[i, ] %>%
-              unlist() %>%
-              tibble::as_tibble(.name_repair = "minimal") %>%
-              dplyr::mutate(N = dplyr::row_number()) %>%
+      for(i in 1:nrow(Balance$Pillai)) {
+        Balance_temp <- Balance$Pillai[i, ] %>%
+          unlist() %>%
+          tibble::as_tibble(.name_repair = "minimal")
+        Balance_temp$N <- c(1:nrow(Balance_temp))
+        
+      print(Balance_temp %>%
               ggplot2::ggplot() +
-              ggplot2::geom_point(aes(x = N, y = value))+
+              ggplot2::geom_point(aes(x = Balance_temp$N, y = Balance_temp$value))+
               ggplot2::theme(panel.background = element_blank()) +
               ggplot2::scale_y_continuous(limits = c(0, .5),
                                  breaks = seq(0, .5, .05)) +
@@ -732,16 +752,20 @@ Plot_MAGMA <- function(Balance,
                    title = paste("Pillai`s Trace values for",
                                  effects[i],
                                  "for different sample sizes",
-                                 sep = " ")))
+                                 sep = " "))
+            )
+      }
     }
 
   }
   if (any(criterion == "d_ratio")) {
-    print(Balance$d_ratio$d_rate %>%
-            tibble::as_tibble(.name_repair = "minimal") %>%
-            dplyr::mutate(N = dplyr::row_number()) %>%
-            ggplot2::ggplot() +
-            ggplot2::geom_point(aes(x = N, y = value)) +
+    Balance_temp <- Balance$d_ratio$d_rate %>%
+      unlist() %>%
+      tibble::as_tibble(.name_repair = "minimal")
+    Balance_temp$N <- c(1:nrow(Balance_temp))
+    
+    print(ggplot2::ggplot() +
+            ggplot2::geom_point(aes(x = Balance_temp$N, y = Balance_temp$value)) +
             ggplot2::theme(panel.background = element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +
@@ -749,11 +773,13 @@ Plot_MAGMA <- function(Balance,
                  title = "Cohen`s d < .20` for different sample sizes"))
   }
   if (any(criterion == "mean_g")) {
-    print(Balance$mean_effect %>%
-            tibble::as_tibble(.name_repair = "minimal") %>%
-            dplyr::mutate(N = dplyr::row_number()) %>%
-            ggplot2::ggplot() +
-            ggplot2::geom_point(aes(x = N, y = value))+
+    Balance_temp <- Balance$mean_effect %>%
+      unlist() %>%
+      tibble::as_tibble(.name_repair = "minimal")
+    Balance_temp$N <- c(1:nrow(Balance_temp))
+    
+    print(ggplot2::ggplot() +
+            ggplot2::geom_point(aes(x = Balance_temp$N, y = Balance_temp$value))+
             ggplot2::theme(panel.background = element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +
@@ -761,11 +787,13 @@ Plot_MAGMA <- function(Balance,
                  title = "Mean effect for different sample sizes"))
   }
   if (any(criterion == "Adj_d_ratio")) {
-    print(Balance$adjusted_d_ratio %>%
-            tibble::as_tibble(.name_repair = "minimal") %>%
-            dplyr::mutate(N = dplyr::row_number()) %>%
-            ggplot2::ggplot() +
-            ggplot2::geom_point(aes(x = N, y = value)) +
+    Balance_temp <- Balance$adjusted_d_ratio %>%
+      unlist() %>%
+      tibble::as_tibble(.name_repair = "minimal")
+    Balance_temp$N <- c(1:nrow(Balance_temp))
+    
+    print(ggplot2::ggplot() +
+            ggplot2::geom_point(aes(x = Balance_temp$N, y = Balance_temp$value)) +
             ggplot2::theme(panel.background = element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +

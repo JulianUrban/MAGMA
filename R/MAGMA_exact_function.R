@@ -36,7 +36,11 @@
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse parallel doParallel foreach tibble dplyr tidyselect stats
+#' @import tidyverse parallel doParallel foreach dplyr tibble tidyselect
+#' @importFrom stats var
+#' @importFrom stats ave
+#' @importFrom rlang sym
+#' 
 #' @return Your input data frame of valid cases augmented with matching
 #' relevant variables, namely *weight*, *step*, *distance*, and *ID*. In case
 #' of missing values on the distance or group variable, MAGMA_exact excludes
@@ -103,6 +107,12 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
   if(!is.character(group) | length(group) > 2) {
     stop("group needs to be a character of length 1!")
   }
+  
+  if(length(group) == 2) {
+    if(length(table(Data[[group[1]]])) > 2 | length(table(Data[[group[2]]])) > 2 ) {
+      stop("For two factor designs only 2 levels per factor are currently possible!")
+    }
+  }
 
   if(!is.character(exact) | length(exact) > 1) {
     stop("exact needs to be a character of length 1!")
@@ -127,47 +137,32 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
   #Creating data set with relevant variables
   if(length(group) == 1) {
     data <- Data %>%
-      dplyr::filter(as.logical(!is.na(!!sym(group))),
-                    as.logical(!is.na(!!sym(dist)))) %>%
-      dplyr::mutate(ID = row_number())
+      dplyr::filter(as.logical(!is.na(!!rlang::sym(group))),
+                    as.logical(!is.na(!!rlang::sym(dist))))
+    data$ID <- c(1:nrow(data))
+      
   }  else {
     values_1 <- unlist(unique(Data[group[1]]))
     values_2 <- unlist(unique(Data[group[2]]))
 
     if(length(dist) == 1) {
       data <- Data %>%
-        dplyr::filter(!is.na(!!sym(group[1])),
-                      !is.na(!!sym(group[2])),
-                      !is.na(!!sym(dist))) %>%
-        dplyr::mutate(ID = row_number(),
-                      group_long = dplyr::case_when(
-                        !!sym(group[1]) == values_1[1] &
-                          !!sym(group[2]) == values_2[1] ~ 1,
-                        !!sym(group[1]) == values_1[1] &
-                          !!sym(group[2]) == values_2[2] ~ 2,
-                        !!sym(group[1]) == values_1[2] &
-                          !!sym(group[2]) == values_2[1] ~ 3,
-                        !!sym(group[1]) == values_1[2] &
-                          !!sym(group[2]) == values_2[2] ~ 4
-                      ))
+        dplyr::filter(!is.na(!!rlang::sym(group[1])),
+                      !is.na(!!rlang::sym(group[2])),
+                      !is.na(!!rlang::sym(dist)))
     } else {
       data <- Data %>%
-        dplyr::filter(!is.na(!!sym(group[1])),
-                      !is.na(!!sym(group[2])),
-                      !is.na(!!sym(dist[1])),
-                      !is.na(!!sym(dist[2]))) %>%
-        dplyr::mutate(ID = row_number(),
-                      group_long = dplyr::case_when(
-                        !!sym(group[1]) == values_1[1] &
-                          !!sym(group[2]) == values_2[1] ~ 1,
-                        !!sym(group[1]) == values_1[1] &
-                          !!sym(group[2]) == values_2[2] ~ 2,
-                        !!sym(group[1]) == values_1[2] &
-                          !!sym(group[2]) == values_2[1] ~ 3,
-                        !!sym(group[1]) == values_1[2] &
-                          !!sym(group[2]) == values_2[2] ~ 4
-                      ))
+        dplyr::filter(!is.na(!!rlang::sym(group[1])),
+                      !is.na(!!rlang::sym(group[2])),
+                      !is.na(!!rlang::sym(dist[1])),
+                      !is.na(!!rlang::sym(dist[2]))) 
     }
+      
+      data$ID <- c(1:nrow(data))
+      data$group_long <- ifelse(data[[group[1]]] == values_1[1] & data[[group[2]]] == values_2[1], 1,
+                                ifelse(data[[group[1]]] == values_1[1] & data[[group[2]]] == values_2[2], 2,
+                                       ifelse(data[[group[1]]] == values_1[2] & data[[group[2]]] == values_2[1], 3,
+                                              ifelse(data[[group[1]]] == values_1[2] & data[[group[2]]] == values_2[2], 4, NA))))
   }
 
 
@@ -189,14 +184,13 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
   }
 
   colnames(input) <- c("ID", "group", "distance_ps","exact")
-  input <- input %>%
-    tibble::as_tibble() %>%
-    dplyr::group_by(group) %>%
-    dplyr::mutate(group_id = dplyr::row_number()) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(weight = NA,
-           step = NA,
-           distance = NA)
+  
+  input <- transform(input,
+                     group_id = stats::ave(1:nrow(input),
+                                           input$group,
+                                           FUN = seq_along))
+  
+  input$distance <- input$step <- input$weight <- NA
 
   cat("\n","Input correctly identified!")
 
@@ -205,11 +199,9 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
   ######################
   var_ma <- as.numeric(stats::var(input$distance_ps))
 
-  elements <- input %>%
-    dplyr::group_by(group) %>%
-    dplyr::summarise(max(group_id)) %>%
-    `[`(, 2) %>%
-    unlist()
+  elements <- split(input$group_id, input$group) %>%
+    sapply(FUN = max)
+
 
   if(length(elements) == 2) {
 
@@ -253,11 +245,10 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
     exact_list[[i]] <- do.call(rbind.data.frame, group_list_temp)
     }
 
-  data_temp <- do.call(rbind.data.frame, exact_list) %>%
-    dplyr::arrange(distance, step) %>%
-    dplyr::mutate(step = ceiling(c(1:nrow(input))/2)) %>%
-    dplyr::select(ID, step, weight, distance) %>%
-    dplyr::filter(weight == 1)
+  data_temp <- do.call(rbind.data.frame, exact_list)
+  data_temp <- data_temp[order(data_temp$step, data_temp$distance),]
+  data_temp$step <- ceiling(c(1:nrow(input))/2)
+  data_temp <- data_temp[!is.na(data_temp$weight), c("ID", "step", "weight", "distance")] 
 
   data <- merge(data,
                 data_temp,
@@ -304,11 +295,10 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
         gc()
         exact_list[[i]] <- do.call(rbind.data.frame, group_list_temp)
       }
-      data_temp <- do.call(rbind.data.frame, exact_list) %>%
-        dplyr::arrange(distance, step) %>%
-        dplyr::mutate(step = ceiling(c(1:nrow(input))/3)) %>%
-        dplyr::select(ID, step, weight, distance) %>%
-        dplyr::filter(weight == 1)
+      data_temp <- do.call(rbind.data.frame, exact_list)
+      data_temp <- data_temp[order(data_temp$step, data_temp$distance),]
+      data_temp$step <- ceiling(c(1:nrow(input))/3)
+      data_temp <- data_temp[!is.na(data_temp$weight), c("ID", "step", "weight", "distance")] 
 
       data <- merge(data,
                     data_temp,
@@ -356,11 +346,10 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
         gc()
         exact_list[[i]] <- do.call(rbind.data.frame, group_list_temp)
       }
-      data_temp <- do.call(rbind.data.frame, exact_list) %>%
-        dplyr::arrange(distance, step) %>%
-        dplyr::mutate(step = ceiling(c(1:nrow(input))/4)) %>%
-        dplyr::select(ID, step, weight, distance) %>%
-        dplyr::filter(weight == 1)
+      data_temp <- do.call(rbind.data.frame, exact_list) 
+      data_temp <- data_temp[order(data_temp$step, data_temp$distance),]
+      data_temp$step <- ceiling(c(1:nrow(input))/4)
+      data_temp <- data_temp[!is.na(data_temp$weight), c("ID", "step", "weight", "distance")] 
 
       data <- merge(data,
                     data_temp,

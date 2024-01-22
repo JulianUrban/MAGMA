@@ -9,18 +9,14 @@
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych
+#' @import tidyverse
 #' @return A matrix of the covariates
 #' @noRd
 #'
 Pillai_DV <- function(data, input) {
-  suppressMessages(attach(data))
-  DV <- eval(parse(text = input[1]))
-  for(i in 2:length(input)) {
-    DV <- cbind(DV, eval(parse(text = input[i])))
-  }
-  return(DV)
-  suppressMessages(detach(data))
+  DV <- data %>%
+    dplyr::select(tidyselect::all_of(input)) %>%
+    as.matrix()
 }
 
 
@@ -37,7 +33,11 @@ Pillai_DV <- function(data, input) {
 #'
 #' @author Julian Urban
 #'
-#' @import tidyverse psych dplyr tidyselect tibble stats
+#' @import tidyverse dplyr tidyselect tibble
+#' @importFrom psych describe
+#' @importFrom stats manova
+#' @importFrom rlang sym
+#' 
 #' @return A vector containing Pillai's Trace in dependency of sample size. If two
 #' grouping variables were specified, the output is a matrix containing
 #' Pillai's Trace for both IVs and their ineraction.
@@ -79,9 +79,10 @@ Pillai_iterativ <- function(da, gr, co, st) {
                     tidyselect::all_of(gr),
                     tidyselect::all_of(st)) %>%
       purrr::set_names(c(co, "IV", "It")) %>%
-      dplyr::filter(!!sym("It") <= iteration)
+      dplyr::filter(!!rlang::sym("It") <= iteration)
 
-    Pillai_temp[iteration] <- stats::manova(Pillai_DV(Pillai_input, co) ~ IV,
+    Pillai_temp[iteration] <- stats::manova(Pillai_DV(data = Pillai_input,
+                                                      input = co) ~ IV,
                                             data = Pillai_input) %>%
       summary() %>%
       `[[`("stats") %>%
@@ -102,9 +103,11 @@ Pillai_iterativ <- function(da, gr, co, st) {
                       tidyselect::all_of(gr),
                       tidyselect::all_of(st)) %>%
         purrr::set_names(c(co, "IV1", "IV2", "It")) %>%
-        dplyr::filter(!!sym("It") <= iteration)
+        dplyr::filter(!!rlang::sym("It") <= iteration)
 
-      Pillai_temp[, iteration] <- stats::manova(Pillai_DV(Pillai_input, co) ~ IV1 + IV2 + IV1 * IV2, data = Pillai_input) %>%
+      Pillai_temp[, iteration] <- stats::manova(Pillai_DV(data = Pillai_input,
+                                                          input = co) ~ IV1 + IV2 + IV1 * IV2,
+                                                data = Pillai_input) %>%
         summary() %>%
         `[[`("stats") %>%
         `[`(c(1:3), 2)
