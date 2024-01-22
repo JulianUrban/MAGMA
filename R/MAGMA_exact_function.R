@@ -246,7 +246,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
     }
 
   data_temp <- do.call(rbind.data.frame, exact_list)
-  data_temp <- data_temp[order(data_temp$step, data_temp$distance),]
+  data_temp <- data_temp[order(data_temp$distance, data_temp$step),]
   data_temp$step <- ceiling(c(1:nrow(input))/2)
   data_temp <- data_temp[!is.na(data_temp$weight), c("ID", "step", "weight", "distance")] 
 
@@ -296,7 +296,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
         exact_list[[i]] <- do.call(rbind.data.frame, group_list_temp)
       }
       data_temp <- do.call(rbind.data.frame, exact_list)
-      data_temp <- data_temp[order(data_temp$step, data_temp$distance),]
+      data_temp <- data_temp[order(data_temp$distance, data_temp$step),]
       data_temp$step <- ceiling(c(1:nrow(input))/3)
       data_temp <- data_temp[!is.na(data_temp$weight), c("ID", "step", "weight", "distance")] 
 
@@ -347,7 +347,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
         exact_list[[i]] <- do.call(rbind.data.frame, group_list_temp)
       }
       data_temp <- do.call(rbind.data.frame, exact_list) 
-      data_temp <- data_temp[order(data_temp$step, data_temp$distance),]
+      data_temp <- data_temp[order(data_temp$distance, data_temp$step),]
       data_temp$step <- ceiling(c(1:nrow(input))/4)
       data_temp <- data_temp[!is.na(data_temp$weight), c("ID", "step", "weight", "distance")] 
 
