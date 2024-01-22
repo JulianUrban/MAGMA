@@ -606,7 +606,7 @@ Table_MAGMA <- function(Balance, filename = NULL) {
                 Pillai_Trace_ME1 = round(Balance$Pillai[1, index_optimal], 2),
                 Pillai_Trace_ME2 = round(Balance$Pillai[2, index_optimal], 2),
                 Pillai_Trace_IA = round(Balance$Pillai[3, index_optimal], 2),
-                d_ratio = Balance$d_ratio$d_rate[index_optimal],
+                d_ratio = round(Balance$d_ratio$d_rate[index_optimal], 2),
                 mean_g = round(Balance$mean_effect[index_optimal], 2),
                 adjusted_d_ratio = round(Balance$adjusted_d_ratio[index_optimal], 2))
                 
