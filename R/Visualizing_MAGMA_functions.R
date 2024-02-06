@@ -65,7 +65,8 @@
 #' # Estimating balance of a two-group matching using the data set
 #' # 'MAGMA_sim_data'.
 #' # Matching variable 'gifted_support' (received giftedness support yes or no)
-#' Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data,
+#' # Using subsample only for faster execution.
+#' Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data[MAGMA_sim_data$step_gifted < 200, ],
 #'                                 group = "gifted_support",
 #'                                 covariates = covariates_vector,
 #'                                 step = "step_gifted")
@@ -546,7 +547,7 @@ if(length(group) == 2) {
 #' # Estimating balance of a two-group matching using the data set
 #' # 'MAGMA_sim_data'.
 #' # Matching variable 'gifted_support' (received giftedness support yes or no)
-#' Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data,
+#' Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data[MAGMA_sim_data$step_gifted < 200, ],
 #'                                 group = "gifted_support",
 #'                                 covariates = covariates_vector,
 #'                                 step = "step_gifted")
@@ -688,7 +689,7 @@ return(balance_matrix)
 #' #  Estimating balance of a two-group matching using the data set
 #' # 'MAGMA_sim_data'.
 #' # Matching variable 'gifted_support' (received giftedness support yes or no)
-#' Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data,
+#' Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data[MAGMA_sim_data$step_gifted < 200, ],
 #'                                 group = "gifted_support",
 #'                                 covariates = covariates_vector,
 #'                                 step = "step_gifted") 

@@ -69,7 +69,7 @@ MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
                                            group = "gifted_support",
                                            dist = "ps_gifted",
                                            exact = "enrichment",
-                                           cores = 2)
+                                           cores = 1)
 head(MAGMA_sim_data_gifted_exact)
 
 \donttest{
