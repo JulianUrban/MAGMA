@@ -2,9 +2,9 @@
 % Please edit documentation in R/MAGMA_exact_function.R
 \name{MAGMA_exact}
 \alias{MAGMA_exact}
-\title{MAGMA exact}
+\title{MAGMA_exact}
 \usage{
-MAGMA_exact(Data, group, dist, exact, cores = 1)
+MAGMA_exact(Data, group, dist, exact, cores = 1, verbose = TRUE)
 }
 \arguments{
 \item{Data}{A data frame or tibble containing at least your grouping and
@@ -25,6 +25,9 @@ Only cases with the same value on this variable can be matched.}
 
 \item{cores}{An integer defining the number of cores used for
 parallel computation.}
+
+\item{verbose}{TRUE or FALSE indicating whether matching information should
+be printed to the console.}
 }
 \value{
 Your input data frame of valid cases augmented with matching
@@ -36,7 +39,7 @@ excluded cases. For more information, see Details.
 \description{
 This function conducts exact many group matching for 2 to 4 groups. Exact
 means that only cases with the same value on the exact variable can be
-matched. It augments the original data set by relevant MAGMA variables.
+matched. It augments the original data set by relevant 'MAGMA.R' variables.
 For details, see below.
 }
 \details{
@@ -54,7 +57,7 @@ same school, or the same organization are possible matches. For standard
 matching, see \code{\link{MAGMA}}
 }
 \examples{
-\dontrun{
+
 # Running this code will take a while
 # Two-group exact matching using the data set 'MAGMA_sim_data'
 # Matching variable 'gifted_support' (received giftedness support yes or no)
@@ -69,6 +72,7 @@ MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
                                            cores = 2)
 head(MAGMA_sim_data_gifted_exact)
 
+\donttest{
 # Conducting three-group matching using the data set 'MAGMA_sim_data'
 # Matching variable 'teacher_ability_rating' (ability rated from teacher as
 # below average, average, or above average)

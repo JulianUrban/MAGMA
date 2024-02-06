@@ -1,9 +1,9 @@
-#' Inner MAGMA-matching process function
+#' match_iterative
 #'
-#' matches Cases iteratively during MAGMA
+#' matches Cases iteratively during the matching process.
 #'
 #' This function conducts the matching process, by extracting the match with
-#' the lowest distance
+#' the lowest distance.
 #'
 #' @param distance_input distance matrix to extract lowest distance
 #' @param output_list output where MAGMA results get stored
@@ -86,11 +86,11 @@ match_iterative <- function(distance_input, output_list, rep_elements) {
 }
 
 
-#' Inner MAGMA distance estimation preparation function
+#' build_value_matrix
 #'
-#' prepares distance estimation
+#' prepares distance estimation.
 #'
-#' This function uses the PS inputs to prepare them for distance estimation
+#' This function uses the PS inputs to prepare them for distance estimation.
 #'
 #' @param input_list Data with PS
 #' @param rep_element sample sizes per group

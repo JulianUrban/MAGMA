@@ -1,14 +1,14 @@
-#' Balance extraction
+#' Balance_extract
 #'
 #' This function extracts the balance criteria or pairwise effects of a
-#' Balance_MAGMA result for a specified sample size.
+#' \code{\link{Balance_MAGMA}} result for a specified sample size.
 #'
 #' Given a previous computed \code{\link{Balance_MAGMA}} object, this function
 #' enables the extraction of balance criteria or pairwise effects for any
 #' desired sample size. This makes it possible to independently check the
 #' balance for each possible sample size.
 #'
-#' @param Balance A result of Balance_MAGMA. See the function
+#' @param Balance A result of \code{\link{Balance_MAGMA}} See the function
 #' \code{\link{Balance_MAGMA}} for details.
 #' @param samplesize An integer indicating the sample size for which the balance
 #' criteria or pairwise effects should be extracted.
@@ -29,44 +29,33 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # Define the names of the metric and binary covariates
-#' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
+#' 
+#' # Defining the names of the metric and binary covariates
+#' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "gender")
 #'
-#' # Two-group exact matching using the data set 'MAGMA_sim_data'
+#'
+#' # Estimating balance of a two-group matching using the data set
+#' # 'MAGMA_sim_data'.
 #' # Matching variable 'gifted_support' (received giftedness support yes or no)
-#' # 'MAGMA_sim_data_gifted_exact' contains the result of the matching
-#' # Exact matching for 'enrichment' (participated in enrichment or not)
-#' # Students that participated can only be matched with other
-#' # students that participated and vice versa
-#' MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
-#'                                            group = "gifted_support",
-#'                                            dist = "ps_gifted",
-#'                                            exact = "enrichment",
-#'                                            cores = 2)
-#'
-#'
-#' # Estimating balance
-#' Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
-#'                                       group = "gifted_support",
-#'                                       covariates = covariates_vector,
-#'                                       step = "step") # Step created during matching
-#' str(Balance_gifted_exact)
+#' Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data,
+#'                                 group = "gifted_support",
+#'                                 covariates = covariates_vector,
+#'                                 step = "step_gifted")
 #'
 #' # Balance criteria for 100 cases per group
 #' # Balance criteria
-#' Balance_100_gifted <- Balance_extract(Balance = Balance_gifted_exact,
+#' Balance_100_gifted <- Balance_extract(Balance = Balance_gifted,
 #'                                       samplesize = 100,
 #'                                       effects = FALSE)
 #' Balance_100_gifted
 #'
 #' # Pairwise effects
-#' Balance_100_gifted_effects <- Balance_extract(Balance = Balance_gifted_exact,
+#' Balance_100_gifted_effects <- Balance_extract(Balance = Balance_gifted,
 #'                                               samplesize = 100,
 #'                                               effects = TRUE)
 #' Balance_100_gifted_effects
 #'
-#'
+#' \donttest{
 #' # 2x2 matching using the data set 'MAGMA_sim_data'
 #' # Matching variables are 'gifted_support' (received giftedness support yes
 #' # or no) and 'enrichment' (participated in enrichment or not)

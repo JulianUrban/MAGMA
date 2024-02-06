@@ -12,7 +12,8 @@ Density_overlap(
   group_labels = NULL,
   group_name = NULL,
   step_num = NULL,
-  step_var = NULL
+  step_var = NULL,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -40,6 +41,9 @@ per group in this post matching comparison. Is based on the step variable of
 MAGMA.}
 
 \item{step_var}{A character specifying the name of the step variable.}
+
+\item{verbose}{TRUE or FALSE indicating whether matching information should
+be printed to the console.}
 }
 \value{
 A plot showing the kernel density for a specified variable separately
@@ -55,7 +59,6 @@ or more groups. It plots the kernel density separately for each group and
 quantifies the amount of overlap.
 }
 \examples{
-\dontrun{
 # Estimating density overlap using the data set 'MAGMA_sim_data
 # Estimating density overlap for 'ps_gifted' (propensity scores for
 # giftedness support)
@@ -81,11 +84,11 @@ group_name = "Gifted Support")
 # and 'group_name'
 # Estimating post-matching overlap for 250 cases per group ('step_num')
 # Name of the step variable is 'step'
-Density_overlap(Data = MAGMA_sim_data_gifted,
+Density_overlap(Data = MAGMA_sim_data,
 variable = "ps_gifted",
 group = "gifted_support",
 step_num = 250,
-step_var = "step",
+step_var = "step_gifted",
 variable_name = "Propensity Score",
 group_labels = c("No Support", "Support"),
 group_name = "Gifted Support")
@@ -103,7 +106,6 @@ group = "teacher_ability_rating",
 variable_name = "School Achievement",
 group_labels = c("Low", "Medium", "High"),
 group_name = "Rating")
-}
 
 }
 \references{

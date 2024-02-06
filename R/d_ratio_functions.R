@@ -1,4 +1,4 @@
-#' Pairwise Cohen's and d-ratio
+#' inner_d
 #'
 #' d-ratio and pairwise Cohen's d with respect to sample size.
 #'
@@ -147,7 +147,7 @@ inner_d <- function(da, gr, co, st) {
 }
 
 
-#' Adjusted d-ratio
+#' adj_d_ratio
 #'
 #' adjusted d-ratio with respect to sample size.
 #'

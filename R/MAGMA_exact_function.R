@@ -1,8 +1,8 @@
-#' MAGMA exact
+#' MAGMA_exact
 #'
 #' This function conducts exact many group matching for 2 to 4 groups. Exact
 #' means that only cases with the same value on the exact variable can be
-#' matched. It augments the original data set by relevant MAGMA variables.
+#' matched. It augments the original data set by relevant 'MAGMA.R' variables.
 #' For details, see below.
 #'
 #' This function conducts nearest neighbor exact many group matching. It is
@@ -33,6 +33,8 @@
 #' Only cases with the same value on this variable can be matched.
 #' @param cores An integer defining the number of cores used for
 #' parallel computation.
+#' @param verbose TRUE or FALSE indicating whether matching information should
+#' be printed to the console.
 #'
 #' @author Julian Urban
 #'
@@ -49,7 +51,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' 
 #' # Running this code will take a while
 #' # Two-group exact matching using the data set 'MAGMA_sim_data'
 #' # Matching variable 'gifted_support' (received giftedness support yes or no)
@@ -63,7 +65,8 @@
 #'                                            exact = "enrichment",
 #'                                            cores = 2)
 #' head(MAGMA_sim_data_gifted_exact)
-#'
+#' 
+#' \donttest{
 #' # Conducting three-group matching using the data set 'MAGMA_sim_data'
 #' # Matching variable 'teacher_ability_rating' (ability rated from teacher as
 #' # below average, average, or above average)
@@ -97,7 +100,7 @@
 #' head(MAGMA_sim_data_gift_enrich_exact)
 #' }
 #'
-MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
+MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE) {
 
   #Check for regular input
   if(!is.data.frame(Data) && !tibble::is_tibble(Data)) {
@@ -132,7 +135,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
     warning("Specified cores exceeds available cores. Proceeding with all available cores.")
     cores <- max_cores
   }
-
+  
 
   #Creating data set with relevant variables
   if(length(group) == 1) {
@@ -185,6 +188,13 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
 
   colnames(input) <- c("ID", "group", "distance_ps","exact")
   
+  table_exact <- table(input$group, input$exact)
+  if(sum(table_exact == 0) > 0) {
+    exclude_exacts <- colnames(table_exact)[which(table_exact == 0, arr.ind = TRUE)[, 2]]
+    input <- input[!input$exact %in% exclude_exacts, ]
+    warning("In some exact groups were no members of all groups. Matching proceeds after the exclusion of these cases.")
+  }
+  
   input <- transform(input,
                      group_id = stats::ave(1:nrow(input),
                                            input$group,
@@ -192,7 +202,9 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
   
   input$distance <- input$step <- input$weight <- NA
 
+  if(verbose) {
   cat("\n","Input correctly identified!")
+  }
 
   #######################
   #distance estimation##
@@ -235,7 +247,9 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
     gc()
 
     if (i == 1) {
+      if(verbose) {
       cat("\n", "Distance computation finished. Starting matching")
+      }
     }
 
     group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
@@ -287,7 +301,9 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
         gc()
 
         if (i == 1) {
+          if(verbose) {
           cat("\n", "Distance computation finished. Starting matching")
+          }
         }
 
         group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
@@ -338,7 +354,9 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
         gc()
 
         if (i == 1) {
+          if(verbose) {
           cat("\n", "Distance computation finished. Starting matching")
+          }
         }
 
         group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
@@ -357,7 +375,8 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1) {
   } else {
     stop("Specify a grouping variable that distinguishes 2, 3, or 4 groups or represent a 2x2 Design!")
   }
-
+  if(verbose) {
   cat("\n", "Matching complete!")
+  }
   return(data)
 }

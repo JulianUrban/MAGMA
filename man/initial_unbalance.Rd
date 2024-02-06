@@ -2,9 +2,9 @@
 % Please edit documentation in R/Visualizing_MAGMA_functions.R
 \name{initial_unbalance}
 \alias{initial_unbalance}
-\title{Initial unbalance estimation}
+\title{initial_unbalance}
 \usage{
-initial_unbalance(Data, group, covariates)
+initial_unbalance(Data, group, covariates, verbose = TRUE)
 }
 \arguments{
 \item{Data}{A data frame containing at least the \emph{grouping} variable and all
@@ -19,27 +19,29 @@ levels.}
 
 \item{covariates}{A character vector listing the names of all binary and
 metric covariates of interest.}
+
+\item{verbose}{TRUE or FALSE indicating whether matching information should
+be printed to the console.}
 }
 \value{
 A numeric vector of length 4 containing the balance
 criteria for the unmatched sample.
 }
 \description{
-This function computes all four balance criteria of MAGMA, namely
+This function computes all four balance criteria of 'MAGMA.R,' namely
 \emph{Pillai's Trace}, \emph{d-ratiO}, \emph{mean g}, and \emph{adjusted d-ratio} for the
 unmatched data set. This enables comparison of initial unbalance with
 the balance after matching.
 }
 \details{
-This function computes all four Balance criteria of MAGMA, namely Pillai's
-Trace, d-ratio, mean g, and adjusted d-ratio for the overall samples.
-Missing data for Pillai's Trace are excluded listwise, while for the other
-balance criteria pairwise exclusion is applied.
+This function computes all four Balance criteria of 'MAGMA.R', namely
+Pillai's Trace, d-ratio, mean g, and adjusted d-ratio for the overall
+samples. Missing data for Pillai's Trace are excluded listwise, while for
+the other balance criteria pairwise exclusion is applied.
 }
 \examples{
-\dontrun{
 # Defining covariates for balance estimation
-covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
+covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "gender")
 
 # Computing initial unbalance using the data set 'MAGMA_sim_data'
 # Computing initial unbalance for the variable 'gifted_support' (received
@@ -65,7 +67,7 @@ unbalance_2x2 <- initial_unbalance(Data = MAGMA_sim_data,
                                   group = c("gifted_support", "enrichment"),
                                   covariates = covariates_vector)
 unbalance_2x2
-}
+
 
 }
 \references{

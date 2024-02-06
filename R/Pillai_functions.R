@@ -1,4 +1,4 @@
-#' Pillai DV creation
+#' Pillai_DV
 #'
 #' DV matrix creator.
 #'
@@ -20,7 +20,7 @@ Pillai_DV <- function(data, input) {
 }
 
 
-#' Pillai's Trace
+#' Pillai_iterativ
 #'
 #' Pillai's Trace with respect to sample size.
 #'
@@ -80,6 +80,17 @@ Pillai_iterativ <- function(da, gr, co, st) {
                     tidyselect::all_of(st)) %>%
       purrr::set_names(c(co, "IV", "It")) %>%
       dplyr::filter(!!rlang::sym("It") <= iteration)
+    
+    if(length(co == 1)) {
+      Square_sums <- stats::aov(Pillai_DV(data = Pillai_input,
+                                          input = co) ~ IV,
+                                data = Pillai_input) %>%
+        summary() %>%
+        `[[`(1) %>%
+        `[[`("Sum Sq")
+      
+      Pillai_temp[iteration] <- Square_sums[1] / sum(Square_sums)
+    } else {
 
     Pillai_temp[iteration] <- stats::manova(Pillai_DV(data = Pillai_input,
                                                       input = co) ~ IV,
@@ -87,6 +98,7 @@ Pillai_iterativ <- function(da, gr, co, st) {
       summary() %>%
       `[[`("stats") %>%
       `[[`(1, 2)
+    }
 
     iteration <- iteration + 1
   }
@@ -104,6 +116,19 @@ Pillai_iterativ <- function(da, gr, co, st) {
                       tidyselect::all_of(st)) %>%
         purrr::set_names(c(co, "IV1", "IV2", "It")) %>%
         dplyr::filter(!!rlang::sym("It") <= iteration)
+      
+      if(length(co == 1)) {
+        Square_sums <- stats::aov(Pillai_DV(data = Pillai_input,
+                                            input = co) ~ IV1 + IV2 + IV1 * IV2,
+                                  data = Pillai_input) %>%
+          summary() %>%
+          `[[`(1) %>%
+          `[[`("Sum Sq")
+        
+        Pillai_temp[, iteration] <- c(Square_sums[1] / (Square_sums[1] + Square_sums[4]),
+                                      Square_sums[2] / (Square_sums[2] + Square_sums[4]),
+                                      Square_sums[3] / (Square_sums[3] + Square_sums[4]))
+      } else {
 
       Pillai_temp[, iteration] <- stats::manova(Pillai_DV(data = Pillai_input,
                                                           input = co) ~ IV1 + IV2 + IV1 * IV2,
@@ -111,6 +136,7 @@ Pillai_iterativ <- function(da, gr, co, st) {
         summary() %>%
         `[[`("stats") %>%
         `[`(c(1:3), 2)
+      }
 
       iteration <- iteration + 1
   }

@@ -2,16 +2,19 @@
 % Please edit documentation in R/Visualizing_MAGMA_functions.R
 \name{Table_MAGMA}
 \alias{Table_MAGMA}
-\title{Balance table}
+\title{Table_MAGMA}
 \usage{
-Table_MAGMA(Balance, filename = NULL)
+Table_MAGMA(Balance, filename = NULL, verbose = TRUE)
 }
 \arguments{
-\item{Balance}{A result of Balance_MAGMA. Compare the function
+\item{Balance}{A result of \code{\link{Balance_MAGMA}} Compare the function
 \code{\link{Balance_MAGMA}}.}
 
 \item{filename}{Optional argument.  A character specifying the filename that
 the resulting Word document with the table should have.}
+
+\item{verbose}{TRUE or FALSE indicating whether matching information should
+be printed to the console.}
 }
 \value{
 A 4x5 APA table showing the four balance
@@ -33,33 +36,22 @@ group as well as the sample size itself. With an optional argument you can
 save a the APA table in Word.
 }
 \examples{
-\dontrun{
 # This function bases on a MAGMA function as well as Balance_MAGMA
-# To run examples, copy them into your console or script
 # Defining the names of the metric and binary covariates
-covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
+covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "gender")
 
-# Two-group exact matching using the data set 'MAGMA_sim_data'
+
+# Estimating balance of a two-group matching using the data set
+# 'MAGMA_sim_data'.
 # Matching variable 'gifted_support' (received giftedness support yes or no)
-# 'MAGMA_sim_data_gifted_exact' contains the result of the matching
-# Exact matching for 'enrichment' (participated in enrichment or not)
-# Students that participated can only be matched with other
-# students that participated and vice versa
-MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
-                                           group = "gifted_support",
-                                           dist = "ps_gifted",
-                                           exact = "enrichment",
-                                           cores = 2)
+Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data,
+                                group = "gifted_support",
+                                covariates = covariates_vector,
+                                step = "step_gifted")
 
+Table_MAGMA(Balance_gifted)
 
-# Estimating balance
-Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
-                                      group = "gifted_support",
-                                      covariates = covariates_vector,
-                                      step = "step") #step created during matching
-
-Table_MAGMA(Balance_gifted_exact, "Balance_gifted_exact.docx")
-
+\donttest{
 # 2x2 matching using the data set 'MAGMA_sim_data'
 # Matching variables are 'gifted_support' (received giftedness support yes
 # or no) and 'enrichment' (participated in enrichment or not)
@@ -77,7 +69,7 @@ Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_gift_enrich,
                              covariates = covariates_vector,
                              step = "step") #step created during matching
 
-Table_MAGMA(Balance_2x2, "Balance_2x2.docx")
+Table_MAGMA(Balance_2x2)
 }
 
 }

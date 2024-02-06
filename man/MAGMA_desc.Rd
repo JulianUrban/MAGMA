@@ -10,7 +10,8 @@ MAGMA_desc(
   group,
   step_num = NULL,
   step_var = NULL,
-  filename = NULL
+  filename = NULL,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -34,6 +35,9 @@ statistics are computed. Optional argument.}
 
 \item{filename}{A character specifying the filename that
 the resulting Word document with the Table should have. Optional argument.}
+
+\item{verbose}{TRUE or FALSE indicating whether matching information should
+be printed to the console.}
 }
 \value{
 A table of descriptive statistics and pairwise effects for pre- or
@@ -49,9 +53,8 @@ continuous variables for the overall sample and specified groups. Additional,
 pairwise effects (Cohen's d) are computed.
 }
 \examples{
-\dontrun{
 # Defining covariates
-covariates_gifted <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
+covariates_gifted <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "gender")
 
 # Estimating pre-matching descriptive statistics and pairwise effects using
 # the data set 'MAGMA_sim_data'
@@ -61,26 +64,17 @@ MAGMA_desc(Data = MAGMA_sim_data,
            covariates = covariates_gifted,
            group =  "gifted_support")
 
-# Two-group exact matching using the data set 'MAGMA_sim_data'
-# Matching variable 'gifted_support' (received giftedness support yes or no)
-# 'MAGMA_sim_data_gifted' contains the result of the matching
-MAGMA_sim_data_gifted <- MAGMA(Data = MAGMA_sim_data,
-                               group = "gifted_support",
-                               dist = "ps_gifted",
-                               cores = 2)
 
 # Estimating post-matching descriptive statistics and pairwise effects using
 # the data set 'MAGMA_sim_data'
 # Estimating statistics for grouping variable 'gifted support' (received
 # giftedness support yes or no)
 # Estimating statistics for 100 cases per group
-MAGMA_desc(Data = MAGMA_sim_data_gifted,
+MAGMA_desc(Data = MAGMA_sim_data,
            covariates = covariates_gifted,
-           group =  "gifted_support"
+           group =  "gifted_support",
            step_num = 100,
-           step_var = "step")
-
-}
+           step_var = "step_gifted")
 
 }
 \author{

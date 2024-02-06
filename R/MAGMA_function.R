@@ -1,9 +1,9 @@
-#' distance estimation
+#' distance_estimator
 #'
-#' estimates distance in MAGMA_3.
+#' estimates distance in \code{\link{MAGMA}}.
 #'
-#' This function is an inner function of MAGMA. It estimates the distance
-#' of all possible matches.
+#' This function is an inner function of \code{\link{MAGMA}}. It estimates the
+#' distance of all possible matches.
 #'
 #' @param data A matrix containing all possible combinations.
 #' @param means A matrix containing all row means of all possible matches.
@@ -32,7 +32,7 @@ distance_estimator <- function(data, means, variance, cores, inp = NULL) {
 #' MAGMA
 #'
 #' This function conducts many group matching for 2 to 4 groups. It augments
-#' the original data set by the relevant MAGMA variables. For details, see
+#' the original data set by the relevant 'MAGMA.R' variables. For details, see
 #' below.
 #'
 #' This function conducts nearest neighbor many group matching. It is
@@ -62,6 +62,8 @@ distance_estimator <- function(data, means, variance, cores, inp = NULL) {
 #' variable in data.
 #' @param cores An integer defining the number of cores used for
 #' parallel computation.
+#' @param verbose TRUE or FALSE indicating whether matching information should
+#' be printed to the console.
 #'
 #' @author Julian Urban
 #'
@@ -79,7 +81,7 @@ distance_estimator <- function(data, means, variance, cores, inp = NULL) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' 
 #' # Running this code will take a while
 #' # Two-group exact matching using the data set 'MAGMA_sim_data'
 #' # Matching variable 'gifted_support' (received giftedness support yes or no)
@@ -87,9 +89,10 @@ distance_estimator <- function(data, means, variance, cores, inp = NULL) {
 #' MAGMA_sim_data_gifted <- MAGMA(Data = MAGMA_sim_data,
 #'                                 group = "gifted_support",
 #'                                 dist = "ps_gifted",
-#'                                 cores = 2)
+#'                                 cores = 1)
 #' head(MAGMA_sim_data_gifted)
-#'
+#' 
+#' \donttest{
 #' # Two-group exact matching using the data set 'MAGMA_sim_data'
 #' # Matching variable 'teacher_ability_rating' (ability rated from teacher as
 #' # below average, average, or above average)
@@ -112,7 +115,7 @@ distance_estimator <- function(data, means, variance, cores, inp = NULL) {
 #' head(MAGMA_sim_data_gift_enrich)
 #' }
 #'
-MAGMA <- function(Data, group, dist, cores = 1) {
+MAGMA <- function(Data, group, dist, cores = 1, verbose = TRUE) {
 
   #Check for regular input
   if(!is.data.frame(Data) && !tibble::is_tibble(Data)) {
@@ -201,8 +204,9 @@ MAGMA <- function(Data, group, dist, cores = 1) {
   
   input$distance <- input$step <- input$weight <- NA
 
-
+if(verbose) {
   cat("\n","Input correctly identified.")
+}
 
   #######################
   #distance estimation##
@@ -235,8 +239,10 @@ MAGMA <- function(Data, group, dist, cores = 1) {
       rm(value_matrix)
       rm(means)
       gc()
-
+      
+      if(verbose) {
       cat("\n", "Distance computation finished. Starting matching.")
+      }
 
       group_list <- match_iterative(distance_array, group_list, elements)
 
@@ -268,8 +274,9 @@ MAGMA <- function(Data, group, dist, cores = 1) {
         rm(means)
         gc()
 
-
+        if(verbose) {
         cat("\n", "Distance computation finished. Starting matching")
+        }
 
         group_list <- match_iterative(distance_array, group_list, elements)
 
@@ -282,8 +289,10 @@ MAGMA <- function(Data, group, dist, cores = 1) {
                       all.x = TRUE)
       } else {
         cores <- 2
+        if(verbose) {
         cat("\n", "Large number of groups with large group sizes. Computing quasi-systematic matching. Cores were reduced to 2 to simplify node communication despite high RAM usage.")
-
+        }
+        
         number_split_groups <- ceiling(sqrt(prod(elements) / 1.0e+09)) + 1
 
         initial_seed <- .Random.seed
@@ -365,8 +374,9 @@ MAGMA <- function(Data, group, dist, cores = 1) {
         rm(means)
         gc()
 
-
+        if(verbose) {
         cat("\n", "Distance computation finished. Starting matching")
+        }
 
         group_list <- match_iterative(distance_array, group_list, elements)
 
@@ -379,8 +389,10 @@ MAGMA <- function(Data, group, dist, cores = 1) {
                       all.x = TRUE)
       } else {
         cores <- 2
+        if(verbose) {
         cat("\n", "Large number of groups with large group sizes. Computing quasi-systematic matching. Cores were reduced to 2 to simplify node communication despite high RAM usage.")
-
+        }
+        
         number_split_groups <- ceiling(sqrt(prod(elements) / 1.0e+09)) + 1
         if(number_split_groups == 1) {
           number_split_groups <- 2
@@ -443,8 +455,9 @@ MAGMA <- function(Data, group, dist, cores = 1) {
     } else {
       stop("Specify a grouping variable that distinguishes 2, 3, or 4 groups or represent a 2x2 Design!")
     }
-
+    if(verbose) {
     cat("\n", "Matching complete!")
+    }
     return(data)
   } else {
     var_ma <- input[c("distance_ps_1", "distance_ps_2")] %>%
@@ -497,13 +510,17 @@ MAGMA <- function(Data, group, dist, cores = 1) {
                     output_temp,
                     by = "ID",
                     all.x = TRUE)
+      if(verbose) {
       cat("\n", "matching complete!")
+      }
       return(data)
 
     } else {
       cores <- 2
+      if(verbose) {
       cat("\n", "Large number of groups with large group sizes. Computing quasi-systematic matching. Cores were reduced to 2 to simplify node communication despite high RAM usage.")
-
+      }
+      
       number_split_groups <- ceiling(sqrt(prod(elements) / 1.0e+09)) + 1
       if(number_split_groups == 1) {
         number_split_groups <- 2
@@ -575,7 +592,9 @@ MAGMA <- function(Data, group, dist, cores = 1) {
                     data_temp,
                     by = "ID",
                     all.x = TRUE)
+      if(verbose) {
       cat("\n", "Matching complete!")
+      }
       return(data)
     }
   }

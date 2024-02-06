@@ -22,6 +22,8 @@
 #' statistics are computed. Optional argument.
 #' @param filename A character specifying the filename that
 #' the resulting Word document with the Table should have. Optional argument.
+#' @param verbose TRUE or FALSE indicating whether matching information should
+#' be printed to the console.
 #'
 #' @author Julian Urban
 #'
@@ -40,9 +42,8 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' # Defining covariates
-#' covariates_gifted <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
+#' covariates_gifted <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "gender")
 #'
 #' # Estimating pre-matching descriptive statistics and pairwise effects using
 #' # the data set 'MAGMA_sim_data'
@@ -52,33 +53,25 @@
 #'            covariates = covariates_gifted,
 #'            group =  "gifted_support")
 #'
-#' # Two-group exact matching using the data set 'MAGMA_sim_data'
-#' # Matching variable 'gifted_support' (received giftedness support yes or no)
-#' # 'MAGMA_sim_data_gifted' contains the result of the matching
-#' MAGMA_sim_data_gifted <- MAGMA(Data = MAGMA_sim_data,
-#'                                group = "gifted_support",
-#'                                dist = "ps_gifted",
-#'                                cores = 2)
 #'
 #' # Estimating post-matching descriptive statistics and pairwise effects using
 #' # the data set 'MAGMA_sim_data'
 #' # Estimating statistics for grouping variable 'gifted support' (received
 #' # giftedness support yes or no)
 #' # Estimating statistics for 100 cases per group
-#' MAGMA_desc(Data = MAGMA_sim_data_gifted,
+#' MAGMA_desc(Data = MAGMA_sim_data,
 #'            covariates = covariates_gifted,
-#'            group =  "gifted_support"
+#'            group =  "gifted_support",
 #'            step_num = 100,
-#'            step_var = "step")
-#'
-#' }
+#'            step_var = "step_gifted")
 #'
 MAGMA_desc <- function(Data,
                        covariates,
                        group,
                        step_num = NULL,
                        step_var = NULL,
-                       filename = NULL) {
+                       filename = NULL,
+                       verbose = TRUE) {
   if (!is.data.frame(Data) && !tibble::is_tibble(Data)) {
     stop("Class data needs to be data frame, or tibble!")
   }
@@ -104,8 +97,8 @@ MAGMA_desc <- function(Data,
   }
 
   if(!is.null(step_num)) {
-    if(step_num >= max(Data[step_var], na.rm = T)) {
-      stop("Step exceeded max step. Results equal to MAGMA_desc_post.")
+    if(step_num > max(Data[step_var], na.rm = T)) {
+      stop("Step exceeded max step.")
     }
     Data <- Data %>%
       dplyr::filter(!!rlang::sym(step_var) <= step_num)
@@ -124,7 +117,10 @@ MAGMA_desc <- function(Data,
           !!rlang::sym(group[2]) == unique(!!rlang::sym(group[2]))[2] ~ 4
       ))
     group <- "group_long"
+    
+    if(verbose) {
     cat("2x2 groups are represented as 4 groups.")
+    }
   }
 
 
@@ -193,9 +189,10 @@ MAGMA_desc <- function(Data,
 
 #' cohen_d
 #'
-#' This function estimates Cohen's d in MAGMA_desc.
+#' This function estimates Cohen's d in \code{\link{MAGMA_desc}}.
 #'
-#' Inner function of MAGMA_desc that computes Cohen's d using the pooled SD.
+#' Inner function of \code{\link{MAGMA_desc}} that computes Cohen's d using the
+#' pooled SD.
 #'
 #' @param Data A data frame that contains sample sizes, means, and standard
 #' deviations.

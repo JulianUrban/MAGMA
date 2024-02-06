@@ -1,6 +1,6 @@
-#' J per group size
+#' J_group_size
 #'
-#' inner function of mean_g.
+#' inner function of \code{\link{mean_g_meta}}.
 #'
 #' This function computes J over samples sizes necessary for Hedges' g.
 #'
@@ -22,7 +22,7 @@ J_group_size <- function(group_size) {
 
 
 
-#' mean standardized effect
+#' mean_g_meta
 #'
 #' Mean standardized effect.
 #'

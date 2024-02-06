@@ -24,6 +24,8 @@
 #' per group in this post matching comparison. Is based on the step variable of
 #' MAGMA.
 #' @param step_var A character specifying the name of the step variable.
+#' @param verbose TRUE or FALSE indicating whether matching information should
+#' be printed to the console.
 #'
 #' @author Julian Urban
 #'
@@ -38,7 +40,6 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' # Estimating density overlap using the data set 'MAGMA_sim_data
 #' # Estimating density overlap for 'ps_gifted' (propensity scores for
 #' # giftedness support)
@@ -64,11 +65,11 @@
 #' # and 'group_name'
 #' # Estimating post-matching overlap for 250 cases per group ('step_num')
 #' # Name of the step variable is 'step'
-#' Density_overlap(Data = MAGMA_sim_data_gifted,
+#' Density_overlap(Data = MAGMA_sim_data,
 #' variable = "ps_gifted",
 #' group = "gifted_support",
 #' step_num = 250,
-#' step_var = "step",
+#' step_var = "step_gifted",
 #' variable_name = "Propensity Score",
 #' group_labels = c("No Support", "Support"),
 #' group_name = "Gifted Support")
@@ -86,14 +87,14 @@
 #' variable_name = "School Achievement",
 #' group_labels = c("Low", "Medium", "High"),
 #' group_name = "Rating")
-#' }
 #'
 Density_overlap <- function(Data, variable, group,
                             variable_name = NULL,
                             group_labels = NULL,
                             group_name  = NULL,
                             step_num = NULL,
-                            step_var = NULL) {
+                            step_var = NULL,
+                            verbose = TRUE) {
   if(!is.data.frame(Data) && !tibble::is_tibble(Data)) {
     stop("Data needs to be an object of class dataframe or tibble!")
   }
@@ -129,7 +130,9 @@ Density_overlap <- function(Data, variable, group,
           !!rlang::sym(group[2]) == unique(!!rlang::sym(group[2]))[2] ~ 4
       ))
     group <- "group_long"
+    if(verbose) {
     cat("2x2 groups are represented as 4 groups.")
+    }
   }
 
 
@@ -182,7 +185,7 @@ overlap_areas <- split.data.frame(Data, Data[group]) %>%
   overlapping::overlap(type = "1") %>%
   unlist()
 
-print(overlap_areas)
+return(overlap_areas)
 
 }
 

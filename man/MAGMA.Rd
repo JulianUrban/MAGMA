@@ -4,7 +4,7 @@
 \alias{MAGMA}
 \title{MAGMA}
 \usage{
-MAGMA(Data, group, dist, cores = 1)
+MAGMA(Data, group, dist, cores = 1, verbose = TRUE)
 }
 \arguments{
 \item{Data}{A data frame or tibble containing at least your grouping and
@@ -22,6 +22,9 @@ variable in data.}
 
 \item{cores}{An integer defining the number of cores used for
 parallel computation.}
+
+\item{verbose}{TRUE or FALSE indicating whether matching information should
+be printed to the console.}
 }
 \value{
 Your input data frame augmented with matching
@@ -32,7 +35,7 @@ cases. For more information, see Details.
 }
 \description{
 This function conducts many group matching for 2 to 4 groups. It augments
-the original data set by the relevant MAGMA variables. For details, see
+the original data set by the relevant 'MAGMA.R' variables. For details, see
 below.
 }
 \details{
@@ -51,7 +54,7 @@ case, MAGMA informs you. The output of the function does not change, but
 balance might be slightly affected.
 }
 \examples{
-\dontrun{
+
 # Running this code will take a while
 # Two-group exact matching using the data set 'MAGMA_sim_data'
 # Matching variable 'gifted_support' (received giftedness support yes or no)
@@ -59,9 +62,10 @@ balance might be slightly affected.
 MAGMA_sim_data_gifted <- MAGMA(Data = MAGMA_sim_data,
                                 group = "gifted_support",
                                 dist = "ps_gifted",
-                                cores = 2)
+                                cores = 1)
 head(MAGMA_sim_data_gifted)
 
+\donttest{
 # Two-group exact matching using the data set 'MAGMA_sim_data'
 # Matching variable 'teacher_ability_rating' (ability rated from teacher as
 # below average, average, or above average)

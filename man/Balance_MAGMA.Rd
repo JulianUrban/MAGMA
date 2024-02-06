@@ -2,9 +2,9 @@
 % Please edit documentation in R/Visualizing_MAGMA_functions.R
 \name{Balance_MAGMA}
 \alias{Balance_MAGMA}
-\title{Balance estimation}
+\title{Balance_MAGMA}
 \usage{
-Balance_MAGMA(Data, group, covariates, step = "step")
+Balance_MAGMA(Data, group, covariates, step = "step", verbose = TRUE)
 }
 \arguments{
 \item{Data}{A data frame containing at least the \emph{grouping} variable, the
@@ -24,56 +24,50 @@ metric covariates of interest.}
 \item{step}{A character specifying the step variable of the matching. Per
 default, it is set to \emph{step}, which corresponds the resulting
 name of the main MAGMA function.}
+
+\item{verbose}{TRUE or FALSE indicating whether matching information should
+be printed to the console.}
 }
 \value{
 A list of length four containing all balance criteria and all
 pairwise effects with respect to group sample size.
 }
 \description{
-This function computes all four balance criteria of MAGMA, namely
+This function computes all four balance criteria of 'MAGMA.R', namely
 \emph{Pillai's Trace}, \emph{d-ratio}, \emph{mean g}, and \emph{adjusted d-ratio}. The
-estimation onvolves both binary and metric variables. Balance
+estimation involves both binary and metric variables. Balance
 estimation is performed across various sample sizes. See Details for more
 information.
 }
 \details{
-This function computes all four balance criteria of MAGMA, namely Pillai's
-Trace, d-ratio, mean g, and adjusted d-ratio. This is an iterative process
-including more cases with each iteration according to the step variable.
-Thus, starting with cases having a small within-match distance, larger
-distances are included with increasing iterations. As a minimum the function
-specifies n >= 20 per group. This does not imply that balance criteria
-with such a small sample size can be estimated consistently. For Pillai's
-Trace a higher minimum sample size can be possible. It depends on the number
-of covariates to ensure a positive model identification.
+This function computes all four balance criteria of 'MAGMA.R', namely
+Pillai's Trace, d-ratio, mean g, and adjusted d-ratio. This is an iterative
+process including more cases with each iteration according to the step
+variable. Thus, starting with cases having a small within-match distance,
+larger distances are included with increasing iterations. As a minimum the
+function specifies n >= 20 per group. This does not imply that balance
+criteria with such a small sample size can be estimated consistently. For
+Pillai's Trace a higher minimum sample size can be possible. It depends on
+the number of covariates to ensure a positive model identification.
 Missing data for Pillai's Trace are excluded listwise, while for the other
 balance criteria pairwise exclusion is applied.
 }
 \examples{
-\dontrun{
+
 # Defining the names of the metric and binary covariates
-covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
+covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "gender")
 
-# Two-group exact matching using the data set 'MAGMA_sim_data'
+
+# Estimating balance of a two-group matching using the data set
+# 'MAGMA_sim_data'.
 # Matching variable 'gifted_support' (received giftedness support yes or no)
-# 'MAGMA_sim_data_gifted_exact' contains the result of the matching
-# Exact matching for 'enrichment' (participated in enrichment or not)
-# Students that participated can only be matched with other
-# students that participated and vice versa
-MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
-                                           group = "gifted_support",
-                                           dist = "ps_gifted",
-                                           exact = "enrichment",
-                                           cores = 2)
+Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data,
+                                group = "gifted_support",
+                                covariates = covariates_vector,
+                                step = "step_gifted")
+str(Balance_gifted)
 
-
-# Estimating balance
-Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
-                                      group = "gifted_support",
-                                      covariates = covariates_vector,
-                                      step = "step") # step created during matching
-str(Balance_gifted_exact)
-
+\donttest{
 # 2x2 matching using the data set 'MAGMA_sim_data'
 # Matching variables are 'gifted_support' (received giftedness support yes
 # or no) and 'enrichment' (participated in enrichment or not)

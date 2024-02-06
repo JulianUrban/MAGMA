@@ -1,20 +1,20 @@
-#' Balance estimation
+#' Balance_MAGMA
 #'
-#' This function computes all four balance criteria of MAGMA, namely
+#' This function computes all four balance criteria of 'MAGMA.R', namely
 #' *Pillai's Trace*, *d-ratio*, *mean g*, and *adjusted d-ratio*. The
-#' estimation onvolves both binary and metric variables. Balance
+#' estimation involves both binary and metric variables. Balance
 #' estimation is performed across various sample sizes. See Details for more
 #' information.
 #'
-#' This function computes all four balance criteria of MAGMA, namely Pillai's
-#' Trace, d-ratio, mean g, and adjusted d-ratio. This is an iterative process
-#' including more cases with each iteration according to the step variable.
-#' Thus, starting with cases having a small within-match distance, larger
-#' distances are included with increasing iterations. As a minimum the function
-#' specifies n >= 20 per group. This does not imply that balance criteria
-#' with such a small sample size can be estimated consistently. For Pillai's
-#' Trace a higher minimum sample size can be possible. It depends on the number
-#' of covariates to ensure a positive model identification.
+#' This function computes all four balance criteria of 'MAGMA.R', namely
+#' Pillai's Trace, d-ratio, mean g, and adjusted d-ratio. This is an iterative
+#' process including more cases with each iteration according to the step
+#' variable. Thus, starting with cases having a small within-match distance,
+#' larger distances are included with increasing iterations. As a minimum the
+#' function specifies n >= 20 per group. This does not imply that balance
+#' criteria with such a small sample size can be estimated consistently. For
+#' Pillai's Trace a higher minimum sample size can be possible. It depends on
+#' the number of covariates to ensure a positive model identification.
 #' Missing data for Pillai's Trace are excluded listwise, while for the other
 #' balance criteria pairwise exclusion is applied.
 #'
@@ -32,6 +32,8 @@
 #' @param step A character specifying the step variable of the matching. Per
 #' default, it is set to *step*, which corresponds the resulting
 #' name of the main MAGMA function.
+#' @param verbose TRUE or FALSE indicating whether matching information should
+#' be printed to the console.
 #'
 #'
 #' @author Julian Urban
@@ -55,30 +57,21 @@
 #' (\url{https://CRAN.R-project.org/package=robumeta}).}
 #'
 #' @examples
-#' \dontrun{
+#' 
 #' # Defining the names of the metric and binary covariates
-#' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
+#' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "gender")
 #'
-#' # Two-group exact matching using the data set 'MAGMA_sim_data'
+#'
+#' # Estimating balance of a two-group matching using the data set
+#' # 'MAGMA_sim_data'.
 #' # Matching variable 'gifted_support' (received giftedness support yes or no)
-#' # 'MAGMA_sim_data_gifted_exact' contains the result of the matching
-#' # Exact matching for 'enrichment' (participated in enrichment or not)
-#' # Students that participated can only be matched with other
-#' # students that participated and vice versa
-#' MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
-#'                                            group = "gifted_support",
-#'                                            dist = "ps_gifted",
-#'                                            exact = "enrichment",
-#'                                            cores = 2)
-#'
-#'
-#' # Estimating balance
-#' Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
-#'                                       group = "gifted_support",
-#'                                       covariates = covariates_vector,
-#'                                       step = "step") # step created during matching
-#' str(Balance_gifted_exact)
-#'
+#' Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data,
+#'                                 group = "gifted_support",
+#'                                 covariates = covariates_vector,
+#'                                 step = "step_gifted")
+#' str(Balance_gifted)
+#' 
+#' \donttest{
 #' # 2x2 matching using the data set 'MAGMA_sim_data'
 #' # Matching variables are 'gifted_support' (received giftedness support yes
 #' # or no) and 'enrichment' (participated in enrichment or not)
@@ -99,10 +92,12 @@
 #'
 #' }
 #'
-Balance_MAGMA <- function(Data, group, covariates, step = "step") {
-  #Fehlermeldungen
-  #Prüfen ob data korrekt ist
-  #TODO: tbl class > 1
+Balance_MAGMA <- function(Data,
+                          group,
+                          covariates,
+                          step = "step",
+                          verbose = TRUE) {
+# Check input
   if (!is.data.frame(Data) && !tibble::is_tibble(Data)) {
     stop("data needs to be list, data frame, or tibble!")
   }
@@ -119,8 +114,9 @@ Balance_MAGMA <- function(Data, group, covariates, step = "step") {
     stop("step needs to be a character of length 1!")
   }
 
-cat("\n", "Start estimating Pillai's Trace.")
-
+  if(verbose) {
+    cat("\n", "Start estimating Pillai's Trace.")
+    }
   ########################
   #####Pillai's Trace#####
   ########################
@@ -130,8 +126,9 @@ Pillai <- Pillai_iterativ(da = Data,
                          co = covariates,
                          st = step)
 
-
+if(verbose) {
 cat("\n", "Pillai's Trace finished. Starting to compute d-ratio.")
+}
 
 if(length(group) == 2) {
   values_1 <- unlist(unique(Data[group[1]]))
@@ -164,7 +161,9 @@ if(length(group) == 2) {
   ########################
   ########mean g#########
   ########################
-cat("\n", "d-ratio finished. Starting to compute mean-g.", "\n")
+  if(verbose) {
+    cat("\n", "d-ratio finished. Starting to compute mean-g.", "\n")
+  }
   group_number <- Data %>%
     dplyr::select(tidyselect::all_of(group)) %>%
     table() %>%
@@ -176,7 +175,9 @@ cat("\n", "d-ratio finished. Starting to compute mean-g.", "\n")
   ########################
   ###likelihhod g < .20###
   ########################
+  if(verbose) {
   cat("\n", "Mean g finished. Starting to compute adjusted d-ratio.")
+  }
   adj_d_ratio_20 <- adj_d_ratio(input = d_effects)
 
   #####################
@@ -186,22 +187,24 @@ cat("\n", "d-ratio finished. Starting to compute mean-g.", "\n")
                  d_ratio = d_effects,
                  mean_effect = mean_g,
                  adjusted_d_ratio = adj_d_ratio_20)
+  if(verbose) {
   cat("\n", "Adjusted d-ratio finished.")
   cat("\n", "Balance estimation finished.")
+  }
   return(output)
 }
 
-#' Initial unbalance estimation
+#' initial_unbalance
 #'
-#' This function computes all four balance criteria of MAGMA, namely
+#' This function computes all four balance criteria of 'MAGMA.R,' namely
 #' *Pillai's Trace*, *d-ratiO*, *mean g*, and *adjusted d-ratio* for the
 #' unmatched data set. This enables comparison of initial unbalance with
 #' the balance after matching.
 #'
-#' This function computes all four Balance criteria of MAGMA, namely Pillai's
-#' Trace, d-ratio, mean g, and adjusted d-ratio for the overall samples.
-#' Missing data for Pillai's Trace are excluded listwise, while for the other
-#' balance criteria pairwise exclusion is applied.
+#' This function computes all four Balance criteria of 'MAGMA.R', namely
+#' Pillai's Trace, d-ratio, mean g, and adjusted d-ratio for the overall
+#' samples. Missing data for Pillai's Trace are excluded listwise, while for
+#' the other balance criteria pairwise exclusion is applied.
 #'
 #' @param Data A data frame containing at least the *grouping* variable and all
 #'  *covariates* of interest.
@@ -213,6 +216,8 @@ cat("\n", "d-ratio finished. Starting to compute mean-g.", "\n")
 #' levels.
 #' @param covariates A character vector listing the names of all binary and
 #' metric covariates of interest.
+#' @param verbose TRUE or FALSE indicating whether matching information should
+#' be printed to the console.
 #'
 #' @author Julian Urban
 #'
@@ -237,9 +242,8 @@ cat("\n", "d-ratio finished. Starting to compute mean-g.", "\n")
 #' (\url{https://CRAN.R-project.org/package=robumeta}).}
 #'
 #' @examples
-#' \dontrun{
 #' # Defining covariates for balance estimation
-#' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
+#' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "gender")
 #'
 #' # Computing initial unbalance using the data set 'MAGMA_sim_data'
 #' # Computing initial unbalance for the variable 'gifted_support' (received
@@ -265,9 +269,9 @@ cat("\n", "d-ratio finished. Starting to compute mean-g.", "\n")
 #'                                   group = c("gifted_support", "enrichment"),
 #'                                   covariates = covariates_vector)
 #' unbalance_2x2
-#' }
+#' 
 #'
-initial_unbalance <- function(Data, group, covariates) {
+initial_unbalance <- function(Data, group, covariates, verbose = TRUE) {
   if (!is.data.frame(Data) && !tibble::is_tibble(Data)) {
     stop("Data needs to be a data frame, or tibble!")
   }
@@ -289,13 +293,23 @@ initial_unbalance <- function(Data, group, covariates) {
                     tidyselect::all_of(group))
     
     formula <- paste0("cbind(", paste(covariates, collapse = ","), ") ~ as.factor(", group, ")")
-
+    
+    if(length(covariates == 1)) {
+      Square_sums <- stats::aov(stats::as.formula(formula),
+                                data = Pillai_input) %>%
+        summary() %>%
+        `[[`(1) %>%
+        `[[`("Sum Sq")
+      
+      Pillai <- Square_sums[1] / sum(Square_sums)
+    } else {
       Pillai <- stats::manova(stats::as.formula(formula),
                               data = Pillai_input) %>%
         summary() %>%
         `[[`("stats") %>%
         `[[`(1, 2) %>%
         unlist()
+    }
 
   } else {
     Pillai_input <- Data %>%
@@ -306,6 +320,18 @@ initial_unbalance <- function(Data, group, covariates) {
     formula <- paste0("cbind(", paste(covariates, collapse = ","), ") ~ as.factor(", group[1],
                       ") + as.factor(", group[2],
                       ") + ", group[1], "*", group[2])
+    
+    if(length(covariates == 1)) {
+      Square_sums <- stats::aov(stats::as.formula(formula),
+                                data = Pillai_input) %>%
+        summary() %>%
+        `[[`(1) %>%
+        `[[`("Sum Sq")
+      
+      Pillai <- c(Square_sums[1] / (Square_sums[1] + Square_sums[4]),
+                  Square_sums[2] / (Square_sums[2] + Square_sums[4]),
+                  Square_sums[3] / (Square_sums[3] + Square_sums[4]))
+    } else {
 
     Pillai <- stats::manova(stats::as.formula(formula),
                      data = Pillai_input) %>%
@@ -313,6 +339,7 @@ initial_unbalance <- function(Data, group, covariates) {
       `[[`("stats") %>%
       `[`(c(1:3), 2) %>%
       unlist()
+    }
 
   }
 
@@ -417,7 +444,9 @@ if(length(group) == 2) {
 
   if(nrow(effect_g) == 1) {
     mean_g <- metafor::rma(effect_g, var_g)[["b"]]
-    print("Mean g was computed using random effects meta-analysis with metafor.")
+    if(verbose) {
+    cat("Mean g was computed using random effects meta-analysis with metafor.")
+    }
   } else {
     effect <- as.numeric(effect_g)
     variance <- as.numeric(var_g)
@@ -428,7 +457,9 @@ if(length(group) == 2) {
 
     mean_g <- robumeta::robu(ma_input[, 1] ~ 1, var.eff.size = ma_input[, 2],
                                 studynum = ma_input[, 3], data = ma_input)[["b.r"]]
-    print("Mean g was computed using robust variance meta-analysis with robumeta.")
+    if(verbose) {
+    cat("Mean g was computed using robust variance meta-analysis with robumeta.")
+    }
   }
 
   ########################
@@ -470,7 +501,7 @@ if(length(group) == 2) {
 }
 
 
-#' Balance table
+#' Table_MAGMA
 #'
 #' This function prints an APA Table of the Balance criteria. It displays the
 #' balance criteria for four different sample sizes per group. In each scenario,
@@ -483,10 +514,12 @@ if(length(group) == 2) {
 #' group as well as the sample size itself. With an optional argument you can
 #' save a the APA table in Word.
 #'
-#' @param Balance A result of Balance_MAGMA. Compare the function
+#' @param Balance A result of \code{\link{Balance_MAGMA}} Compare the function
 #' \code{\link{Balance_MAGMA}}.
 #' @param filename Optional argument.  A character specifying the filename that
 #' the resulting Word document with the table should have.
+#' @param verbose TRUE or FALSE indicating whether matching information should
+#' be printed to the console.
 #'
 #'
 #' @author Julian Urban
@@ -505,33 +538,22 @@ if(length(group) == 2) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' # This function bases on a MAGMA function as well as Balance_MAGMA
-#' # To run examples, copy them into your console or script
 #' # Defining the names of the metric and binary covariates
-#' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
+#' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "gender")
 #'
-#' # Two-group exact matching using the data set 'MAGMA_sim_data'
+#'
+#' # Estimating balance of a two-group matching using the data set
+#' # 'MAGMA_sim_data'.
 #' # Matching variable 'gifted_support' (received giftedness support yes or no)
-#' # 'MAGMA_sim_data_gifted_exact' contains the result of the matching
-#' # Exact matching for 'enrichment' (participated in enrichment or not)
-#' # Students that participated can only be matched with other
-#' # students that participated and vice versa
-#' MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
-#'                                            group = "gifted_support",
-#'                                            dist = "ps_gifted",
-#'                                            exact = "enrichment",
-#'                                            cores = 2)
+#' Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data,
+#'                                 group = "gifted_support",
+#'                                 covariates = covariates_vector,
+#'                                 step = "step_gifted")
 #'
+#' Table_MAGMA(Balance_gifted)
 #'
-#' # Estimating balance
-#' Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
-#'                                       group = "gifted_support",
-#'                                       covariates = covariates_vector,
-#'                                       step = "step") #step created during matching
-#'
-#' Table_MAGMA(Balance_gifted_exact, "Balance_gifted_exact.docx")
-#'
+#' \donttest{
 #' # 2x2 matching using the data set 'MAGMA_sim_data'
 #' # Matching variables are 'gifted_support' (received giftedness support yes
 #' # or no) and 'enrichment' (participated in enrichment or not)
@@ -549,10 +571,10 @@ if(length(group) == 2) {
 #'                              covariates = covariates_vector,
 #'                              step = "step") #step created during matching
 #'
-#' Table_MAGMA(Balance_2x2, "Balance_2x2.docx")
+#' Table_MAGMA(Balance_2x2)
 #' }
 #'
-Table_MAGMA <- function(Balance, filename = NULL) {
+Table_MAGMA <- function(Balance, filename = NULL, verbose = TRUE) {
   #Check input
   if (!rlang::is_list(Balance)) {
     stop("Balance needs to be a Balance_MAGMA object!")
@@ -627,18 +649,19 @@ if(!is.null(filename)) {
     flextable::autofit() %>%
     flextable::save_as_docx(path = paste("./",filename,sep=""))
 }
-
+  if(verbose) {
 cat("Balance table successfully created!")
+  }
 return(balance_matrix)
 }
 
 
 
-#' Balance plots
+#' Plot_MAGMA
 #'
 #' Plots for balance with respect to sample size.
 #'
-#' This function creates R-Plots using ggplot to show the balance trend over
+#' This function creates R-Plots using ggplot2 to show the balance trend over
 #' sample size.
 #'
 #' @param Balance A result of Balance_MAGMA. Compare the function
@@ -656,33 +679,24 @@ return(balance_matrix)
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' 
 #' # This function bases on a MAGMA function as well as Balance_MAGMA
 #' # To run examples, copy them into your console or script
 #' # Defining the names of the metric and binary covariates
-#' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "sex")
+#' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "gender")
 #'
-#' # Two-group exact matching using the data set 'MAGMA_sim_data'
+#' #  Estimating balance of a two-group matching using the data set
+#' # 'MAGMA_sim_data'.
 #' # Matching variable 'gifted_support' (received giftedness support yes or no)
-#' # 'MAGMA_sim_data_gifted_exact' contains the result of the matching
-#' # Exact matching for 'enrichment' (participated in enrichment or not)
-#' # Students that participated can only be matched with other
-#' # students that participated and vice versa
-#' MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
-#'                                            group = "gifted_support",
-#'                                            dist = "ps_gifted",
-#'                                            exact = "enrichment",
-#'                                            cores = 2)
+#' Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data,
+#'                                 group = "gifted_support",
+#'                                 covariates = covariates_vector,
+#'                                 step = "step_gifted") 
 #'
-#'
-#' # Estimating balance
-#' Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
-#'                                       group = "gifted_support",
-#'                                       covariates = covariates_vector,
-#'                                       step = "step") #step created during matching
-#'
-#' Plot_MAGMA(Balance = Balance_gifted_exact) #Using default to plot all criteria
-#'
+#' Plot_MAGMA(Balance = Balance_gifted,
+#'            criterion = "Adj_d_ratio") #Using default to plot all criteria
+#' 
+#' \donttest{
 #' # 2x2 matching using the data set 'MAGMA_sim_data'
 #' # Matching variables are 'gifted_support' (received giftedness support yes
 #' # or no) and 'enrichment' (participated in enrichment or not)
