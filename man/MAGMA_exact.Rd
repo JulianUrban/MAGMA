@@ -65,7 +65,7 @@ matching, see \code{\link{MAGMA}}
 # Exact matching for 'enrichment' (participated in enrichment or not)
 # Students that participated can only be matched with other
 # students that participated and vice versa
-MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data,
+MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data[c(1:100 ), ],
                                            group = "gifted_support",
                                            dist = "ps_gifted",
                                            exact = "enrichment",

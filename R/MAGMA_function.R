@@ -295,16 +295,12 @@ if(verbose) {
         
         number_split_groups <- ceiling(sqrt(prod(elements) / 1.0e+09)) + 1
 
-        initial_seed <- .Random.seed
-
-        set.seed(28062022)
 
         input$random_group = floor(stats::runif(nrow(input),
                                                 1, number_split_groups))
         
         random_list <- split.data.frame(input, input$random_group)
 
-        .Random.seed <- initial_seed
 
         for(i in 1:length(random_list)) {
 
@@ -398,15 +394,12 @@ if(verbose) {
           number_split_groups <- 2
         }
 
-        initial_seed <- .Random.seed
-
-        set.seed(28062022)
 
         input$random_group = floor(stats::runif(nrow(input),
                                                 1, number_split_groups))
         random_list <- split.data.frame(input, input$random_group)
 
-        .Random.seed <- initial_seed
+
 
         for(i in 1:length(random_list)) {
 
@@ -526,15 +519,10 @@ if(verbose) {
         number_split_groups <- 2
       }
 
-      initial_seed <- .Random.seed
-
-      set.seed(28062022)
 
       input <- input$random_group <- floor(stats::runif(nrow(input),
                                                         1, number_split_groups))
       random_list <- split.data.frame(input, input$random_group)
-
-      .Random.seed <- initial_seed
 
       for(i in 1:length(random_list)) {
 

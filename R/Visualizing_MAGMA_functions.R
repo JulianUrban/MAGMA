@@ -295,7 +295,7 @@ initial_unbalance <- function(Data, group, covariates, verbose = TRUE) {
     
     formula <- paste0("cbind(", paste(covariates, collapse = ","), ") ~ as.factor(", group, ")")
     
-    if(length(covariates == 1)) {
+    if(length(covariates) == 1) {
       Square_sums <- stats::aov(stats::as.formula(formula),
                                 data = Pillai_input) %>%
         summary() %>%
@@ -322,7 +322,7 @@ initial_unbalance <- function(Data, group, covariates, verbose = TRUE) {
                       ") + as.factor(", group[2],
                       ") + ", group[1], "*", group[2])
     
-    if(length(covariates == 1)) {
+    if(length(covariates) == 1) {
       Square_sums <- stats::aov(stats::as.formula(formula),
                                 data = Pillai_input) %>%
         summary() %>%
@@ -689,7 +689,7 @@ return(balance_matrix)
 #' #  Estimating balance of a two-group matching using the data set
 #' # 'MAGMA_sim_data'.
 #' # Matching variable 'gifted_support' (received giftedness support yes or no)
-#' Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data[MAGMA_sim_data$step_gifted < 200, ],
+#' Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data[MAGMA_sim_data$step_gifted < 150, ],
 #'                                 group = "gifted_support",
 #'                                 covariates = covariates_vector,
 #'                                 step = "step_gifted") 
