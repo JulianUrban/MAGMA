@@ -11,7 +11,9 @@ MAGMA_desc(
   step_num = NULL,
   step_var = NULL,
   filename = NULL,
-  verbose = TRUE
+  verbose = TRUE,
+  covariates_ordinal = NULL,
+  covariates_nominal = NULL
 )
 }
 \arguments{
