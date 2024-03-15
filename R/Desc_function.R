@@ -92,7 +92,7 @@ MAGMA_desc <- function(Data,
   }
   
 if(is.character(covariates_ordinal)) {
-  if(covariates_ordinal %in% covariates) {
+  if(sum(covariates_ordinal %in% covariates) > 0) {
     stop("Some variables are specified as covariates and covariates_ordinal. You can only specify each variable to one of theese arguments!")
   }
 }
@@ -102,13 +102,13 @@ if(is.character(covariates_ordinal)) {
   }
   
   if(is.character(covariates_nominal)) {
-    if(covariates_nominal %in% covariates) {
+    if(sum(covariates_nominal %in% covariates) > 0) {
       stop("Some variables are specified as covariates and covariates_nominal You can only specify each variable to one of theese arguments!")
     }
   }
   
   if(is.character(covariates_nominal) & is.character(covariates_ordinal))  {
-    if(covariates_nominal %in% covariates_ordinal) {
+    if(sum(covariates_nominal %in% covariates_ordinal) > 0) {
       stop("Some variables are specified as covariates_ordinal and covariates_nominal. You can only specify each variable to one of theese arguments!")
     }
     

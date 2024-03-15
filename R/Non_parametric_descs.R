@@ -48,8 +48,12 @@ row_ordinal<- function(Data,
                         })
   effect_sizes <- round(effect_ordinal(Data, group, variable), digits = 2)
   
+  if(length(variable) > 1) {
   output <- rbind(overall_stats, group_stats, t(effect_sizes)) %>%
     t()
+  } else {
+    output <- t(c(overall_stats, group_stats, effect_sizes))
+  }
   
   return(output)
 }
@@ -165,8 +169,12 @@ row_nominal <- function(Data,
   
   effect_sizes <- round(effect_nominal(Data, group, variable), digits = 2)
   
-  output <-  rbind(overall_stats, group_stats, t(effect_sizes)) %>%
-    t()
+  if(length(variable) > 1) {
+    output <- rbind(overall_stats, group_stats, t(effect_sizes)) %>%
+      t()
+  } else {
+    output <- t(c(overall_stats, group_stats, effect_sizes))
+  }
   
   return(output)
 }
