@@ -467,7 +467,7 @@ if(length(group) == 2) {
   ###adj. d ratioo########
   ########################
 
-  adj_d_ratio <- purrr::map2_dbl(effect_g, var_g, stats::pnorm, q = .20) %>%
+  adj_d_ratio <- purrr::map2_dbl(effect_g, sqrt(var_g), stats::pnorm, q = .20) %>%
     matrix(ncol = ncol(effect_g), nrow = nrow(effect_g)) %>%
     sum() / (ncol(effect_g) * nrow(effect_g))
 
