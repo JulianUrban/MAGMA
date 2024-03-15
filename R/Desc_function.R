@@ -89,22 +89,28 @@ MAGMA_desc <- function(Data,
   
   if(!is.character(covariates_ordinal) & !is.null(covariates_ordinal)) {
     stop("covariates_ordinal needs to be a character or a character vector!")
+    
+    
   }
-  
-  if(covariates_ordinal %in% covariates) {
+if(is.character(covariates_ordinal) & covariates_ordinal %in% covariates) {
     stop("Some variables are specified as covariates and covariates_ordinal. You can only specify each variable to one of theese arguments!")
-  }
+}
   
-  if(!is.character(covariates_nominal) & !is.null(covariates_ordinal)) {
+  if(!is.character(covariates_nominal) & !is.null(covariates_nominal)) {
     stop("covariates_nominal needs to be a character or a character vector!")
+    
+    
   }
   
-  if(covariates_nominal %in% covariates_ordinal) {
-    stop("Some variables are specified as covariates and covariates_nominal You can only specify each variable to one of theese arguments!")
+  if(is.character(covariates_nominal) & covariates_nominal %in% covariates) {
+    stop("Some variables are specified as covariates and covariates_nominal. You can only specify each variable to one of theese arguments!")
   }
   
-  if(covariates_nominal %in% covariates) {
-    stop("Some variables are specified as covariates_ordinal and covariates_nominal You can only specify each variable to one of theese arguments!")
+  if(is.character(covariates_nominal) & is.character(covariates_ordinal))  {
+    if(covariates_nominal %in% covariates_ordinal) {
+      stop("Some variables are specified as covariates_ordinal and covariates_nominal. You can only specify each variable to one of theese arguments!")
+    }
+    
   }
 
   if(!is.numeric(step_num) & !is.null(step_num)) {
