@@ -1,6 +1,6 @@
 Package: MAGMA.R
 Title: MAny-Group MAtching
-Version: 1.0
+Version: 1.0.2
 Authors@R: c(person("Julian", "Urban", email = "urbanj@uni-trier.de", role = c("aut", "cre")),
     person("Markus D.", "Feuchter", role = c("aut")),
     person("Vsevolod", "Scherrer", role = c("aut")),
@@ -13,9 +13,9 @@ Description: Balancing quasi-experimental field research for effects of covariat
     MAGMA as vignette. More information on MAGMA can be found in Feuchter, M. D., Urban, J., Scherrer V., Breit, M. L., and Preckel F. (2022) <https://osf.io/p47nc/>.
 Depends: R (>= 4.2.0), tidyverse (>= 2.0.0)
 License: GPL-3
-Imports: parallel (>= 4.3.1), doParallel (>= 1.0.17), foreach (>= 1.5.2), metafor (>= 4.4-0), robumeta (>= 2.1),
+Imports: parallel (>= 4.2), doParallel (>= 1.0.17), foreach (>= 1.5.2), metafor (>= 4.4-0), robumeta (>= 2.1),
  psych (>= 2.3.9), ggplot2 (>= 3.4.4), janitor (>= 2.2.0), flextable (>= 0.9.4) , overlapping (>= 2.1), purrr (>= 1.0.1),
- tibble (>= 3.2.1), dplyr (>= 1.1.4), tidyselect (>= 1.2.0), stats (>= 4.3.1), rlang (>= 1.1.1)
+ tibble (>= 3.2.1), dplyr (>= 1.1.4), tidyselect (>= 1.2.0), stats (>= 4.2), rlang (>= 1.1.1)
 LazyData: true
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
