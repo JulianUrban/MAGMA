@@ -284,6 +284,14 @@ initial_unbalance <- function(Data, group, covariates, verbose = TRUE) {
   if(!is.character(covariates)) {
     stop("covariates needs to be a character or a character vector!")
   }
+  
+  class_covariates <- unique(sapply(Data[, covariates], class))
+  
+  if("factor" %in% class_covariates |
+     "character" %in%  class_covariates) {
+       stop("Some covariates variables are defined as factor or character.
+            Covariates need to be numeric variables.")
+  }
 
   ########################
   #####Pillai's Trace#####
@@ -292,6 +300,12 @@ initial_unbalance <- function(Data, group, covariates, verbose = TRUE) {
     Pillai_input <- Data %>%
       dplyr::select(tidyselect::all_of(covariates),
                     tidyselect::all_of(group))
+    
+    if(sum(rowSums(is.na(Pillai_input)) == 0) < 50) {
+      Pillai <- NA
+      warning("Too few cases with valid data on all covariates to estimate Pillai's
+              Trace. Setting Pillai's Trace to NA.")
+    } else {
     
     formula <- paste0("cbind(", paste(covariates, collapse = ","), ") ~ as.factor(", group, ")")
     
@@ -312,11 +326,17 @@ initial_unbalance <- function(Data, group, covariates, verbose = TRUE) {
         unlist()
     }
 
-  } else {
+  }} else {
     Pillai_input <- Data %>%
       dplyr::select(tidyselect::all_of(covariates),
                     tidyselect::all_of(group[1]),
                     tidyselect::all_of(group[2]))
+    
+    if(sum(rowSums(is.na(Pillai_input)) == 0) < 50) {
+      Pillai <- NA
+      warning("Too few cases with valid data on all covariates to estimate Pillai's
+              Trace. Setting Pillai's Trace to NA.")
+    } else {
     
     formula <- paste0("cbind(", paste(covariates, collapse = ","), ") ~ as.factor(", group[1],
                       ") + as.factor(", group[2],
@@ -342,7 +362,7 @@ initial_unbalance <- function(Data, group, covariates, verbose = TRUE) {
       unlist()
     }
 
-  }
+  }}
 
 group_test <- group
 

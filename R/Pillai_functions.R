@@ -81,7 +81,11 @@ Pillai_iterativ <- function(da, gr, co, st) {
       purrr::set_names(c(co, "IV", "It")) %>%
       dplyr::filter(!!rlang::sym("It") <= iteration)
     
-    if(length(co) == 1) {
+    if(sum(rowSums(is.na(Pillai_input)) == 0) < 20 + length(co)) {
+      Pillai_temp[iteration] <- NA
+      warning("Too few cases with valid data on all covariates to estimate Pillai's
+              Trace for current samples size. Setting Pillai's Trace to NA.")
+    } else if(length(co) == 1) {
       Square_sums <- stats::aov(Pillai_DV(data = Pillai_input,
                                           input = co) ~ IV,
                                 data = Pillai_input) %>%
@@ -116,8 +120,11 @@ Pillai_iterativ <- function(da, gr, co, st) {
                       tidyselect::all_of(st)) %>%
         purrr::set_names(c(co, "IV1", "IV2", "It")) %>%
         dplyr::filter(!!rlang::sym("It") <= iteration)
-      
-      if(length(co) == 1) {
+      if(sum(rowSums(is.na(Pillai_input)) == 0) < 20 + length(co)) {
+        Pillai_temp[iteration] <- NA
+        warning("Too few cases with valid data on all covariates to estimate Pillai's
+              Trace for current samples size. Setting Pillai's Trace to NA.")
+      } else if(length(co) == 1) {
         Square_sums <- stats::aov(Pillai_DV(data = Pillai_input,
                                             input = co) ~ IV1 + IV2 + IV1 * IV2,
                                   data = Pillai_input) %>%

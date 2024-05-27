@@ -158,7 +158,7 @@ if(is.character(covariates_ordinal)) {
     dplyr::select(tidyselect::all_of(group),
                   tidyselect::all_of(covariates)) %>%
     psych::describe() %>%
-    tibble::as_tibble() %>%
+    tibble::as_tibble(.name_repair = "minimal") %>%
     round(digits = 2)
   descs_overall <- descs_overall[c("n", "mean", "sd")] %>%
     purrr::set_names(c("n", "central_tendency", "dispersion"))
@@ -187,7 +187,8 @@ if(is.character(covariates_ordinal)) {
   } else if(ncol(descs_group) == 12) {
     index_matrix <- matrix(data = c("1", "1", "1", "2", "2", "3",
                                     "2", "3", "4", "3", "4", "4"),
-                           ncol = 2)}
+                           ncol = 2)
+    }
 
   effects_groups <- purrr::map2_dfc(index_matrix[, 1],
                                     index_matrix[, 2],
@@ -203,7 +204,7 @@ if(!is.null(covariates_ordinal)) {
   rows_temp <- rownames(stats_overall)
     stats_overall <- rbind(stats_overall,
                            row_ordinal(Data, group, covariates_ordinal) %>%
-                             tibble::as_tibble() %>%
+                             tibble::as_tibble(.name_repair = "minimal") %>%
                              purrr::set_names(colnames(stats_overall))
                            )
     rownames(stats_overall) <- c(rows_temp, covariates_ordinal)
@@ -213,7 +214,7 @@ if(!is.null(covariates_nominal)) {
   rows_temp <- rownames(stats_overall)
   stats_overall <- rbind(stats_overall,
                          row_nominal(Data, group, covariates_nominal) %>%
-                           tibble::as_tibble() %>%
+                           tibble::as_tibble(.name_repair = "minimal") %>%
                            purrr::set_names(colnames(stats_overall))
   )
   rownames(stats_overall) <- c(rows_temp, covariates_nominal)
