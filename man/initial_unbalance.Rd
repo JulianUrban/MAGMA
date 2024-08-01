@@ -4,7 +4,14 @@
 \alias{initial_unbalance}
 \title{initial_unbalance}
 \usage{
-initial_unbalance(Data, group, covariates, verbose = TRUE)
+initial_unbalance(
+  Data,
+  group,
+  covariates,
+  verbose = TRUE,
+  covariates_ordinal = NULL,
+  covariates_nominal = NULL
+)
 }
 \arguments{
 \item{Data}{A data frame containing at least the \emph{grouping} variable and all

@@ -107,21 +107,22 @@ effect_ordinal <- function(Data,
                                     2, 3, 4, 3, 4, 4),
                            ncol = 2)}
   
-  effects <- sapply(c(1:nrow(index_matrix)),
-                    function(row) {
-                      group_1 <- index_matrix[row, 1]
-                      group_2 <- index_matrix[row, 2]
-                      groups_temp <- group_values[c(group_1, group_2)]
-                      Data_temp <- Data[unlist(Data[, group]) %in% groups_temp, ]
-                      sapply(variable,
-                             function(var) {
-                               p_value <- stats::wilcox.test(
-                                 unlist(Data_temp[, var]) ~ unlist(Data_temp[, group]))[["p.value"]]
-                               stats::qnorm(p_value / 2) / sqrt(nrow(Data_temp[!is.na(Data_temp[, var]), ]))
-                             })
-                    }) 
+  effects <- sapply(c(1:nrow(index_matrix)), function(row) {
+    group_1 <- index_matrix[row, 1]
+    group_2 <- index_matrix[row, 2]
+    groups_temp <- group_values[c(group_1, group_2)]
+    Data_temp <- Data[unlist(Data[, group]) %in% groups_temp, 
+    ]
+    sapply(variable, function(var) {
+      p_value <- stats::wilcox.test(unlist(Data_temp[, 
+                                                     var]) ~ unlist(Data_temp[, group]))[["p.value"]]
+      stats::qnorm(p_value/2)/sqrt(nrow(Data_temp[!is.na(Data_temp[, 
+                                                                   var]), ]))
+    })
+  })
+  d_effects <- (2 * effects) / sqrt(1 - effects ^2)
   
-  return(effects)
+  return(d_effects)
 }
 
 
@@ -297,14 +298,12 @@ effect_nominal <- function(Data,
                       group_1 <- index_matrix[row, 1]
                       group_2 <- index_matrix[row, 2]
                       groups_temp <- group_values[c(group_1, group_2)]
-                      Data_temp <- Data_temp <- Data[unlist(Data[, group]) %in% groups_temp, ]
+                      Data_temp <- Data[unlist(Data[, group]) %in% groups_temp, ]
                       sapply(variable,
                              function(var) {
-                               Chi_test <- stats::chisq.test(unlist(Data_temp[, var]),
-                                                             unlist(Data_temp[, group]))
-                               round(
-                                 sqrt(Chi_test[["statistic"]][["X-squared"]] /
-                                            sum(Chi_test[["observed"]])), 2)
+                               stddiff::stddiff.category(data = Data_temp,
+                                                         gcol = which(colnames(Data_temp) == group),
+                                                         vcol= which(colnames(Data_temp) == var))[1, "stddiff"]
                              })
                     }) 
   

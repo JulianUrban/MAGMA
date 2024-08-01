@@ -272,7 +272,12 @@ if(length(group) == 2) {
 #' unbalance_2x2
 #' 
 #'
-initial_unbalance <- function(Data, group, covariates, verbose = TRUE) {
+initial_unbalance <- function(Data,
+                              group,
+                              covariates,
+                              verbose = TRUE, 
+                              covariates_ordinal = NULL,
+                              covariates_nominal = NULL) {
   if (!is.data.frame(Data) && !tibble::is_tibble(Data)) {
     stop("Data needs to be a data frame, or tibble!")
   }
@@ -292,6 +297,34 @@ initial_unbalance <- function(Data, group, covariates, verbose = TRUE) {
        stop("Some covariates variables are defined as factor or character.
             Covariates need to be numeric variables.")
   }
+  
+  if(!is.character(covariates_ordinal) & !is.null(covariates_ordinal)) {
+    stop("covariates_ordinal needs to be a character or a character vector!")
+  }
+  
+  if(is.character(covariates_ordinal)) {
+    if(sum(covariates_ordinal %in% covariates) > 0) {
+      stop("Some variables are specified as covariates and covariates_ordinal. You can only specify each variable to one of theese arguments!")
+    }
+  }
+  
+  if(!is.character(covariates_nominal) & !is.null(covariates_nominal)) {
+    stop("covariates_nominal needs to be a character or a character vector!")
+  }
+  
+  if(is.character(covariates_nominal)) {
+    if(sum(covariates_nominal %in% covariates) > 0) {
+      stop("Some variables are specified as covariates and covariates_nominal You can only specify each variable to one of theese arguments!")
+    }
+  }
+  
+  if(is.character(covariates_nominal) & is.character(covariates_ordinal))  {
+    if(sum(covariates_nominal %in% covariates_ordinal) > 0) {
+      stop("Some variables are specified as covariates_ordinal and covariates_nominal. You can only specify each variable to one of theese arguments!")
+    }
+  }
+    
+    Data[, covariates_ordinal] <- sapply(Data[, covariates_ordinal], as.numeric)
 
   ########################
   #####Pillai's Trace#####
@@ -434,8 +467,34 @@ if(length(group) == 2) {
       d_effect[j, i] <- mean_diff/pooled_sd
     }
   }
+  
+  effects <- unlist(d_effect)
+  if(!is.null(covariates_ordinal)) {
+    ordinal_effects <- effect_ordinal(Data = Data,
+                                      group = group,
+                                      variable = covariates_ordinal)
+    effects <- c(effects, unlist(ordinal_effects))
+    ordinal_N <-   lapply(covariates_ordinal,
+                          function(var) {
+                            rowSums(as.matrix(table(unlist(Data[ , group]),
+                                                    unlist(Data[, var]))))
+                          })
+    }
+  
+  if(!is.null(covariates_nominal)) {
+    nominal_effects <- effect_nominal(Data = Data,
+                                      group = group,
+                                      variable = covariates_nominal)
+    effects <- c(effects, unlist(nominal_effects))
+    nominal_N <-  lapply(covariates_nominal,
+                         function(var) {
+                           rowSums(as.matrix(table(unlist(Data[ , group]),
+                                 unlist(Data[, var]))))
+                           })
+  }
+  
 
-  d_logic <- abs(d_effect) < .20
+  d_logic <- abs(effects) < .20
   d_ratio <- sum(d_logic)/length(d_logic)
 
 
@@ -443,16 +502,19 @@ if(length(group) == 2) {
   ########mean g#########
   ########################
   n_matrix <- var_matrix <- d_effect
+  metric_N <-  lapply(covariates,
+                       function(var) {
+                         rowSums(as.matrix(table(unlist(Data[ , group]),
+                                                 unlist(Data[, var]))))
+                       })
 
   for(j in 1:nrow(pairwise_matrix)) {
     value_1 <- pairwise_matrix[j, 1]
     value_2 <- pairwise_matrix[j, 2]
-    for(i in seq_along(group_stats)) {
-      temp_n <- group_stats[[i]]["n"] %>%
-        unlist()
-      n_matrix[j, i] <- sum(temp_n)
-      var_matrix[j, i] <- d_effect[j, i]^2/(2 * sum(temp_n)) +
-                          sum(temp_n)/prod(temp_n)
+    for(i in seq_along(covariates)) {
+      n_matrix[j, i] <- sum(metric_N[[i]][c(value_1, value_2)])
+      var_matrix[j, i] <- d_effect[j, i]^2/(2 * sum(metric_N[[i]][c(value_1, value_2)])) +
+                          sum(metric_N[[i]][c(value_1, value_2)])/prod(metric_N[[i]][c(value_1, value_2)])
     }
   }
 
@@ -461,7 +523,7 @@ if(length(group) == 2) {
 
   effect_g <- abs(J_matrix * d_effect)
 
-  var_g <- J_matrix^2 * var_matrix #matrix multiplication?
+  var_g <- J_matrix^2 * var_matrix 
 
   if(nrow(effect_g) == 1) {
     mean_g <- metafor::rma(effect_g, var_g)[["b"]]
@@ -486,10 +548,32 @@ if(length(group) == 2) {
   ########################
   ###adj. d ratioo########
   ########################
+  matrix_n <- lapply(c(covariates,
+                       covariates_ordinal,
+                       covariates_nominal),
+                     function(variable) {
+                       matrix_n_temp <- unlist(table(Data[!is.na(Data[, variable]), group]))
+                       sapply(c(1:nrow(pairwise_matrix)),
+                              function(index) {
+                                n <- c(matrix_n_temp[pairwise_matrix[index, 1]],
+                                       matrix_n_temp[pairwise_matrix[index, 2]])
+                              }) %>%
+                         t()
+                     })
+    matrix_n <-  do.call(rbind.data.frame, matrix_n)
 
-  adj_d_ratio <- purrr::map2_dbl(effect_g, sqrt(var_g), stats::pnorm, q = .20) %>%
-    matrix(ncol = ncol(effect_g), nrow = nrow(effect_g)) %>%
-    sum() / (ncol(effect_g) * nrow(effect_g))
+  matrix_J <- 1 - (3/(4 * (2 * rowSums(matrix_n) - 2) - 1))
+  
+  effects_g <- abs(matrix_J * effects)
+  
+  var_matrix <- effects_g^2 / (2 * rowSums(matrix_n)) +
+    rowSums(matrix_n) / (matrix_n[, 1] * matrix_n[, 2])
+
+  var_effects_g <- matrix_J^2 * var_matrix 
+
+
+  adj_d_ratio_raw <- purrr::map2_dbl(effects_g, sqrt(var_effects_g), stats::pnorm, q = .20) 
+  adj_d_ratio <-  sum(adj_d_ratio_raw) / length(adj_d_ratio_raw)
 
   #####################
   ###Output creation###
