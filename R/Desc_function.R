@@ -202,9 +202,9 @@ stats_overall <- cbind(descs_overall,
 
 if(!is.null(covariates_ordinal)) {
   rows_temp <- rownames(stats_overall)
-  Data[, covariates_ordinal] <- apply(X = Data[, covariates_ordinal], 
-                                 MARGIN = 2,
-                                 FUN = as.numeric)
+  Data[, covariates_ordinal] <- sapply(covariates_ordinal,
+                                       function(var) {
+                                         as.numeric(var)}
     stats_overall <- rbind(stats_overall,
                            row_ordinal(Data, group, covariates_ordinal) %>%
                              tibble::as_tibble(.name_repair = "minimal") %>%
