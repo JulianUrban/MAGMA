@@ -59,7 +59,11 @@ row_ordinal<- function(Data,
                           
                         })
   
-  effect_sizes <- round(effect_ordinal(Data, group, variable), digits = 2)
+  effect_sizes <- round(sapply(variable,
+                               effect_ordinal,
+                               Data = Data,
+                               group = group),
+                        digits = 2)
   
   if(length(variable) > 1) {
   output <- rbind(overall_stats, group_stats, t(effect_sizes)) %>%
