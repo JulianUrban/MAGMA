@@ -42,40 +42,27 @@ J_group_size <- function(group_size) {
 #'
 #'
 mean_g_meta <- function(input, number_groups) {
-  #Check, that input is an inner d object: addapting for more possibilites
-  if (!rlang::is_list(input) &&
-      length(input) != 2 &&
-      names(input) != c("d_rate", "effects")) {
-    stop("input needs to be an inner d object!")
-  }
-  if (!is.numeric(number_groups) | number_groups < 2) {
+    if (!is.numeric(number_groups) | number_groups < 2) {
     stop("number_groups needs to be an integer of at least two!") #Check that number of groups is an integer
   }
-  J <- J_group_size(ncol(input$effects))
+  J <- J_group_size(ncol(input))
   suppressMessages({
-    g <- input$effects %>%
+    g <- apply(input,
+               MARGIN = 1,
+               FUN = function(row) {
+                 row * J
+               }) %>%
       t() %>%
-      tibble::as_tibble(.name_repair = "minimal") %>%
-      dplyr::mutate(dplyr::across(.cols = everything(),
-                                  .fns = ~.x * J,
-                                  .names = "{.col}")) %>%
-      t() %>%
-      abs() %>%
-      tibble::as_tibble(.name_repair = "minimal")
+      abs()
 
-  size_per_group <- c(1:ncol(input$effects))
+  size_per_group <- c(1:ncol(g))
 
-  variance_g <- input$effects^2 %>%
-    t() %>%
-    tibble::as_tibble(.name_repair = "minimal") %>%
-    dplyr::mutate(dplyr::across(.cols = everything(),
-                                .fns = ~.x/(4 * size_per_group) + 2 * size_per_group/size_per_group^2,
-                                .names = "{.col}")) %>%
-    dplyr::mutate(dplyr::across(.cols = everything(),
-                                .fns = ~.x * J^2,
-                                .names = "{.col}")) %>%
-    t() %>%
-    tibble::as_tibble(.name_repair = "minimal")
+  variance_g <- apply(input,
+                      MARGIN = 1,
+                      FUN = function(row) {
+                        (row^2 / (4 * size_per_group) + 2 * size_per_group / size_per_group^2) * J^2
+                      }) %>%
+    t()
   })
 
   #meta-analysis can not tak NAs as input. Defining starting value for analysis
@@ -97,12 +84,15 @@ mean_g_meta <- function(input, number_groups) {
     cat("\n", "Mean g was computed using robust variance meta-analysis with robumeta.")
     number_covariates <- 1/2 * ((number_groups - 1)^2 + (number_groups - 1))
     for (i in starting_number:ncol(g)) {
-      ma_input <- cbind(g[, i],
-                      variance_g[, i],
-                      rep(c(1:number_covariates),
-                          nrow(g)/number_covariates)) #create nesting variable
-      mean_g[i] <- robumeta::robu(ma_input[, 1] ~ 1, var.eff.size = ma_input[, 2],
-                        studynum = ma_input[, 3], data = ma_input)[["b.r"]]}
+      ma_input <- tibble::as_tibble(cbind(g[, i],
+                                          variance_g[, i],
+                                          rep(c(1:number_covariates),
+                                              nrow(g)/number_covariates)))#create nesting variable
+      mean_g[i] <- robumeta::robu(V1 ~ 1,
+                                  var.eff.size = V2,
+                                  studynum = V3,
+                                  data = ma_input)[["b.r"]]
+      }
   }
   return(mean_g)
 }

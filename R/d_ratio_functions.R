@@ -20,7 +20,7 @@
 #' in dependency of sample size.
 #'
 #'
-inner_d <- function(da, gr, co, st) {
+inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
 
   if(!is.data.frame(da) && !tibble::is_tibble(da)) {
     stop("da needs to be an object of class dataframe or tibble!")
@@ -107,41 +107,60 @@ inner_d <- function(da, gr, co, st) {
   }
 
 
-  iteration = 20
+  group_values <- unique(da[, gr])
+  effects <- sapply(c(20:max_step),
+                    function(iteration) {
+                      sapply(c(1:nrow(pairwise_matrix)),
+                             function(index) {
+                               groups <- group_values[pairwise_matrix[index, ]]
+                               data_temp <- da[da[, step] <= iteration & da[, gr] %in% groups, ]  
+                               suppressWarnings({
+                                 group_stats <- data_temp %>%
+                                   dplyr::select(!!rlang::sym(gr),
+                                                 tidyselect::all_of(co)) %>%
+                                   dplyr::group_by(!!rlang::sym(gr)) %>%
+                                   dplyr::summarise_at(.vars = co,
+                                                       .funs = c(mean, var),
+                                                       na.rm = T)
+                               })
+                               means <- seq(2, length(co) + 1, 1)
+                               sds <- seq(length(co) + 2, ncol(group_stats), 1)
+                               mean_diffs <- group_stats[1, means] - group_stats[2, means]
+                               pooled_sds <- sqrt((group_stats[1, sds] + group_stats[2, sds]) / 2)
+                               ds <- mean_diffs / pooled_sds
+                               names_effects <- co
+                               if(!is.null(co_ord)) {
+                                 ordinal_effects <- effect_ordinal(Data = data_temp,
+                                                                   group = gr,
+                                                                   variable = co_ord)
+                                 names(ordinal_effects) <- co_ord
+                                 ds <- unlist(c(ds, ordinal_effects))
+                                 
+                               }
+                               if(!is.null(co_nom)) {
+                                 nominal_effects <- effect_nominal(Data = data_temp,
+                                                                   group = gr,
+                                                                   variable = co_nom)
+                                 names(nominal_effects) <- co_nom
+                                 ds <- c(ds, nominal_effects)
+                                 
+                               }
+                               return(ds)
+                             })
+                    })
+names_effects <- co
+if(!is.null(co_ord)) {names_effects <- c(names_effects, co_ord)}
+if(!is.null(co_nom)) {names_effects <- c(names_effects, co_nom)}
+rownames(effects) <- rep(names_effects, each = nrow(pairwise_matrix))
+effects <- cbind(matrix(NA, nrow = nrow(effects), ncol = 19),
+                 effects)
+  
 
-  while (iteration <= max_step){
 
-    d_iteration <- double(nrow(d_matrix))
-    suppressWarnings({
-    group_stats <- da %>%
-      dplyr::filter(!!rlang::sym(st) <= iteration) %>%
-      dplyr::select(!!rlang::sym(gr),
-                    tidyselect::all_of(co)) %>%
-      dplyr::group_by(!!rlang::sym(gr)) %>%
-      dplyr::summarise_at(.vars = co,
-                          .funs = c(mean, var),
-                          na.rm = T)
-    })
-
-    for(i in 1:nrow(pairwise_matrix)) {
-      for(j in 1:length(co)) {
-        d_matrix[(i - 1) * length(co) + j, iteration] <-
-          (as.numeric(group_stats[pairwise_matrix[i, 1], 1 + j]) -
-           as.numeric(group_stats[pairwise_matrix[i, 2], 1 + j]))/
-           sqrt((as.numeric(group_stats[pairwise_matrix[i, 1], 1 + j + length(co)]) +
-              as.numeric(group_stats[pairwise_matrix[i, 2], 1 + j + length(co)]))/
-               2)
-      }
-    }
-
-    iteration <- iteration + 1
-    }
-
-  d_matrix <- abs(d_matrix)
-  rownames(d_matrix) <- names_covariates
-  d_logic <- d_matrix < .20
+ 
+  d_logic <- abs(effects) < .20
   pairwise_effects <- list(d_rate = colSums(d_logic)/nrow(d_logic),
-                         effects = abs(d_matrix))
+                         effects = effects)
 
   return(pairwise_effects)
 }
@@ -168,43 +187,30 @@ inner_d <- function(da, gr, co, st) {
 #'
 adj_d_ratio <- function(input) {
 
-  if (!rlang::is_list(input) &&
-      length(input) != 2 &&
-      names(input) != c("d_rate", "effects")) {
-    stop("input needs to be an inner d object!")
-  }
+  J <- J_group_size(ncol(input))
 
-  J <- J_group_size(ncol(input$effects))
 suppressMessages({
-  g <- input$effects %>%
+  
+  g <- apply(input,
+             MARGIN = 1,
+             FUN = function(row) {
+               row * J
+             }) %>%
     t() %>%
-    tibble::as_tibble(.name_repair = "minimal") %>%
-    dplyr::mutate(dplyr::across(.cols = everything(),
-                                .fns = ~.x * J,
-                                .names = "{.col}")) %>%
+    abs()
+ 
+  size_per_group <- c(1:ncol(input))
+  sd_g <- apply(input,
+                      MARGIN = 1,
+                      FUN = function(row) {
+                        (row^2 / (4 * size_per_group) + 2 * size_per_group/size_per_group^2) * J^2
+                      }) %>%
     t() %>%
-    abs() %>%
-    matrix(ncol = 1,
-           nrow = ncol(input$effects) * nrow(input$effects))
-
-  size_per_group <- c(1:ncol(input$effects))
-  sd_g <- input$effects^2 %>%
-    t() %>%
-    tibble::as_tibble(.name_repair = "minimal") %>%
-    dplyr::mutate(dplyr::across(.cols = everything(),
-                                .fns = ~.x/(4 * size_per_group) + 2 * size_per_group/size_per_group^2,
-                                .names = "{.col}")) %>%
-    dplyr::mutate(dplyr::across(.cols = everything(),
-                                .fns = ~.x * J^2,
-                                .names = "{.col}")) %>%
-    t() %>%
-    sqrt() %>%
-    matrix(ncol = 1,
-           nrow = ncol(input$effects) * nrow(input$effects))
+    sqrt()
     })
 
   likelihood <- purrr::map2_dbl(g, sd_g, stats::pnorm, q = .20) %>%
-    matrix(ncol = ncol(input$effects), nrow = nrow(input$effects)) %>%
-    colSums()/nrow(input$effects)
+    matrix(ncol = ncol(input), nrow = nrow(input)) %>%
+    colSums()/nrow(input)
   return(likelihood)
 }

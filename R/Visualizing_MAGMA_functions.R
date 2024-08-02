@@ -97,7 +97,9 @@ Balance_MAGMA <- function(Data,
                           group,
                           covariates,
                           step = "step",
-                          verbose = TRUE) {
+                          verbose = TRUE,
+                          covariates_ordinal = NULL,
+                          covariates_nominal = NULL) {
 # Check input
   if (!is.data.frame(Data) && !tibble::is_tibble(Data)) {
     stop("data needs to be list, data frame, or tibble!")
@@ -113,6 +115,28 @@ Balance_MAGMA <- function(Data,
 
   if(!is.character(step) | length(step) > 1) {
     stop("step needs to be a character of length 1!")
+  }
+  
+  if(is.character(covariates_ordinal)) {
+    if(sum(covariates_ordinal %in% covariates) > 0) {
+      stop("Some variables are specified as covariates and covariates_ordinal. You can only specify each variable to one of theese arguments!")
+    }
+  }
+  
+  if(!is.character(covariates_nominal) & !is.null(covariates_nominal)) {
+    stop("covariates_nominal needs to be a character or a character vector!")
+  }
+  
+  if(is.character(covariates_nominal)) {
+    if(sum(covariates_nominal %in% covariates) > 0) {
+      stop("Some variables are specified as covariates and covariates_nominal You can only specify each variable to one of theese arguments!")
+    }
+  }
+  
+  if(is.character(covariates_nominal) & is.character(covariates_ordinal))  {
+    if(sum(covariates_nominal %in% covariates_ordinal) > 0) {
+      stop("Some variables are specified as covariates_ordinal and covariates_nominal. You can only specify each variable to one of theese arguments!")
+    }
   }
 
   if(verbose) {
@@ -157,7 +181,9 @@ if(length(group) == 2) {
   d_effects <- inner_d(da = Data,
                        gr = group,
                        co = covariates,
-                       st = step)
+                       st = step,
+                       co_ord = covariates_ordinal,
+                       co_nom = covariates_nominal)
 
   ########################
   ########mean g#########
@@ -169,8 +195,10 @@ if(length(group) == 2) {
     dplyr::select(tidyselect::all_of(group)) %>%
     table() %>%
     length()
+  
+  input_g <- d_effects$effects[rownames(d_effects$effects) %in% covariates, ]
 
-  mean_g <- mean_g_meta(input = d_effects,
+  mean_g <- mean_g_meta(input = input_g,
                         number_groups = group_number)
 
   ########################
@@ -179,7 +207,7 @@ if(length(group) == 2) {
   if(verbose) {
   cat("\n", "Mean g finished. Starting to compute adjusted d-ratio.")
   }
-  adj_d_ratio_20 <- adj_d_ratio(input = d_effects)
+  adj_d_ratio_20 <- adj_d_ratio(input = d_effects$effects)
 
   #####################
   ###Output creation###

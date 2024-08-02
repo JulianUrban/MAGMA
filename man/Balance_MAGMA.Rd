@@ -4,7 +4,15 @@
 \alias{Balance_MAGMA}
 \title{Balance_MAGMA}
 \usage{
-Balance_MAGMA(Data, group, covariates, step = "step", verbose = TRUE)
+Balance_MAGMA(
+  Data,
+  group,
+  covariates,
+  step = "step",
+  verbose = TRUE,
+  covariates_ordinal = NULL,
+  covariates_nominal = NULL
+)
 }
 \arguments{
 \item{Data}{A data frame containing at least the \emph{grouping} variable, the

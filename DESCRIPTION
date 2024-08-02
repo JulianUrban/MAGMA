@@ -1,6 +1,6 @@
 Package: MAGMA.R
 Title: MAny-Group MAtching
-Version: 1.0.2
+Version: 1.0.3
 Authors@R: c(person("Julian", "Urban", email = "urbanj@uni-trier.de", role = c("aut", "cre")),
     person("Markus D.", "Feuchter", role = c("aut")),
     person("Vsevolod", "Scherrer", role = c("aut")),
