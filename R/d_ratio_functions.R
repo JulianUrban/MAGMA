@@ -113,7 +113,7 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
                       sapply(c(1:nrow(pairwise_matrix)),
                              function(index) {
                                groups <- group_values[pairwise_matrix[index, ]]
-                               data_temp <- da[da[, step] <= iteration & da[, gr] %in% groups, ]  
+                               data_temp <- da[da[, st] <= iteration & da[, gr] %in% groups, ]  
                                suppressWarnings({
                                  group_stats <- data_temp %>%
                                    dplyr::select(!!rlang::sym(gr),
