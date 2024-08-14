@@ -111,6 +111,7 @@ effect_ordinal <- function(Data,
                                     2, 3, 4, 3, 4, 4),
                            ncol = 2)}
   
+  suppressWarnings({
   effects <- sapply(c(1:nrow(index_matrix)), function(row) {
     group_1 <- index_matrix[row, 1]
     group_2 <- index_matrix[row, 2]
@@ -123,7 +124,7 @@ effect_ordinal <- function(Data,
       stats::qnorm(p_value/2)/sqrt(nrow(Data_temp[!is.na(Data_temp[, 
                                                                    var]), ]))
     })
-  })
+  })})
   d_effects <- (2 * effects) / sqrt(1 - effects ^2)
   
   return(d_effects)
