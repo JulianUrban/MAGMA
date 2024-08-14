@@ -110,7 +110,7 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
   group_values <- unique(da[, gr])
   effects <- sapply(c(20:max_step),
                     function(iteration) {
-                      sapply(c(1:nrow(pairwise_matrix)),
+                     sapply(c(1:nrow(pairwise_matrix)),
                              function(index) {
                                groups <- group_values[pairwise_matrix[index, ]]
                                data_temp <- da[da[, st] <= iteration & da[, gr] %in% groups, ]  
@@ -127,8 +127,9 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
                                sds <- seq(length(co) + 2, ncol(group_stats), 1)
                                mean_diffs <- group_stats[1, means] - group_stats[2, means]
                                pooled_sds <- sqrt((group_stats[1, sds] + group_stats[2, sds]) / 2)
-                               ds <- mean_diffs / pooled_sds
+                               ds <- unlist(mean_diffs / pooled_sds)
                                names_effects <- co
+                               
                                suppressWarnings({
                                if(!is.null(co_ord)) {
                                  ordinal_effects <- effect_ordinal(Data = data_temp,
@@ -149,7 +150,8 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
                                })
                                return(ds)
                              })
-                    })
+                    }) 
+  
 names_effects <- co
 if(!is.null(co_ord)) {names_effects <- c(names_effects, co_ord)}
 if(!is.null(co_nom)) {names_effects <- c(names_effects, co_nom)}
