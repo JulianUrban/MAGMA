@@ -275,7 +275,7 @@ row_nominal <- function(Data,
 #'
 #' @author Julian Urban
 #'
-#' @importFrom stats chisq.test
+#' @importFrom stddiff stddiff.category
 #' 
 #' @return A vector or matrix containing nominal effect sizes
 #'
