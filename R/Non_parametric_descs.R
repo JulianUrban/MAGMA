@@ -263,7 +263,7 @@ row_nominal <- function(Data,
   return(output)
 }
 
-#' effect_ordinal
+#' effect_nominal
 #'
 #' Computes descriptive statistics and effect size for nominal data
 #'
