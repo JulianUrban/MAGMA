@@ -305,7 +305,7 @@ effect_nominal <- function(Data,
                       groups_temp <- group_values[c(group_1, group_2)]
                       Data_temp <- Data[unlist(Data[, group]) %in% groups_temp, ]
                       Data_temp[, group] <- as.numeric(Data_temp[, group])
-                      Data_temp[, var] <- as.numeric(Data_temp[, var])
+                      Data_temp[, variable] <- as.numeric(Data_temp[, variable])
                       sapply(variable,
                              function(var) {
                                stddiff::stddiff.category(data = Data_temp,
