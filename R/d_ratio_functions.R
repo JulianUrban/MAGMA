@@ -129,6 +129,7 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
                                pooled_sds <- sqrt((group_stats[1, sds] + group_stats[2, sds]) / 2)
                                ds <- mean_diffs / pooled_sds
                                names_effects <- co
+                               suppressWarnings({
                                if(!is.null(co_ord)) {
                                  ordinal_effects <- effect_ordinal(Data = data_temp,
                                                                    group = gr,
@@ -145,6 +146,7 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
                                  ds <- c(ds, nominal_effects)
                                  
                                }
+                               })
                                return(ds)
                              })
                     })

@@ -36,8 +36,8 @@
 #' be printed to the console.
 #' @param covariates_ordinal A character vector listing the names of all ordinal
 #' covariates of interest.
-#' @param covariates A character vector listing the names of all nominal
-#'  covariates of interest.
+#' @param covariates_nominal A character vector listing the names of all nominal
+#'covariates of interest.
 #'
 #'
 #' @author Julian Urban
