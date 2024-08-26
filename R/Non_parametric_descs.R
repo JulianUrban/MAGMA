@@ -191,7 +191,7 @@ row_nominal <- function(Data,
     
     group_stats <- sapply(c(1:length(variable)),
                           function(index) {
-                            sapply(c(1:length(variable)),
+                            sapply(c(1:length(group_values)),
                                    function(gr_index) {
                                      N <- sum(table_statistics[[index]][as.character(gr_index), ])
                                      if(sum(rowSums(cbind(index == bimodal_variables[, 2],
@@ -205,7 +205,7 @@ row_nominal <- function(Data,
                                                table_statistics[[index]][as.character(gr_index), ])
                                            )), collapse = ".")
                                          )
-                                       warning(paste("Varible",
+                                       warning(paste("Variable",
                                        variable[index], "in group",
                                        gr_index,
                                        "has two modi. Both are returned, seperated by a '.'."))
@@ -213,7 +213,7 @@ row_nominal <- function(Data,
                                      } else if(sum(rowSums(cbind(index == multimodal_variables[, 2],
                                                                  gr_index == multimodal_variables[, 1] )) == 2) == 1) {
                                        modi <- NA
-                                       warning(paste("Varible",
+                                       warning(paste("Variable",
                                                      variable[index], "in group",
                                                      gr_index,
                                                      "has more than two modi. Returning 'NA'. Please check modi of these variable in this group manually."))
