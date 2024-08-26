@@ -89,8 +89,8 @@ mean_g_meta <- function(input, number_groups) {
                                     V3 = rep(c(1:number_covariates),
                                               nrow(g)/number_covariates)) #create nesting variable
       mean_g[i] <- robumeta::robu(V1 ~ 1,
-                                  var.eff.size = V2,
-                                  studynum = V3,
+                                  var.eff.size = unlist(ma_input[, 2]),
+                                  studynum = unlist(ma_input[, 3]),
                                   data = ma_input)[["b.r"]]
       }
   }

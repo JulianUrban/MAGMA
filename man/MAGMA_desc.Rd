@@ -21,7 +21,8 @@ MAGMA_desc(
 plotting as well as the specified grouping variable.}
 
 \item{covariates}{A character vector specifying the variable names of the
-continuous variables for which the descriptive statistics should be computed.}
+binary and metric variables for which the descriptive statistics should be
+computed.}
 
 \item{group}{A character (vector) specifying the groups for which
 differentiated statistics should be computed.}
@@ -40,6 +41,12 @@ the resulting Word document with the Table should have. Optional argument.}
 
 \item{verbose}{TRUE or FALSE indicating whether matching information should
 be printed to the console.}
+
+\item{covariates_ordinal}{A character vector specifying the variable names of
+the ordinal variables for which the descriptive statistics should be computed.}
+
+\item{covariates_nominal}{A character vector specifying the variable names of
+the nominal variables for which the descriptive statistics should be computed.}
 }
 \value{
 A table of descriptive statistics and pairwise effects for pre- or
@@ -50,9 +57,9 @@ This function provides pre- and post-matching descriptive statistics and
 effects.
 }
 \details{
-This function enables the computation of descriptive statistics of
-continuous variables for the overall sample and specified groups. Additional,
-pairwise effects (Cohen's d) are computed.
+This function enables the computation of descriptive statistics for the
+overall sample and specified groups. Additional, pairwise effects according
+to the respective scale level are computed.
 }
 \examples{
 # Defining covariates

@@ -251,6 +251,10 @@ if(length(group) == 2) {
 #' metric covariates of interest.
 #' @param verbose TRUE or FALSE indicating whether matching information should
 #' be printed to the console.
+#' @param covariates_ordinal A character vector listing the names of all ordinal
+#' covariates of interest.
+#' @param covariates_nominal A character vector listing the names of all nominal
+#'covariates of interest.
 #'
 #' @author Julian Urban
 #'

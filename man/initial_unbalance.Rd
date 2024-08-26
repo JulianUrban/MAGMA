@@ -29,6 +29,12 @@ metric covariates of interest.}
 
 \item{verbose}{TRUE or FALSE indicating whether matching information should
 be printed to the console.}
+
+\item{covariates_ordinal}{A character vector listing the names of all ordinal
+covariates of interest.}
+
+\item{covariates_nominal}{A character vector listing the names of all nominal
+covariates of interest.}
 }
 \value{
 A numeric vector of length 4 containing the balance

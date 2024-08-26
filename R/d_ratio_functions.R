@@ -9,11 +9,14 @@
 #' @param gr A character vector specifying the IVs.
 #' @param co A character vector naming the DVs.
 #' @param st A character naming the variable for iteratively inclusion
+#' @param co_ord A character vector naming the ordinal DVs.
+#' @param co_nom A character vector naming the nominal DVs. 
 #'
 #' @author Julian Urban
 #'
 #' @import tidyverse tibble tidyselect
 #' @importFrom rlang sym
+#' @importFrom stats na.omit
 #' 
 #' @return A list of length two. The first element is a matrix including all
 #' pairwise effects. The second is a vector expressing d-ratio
@@ -184,6 +187,7 @@ effects <- cbind(matrix(NA, nrow = nrow(effects), ncol = 19),
 #' @importFrom purrr map2
 #' @importFrom purrr map2_dbl
 #' @importFrom rlang is_list
+#' @importFrom stats na.omit
 #' 
 #' @return A vector containing the adjusted d-ratio in dependency of
 #' sample size.
