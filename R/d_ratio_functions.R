@@ -107,7 +107,7 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
   }
 
 
-  group_values <- unique(da[, gr])
+  group_values <- unique(na.omit(da[, gr]))
   effects <- sapply(c(20:max_step),
                     function(iteration) {
                      sapply(c(1:nrow(pairwise_matrix)),

@@ -3,14 +3,15 @@
 #' This function provides pre- and post-matching descriptive statistics and
 #' effects.
 #'
-#' This function enables the computation of descriptive statistics of
-#' continuous variables for the overall sample and specified groups. Additional,
-#' pairwise effects (Cohen's d) are computed.
+#' This function enables the computation of descriptive statistics for the
+#' overall sample and specified groups. Additional, pairwise effects according
+#' to the respective scale level are computed.
 #'
 #' @param Data A data frame that contains the desired variable for density
 #' plotting as well as the specified grouping variable.
 #' @param covariates A character vector specifying the variable names of the
-#' continuous variables for which the descriptive statistics should be computed.
+#' binary and metric variables for which the descriptive statistics should be
+#' computed.
 #' @param group A character (vector) specifying the groups for which
 #' differentiated statistics should be computed.
 #' @param step_num An integer specifying the number of cases to be
@@ -24,6 +25,10 @@
 #' the resulting Word document with the Table should have. Optional argument.
 #' @param verbose TRUE or FALSE indicating whether matching information should
 #' be printed to the console.
+#' @param covariates_ordinal A character vector specifying the variable names of
+#' the ordinal variables for which the descriptive statistics should be computed.
+#' @param covariates_nominal A character vector specifying the variable names of
+#' the nominal variables for which the descriptive statistics should be computed.
 #'
 #' @author Julian Urban
 #'

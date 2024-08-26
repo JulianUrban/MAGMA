@@ -2,7 +2,7 @@
 #'
 #' This function computes all four balance criteria of 'MAGMA.R', namely
 #' *Pillai's Trace*, *d-ratio*, *mean g*, and *adjusted d-ratio*. The
-#' estimation involves both binary and metric variables. Balance
+#' estimation considers the scale level of the variables. Balance
 #' estimation is performed across various sample sizes. See Details for more
 #' information.
 #'

@@ -84,10 +84,10 @@ mean_g_meta <- function(input, number_groups) {
     cat("\n", "Mean g was computed using robust variance meta-analysis with robumeta.")
     number_covariates <- 1/2 * ((number_groups - 1)^2 + (number_groups - 1))
     for (i in starting_number:ncol(g)) {
-      ma_input <- tibble::as_tibble(cbind(g[, i],
-                                          variance_g[, i],
-                                          rep(c(1:number_covariates),
-                                              nrow(g)/number_covariates)))#create nesting variable
+      ma_input <- tibble::tibble(V1 = g[, i],
+                                    V2 = variance_g[, i],
+                                    V3 = rep(c(1:number_covariates),
+                                              nrow(g)/number_covariates)) #create nesting variable
       mean_g[i] <- robumeta::robu(V1 ~ 1,
                                   var.eff.size = V2,
                                   studynum = V3,
