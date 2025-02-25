@@ -91,32 +91,32 @@ MAGMA_desc <- function(Data,
   if(!is.character(covariates)) {
     stop("covariates needs to be a character or a character vector!")
   }
-  
+
   if(!is.character(covariates_ordinal) & !is.null(covariates_ordinal)) {
     stop("covariates_ordinal needs to be a character or a character vector!")
   }
-  
+
 if(is.character(covariates_ordinal)) {
   if(sum(covariates_ordinal %in% covariates) > 0) {
     stop("Some variables are specified as covariates and covariates_ordinal. You can only specify each variable to one of theese arguments!")
   }
 }
-  
+
   if(!is.character(covariates_nominal) & !is.null(covariates_nominal)) {
     stop("covariates_nominal needs to be a character or a character vector!")
   }
-  
+
   if(is.character(covariates_nominal)) {
     if(sum(covariates_nominal %in% covariates) > 0) {
       stop("Some variables are specified as covariates and covariates_nominal You can only specify each variable to one of theese arguments!")
     }
   }
-  
+
   if(is.character(covariates_nominal) & is.character(covariates_ordinal))  {
     if(sum(covariates_nominal %in% covariates_ordinal) > 0) {
       stop("Some variables are specified as covariates_ordinal and covariates_nominal. You can only specify each variable to one of theese arguments!")
     }
-    
+
   }
 
   if(!is.numeric(step_num) & !is.null(step_num)) {
@@ -152,7 +152,7 @@ if(is.character(covariates_ordinal)) {
           !!rlang::sym(group[2]) == unique(!!rlang::sym(group[2]))[2] ~ 4
       ))
     group <- "group_long"
-    
+
     if(verbose) {
     cat("2x2 groups are represented as 4 groups.")
     }
@@ -200,7 +200,7 @@ if(is.character(covariates_ordinal)) {
                                     cohen_d,
                                     Data = descs_group) %>%
     round(digits = 2)
-  
+
 stats_overall <- cbind(descs_overall,
                          descs_group,
                          effects_groups)
@@ -272,14 +272,14 @@ cohen_d <- function(Data, index_1, index_2) {
   Data_temp <- Data %>%
     dplyr::select(tidyselect::starts_with(index_1),
                   tidyselect::starts_with(index_2))
-  
+
   Mean_diff <- Data_temp[paste(index_1, "central_tendency", sep = " ")] - Data_temp[paste(index_2, "central_tendency", sep = " ")]
   Pooled_sd <- sqrt(
-    ((Data_temp[paste(index_1, "n", sep = " ")] - 1) * Data_temp[paste(index_1, "dispersion", sep = " ")]^2 + 
-      (Data_temp[paste(index_2, "n", sep = " ")] - 1) * Data_temp[paste(index_2, "dispersion", sep = " ")]^2) / 
+    ((Data_temp[paste(index_1, "n", sep = " ")] - 1) * Data_temp[paste(index_1, "dispersion", sep = " ")]^2 +
+      (Data_temp[paste(index_2, "n", sep = " ")] - 1) * Data_temp[paste(index_2, "dispersion", sep = " ")]^2) /
       ((Data_temp[paste(index_1, "n", sep = " ")] - 1) + (Data_temp[paste(index_2, "n", sep = " ")] - 1))
   )
-  
+
   d <- Mean_diff / Pooled_sd
   colnames(d) <- paste("ES",
                        index_1,
