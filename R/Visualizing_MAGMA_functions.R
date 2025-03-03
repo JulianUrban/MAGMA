@@ -61,7 +61,7 @@
 #' (\url{https://CRAN.R-project.org/package=robumeta}).}
 #'
 #' @examples
-#' 
+#'
 #' # Defining the names of the metric and binary covariates
 #' covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "gender")
 #'
@@ -75,7 +75,7 @@
 #'                                 covariates = covariates_vector,
 #'                                 step = "step_gifted")
 #' str(Balance_gifted)
-#' 
+#'
 #' \donttest{
 #' # 2x2 matching using the data set 'MAGMA_sim_data'
 #' # Matching variables are 'gifted_support' (received giftedness support yes
@@ -120,23 +120,23 @@ Balance_MAGMA <- function(Data,
   if(!is.character(step) | length(step) > 1) {
     stop("step needs to be a character of length 1!")
   }
-  
+
   if(is.character(covariates_ordinal)) {
     if(sum(covariates_ordinal %in% covariates) > 0) {
       stop("Some variables are specified as covariates and covariates_ordinal. You can only specify each variable to one of theese arguments!")
     }
   }
-  
+
   if(!is.character(covariates_nominal) & !is.null(covariates_nominal)) {
     stop("covariates_nominal needs to be a character or a character vector!")
   }
-  
+
   if(is.character(covariates_nominal)) {
     if(sum(covariates_nominal %in% covariates) > 0) {
       stop("Some variables are specified as covariates and covariates_nominal You can only specify each variable to one of theese arguments!")
     }
   }
-  
+
   if(is.character(covariates_nominal) & is.character(covariates_ordinal))  {
     if(sum(covariates_nominal %in% covariates_ordinal) > 0) {
       stop("Some variables are specified as covariates_ordinal and covariates_nominal. You can only specify each variable to one of theese arguments!")
@@ -199,7 +199,7 @@ if(length(group) == 2) {
     dplyr::select(tidyselect::all_of(group)) %>%
     table() %>%
     length()
-  
+
   input_g <- d_effects$effects[rownames(d_effects$effects) %in% covariates, ]
 
   mean_g <- mean_g_meta(input = input_g,
@@ -306,12 +306,12 @@ if(length(group) == 2) {
 #'                                   group = c("gifted_support", "enrichment"),
 #'                                   covariates = covariates_vector)
 #' unbalance_2x2
-#' 
+#'
 #'
 initial_unbalance <- function(Data,
                               group,
                               covariates,
-                              verbose = TRUE, 
+                              verbose = TRUE,
                               covariates_ordinal = NULL,
                               covariates_nominal = NULL) {
   if (!is.data.frame(Data) && !tibble::is_tibble(Data)) {
@@ -325,41 +325,41 @@ initial_unbalance <- function(Data,
   if(!is.character(covariates)) {
     stop("covariates needs to be a character or a character vector!")
   }
-  
+
   class_covariates <- unique(sapply(Data[, covariates], class))
-  
+
   if("factor" %in% class_covariates |
      "character" %in%  class_covariates) {
        stop("Some covariates variables are defined as factor or character.
             Covariates need to be numeric variables.")
   }
-  
+
   if(!is.character(covariates_ordinal) & !is.null(covariates_ordinal)) {
     stop("covariates_ordinal needs to be a character or a character vector!")
   }
-  
+
   if(is.character(covariates_ordinal)) {
     if(sum(covariates_ordinal %in% covariates) > 0) {
       stop("Some variables are specified as covariates and covariates_ordinal. You can only specify each variable to one of theese arguments!")
     }
   }
-  
+
   if(!is.character(covariates_nominal) & !is.null(covariates_nominal)) {
     stop("covariates_nominal needs to be a character or a character vector!")
   }
-  
+
   if(is.character(covariates_nominal)) {
     if(sum(covariates_nominal %in% covariates) > 0) {
       stop("Some variables are specified as covariates and covariates_nominal You can only specify each variable to one of theese arguments!")
     }
   }
-  
+
   if(is.character(covariates_nominal) & is.character(covariates_ordinal))  {
     if(sum(covariates_nominal %in% covariates_ordinal) > 0) {
       stop("Some variables are specified as covariates_ordinal and covariates_nominal. You can only specify each variable to one of theese arguments!")
     }
   }
-    
+
     Data[, covariates_ordinal] <- sapply(Data[, covariates_ordinal], as.numeric)
 
   ########################
@@ -369,22 +369,22 @@ initial_unbalance <- function(Data,
     Pillai_input <- Data %>%
       dplyr::select(tidyselect::all_of(covariates),
                     tidyselect::all_of(group))
-    
+
     if(sum(rowSums(is.na(Pillai_input)) == 0) < 50) {
       Pillai <- NA
       warning("Too few cases with valid data on all covariates to estimate Pillai's
               Trace. Setting Pillai's Trace to NA.")
     } else {
-    
+
     formula <- paste0("cbind(", paste(covariates, collapse = ","), ") ~ as.factor(", group, ")")
-    
+
     if(length(covariates) == 1) {
       Square_sums <- stats::aov(stats::as.formula(formula),
                                 data = Pillai_input) %>%
         summary() %>%
         `[[`(1) %>%
         `[[`("Sum Sq")
-      
+
       Pillai <- Square_sums[1] / sum(Square_sums)
     } else {
       Pillai <- stats::manova(stats::as.formula(formula),
@@ -400,24 +400,24 @@ initial_unbalance <- function(Data,
       dplyr::select(tidyselect::all_of(covariates),
                     tidyselect::all_of(group[1]),
                     tidyselect::all_of(group[2]))
-    
+
     if(sum(rowSums(is.na(Pillai_input)) == 0) < 50) {
       Pillai <- NA
       warning("Too few cases with valid data on all covariates to estimate Pillai's
               Trace. Setting Pillai's Trace to NA.")
     } else {
-    
+
     formula <- paste0("cbind(", paste(covariates, collapse = ","), ") ~ as.factor(", group[1],
                       ") + as.factor(", group[2],
                       ") + ", group[1], "*", group[2])
-    
+
     if(length(covariates) == 1) {
       Square_sums <- stats::aov(stats::as.formula(formula),
                                 data = Pillai_input) %>%
         summary() %>%
         `[[`(1) %>%
         `[[`("Sum Sq")
-      
+
       Pillai <- c(Square_sums[1] / (Square_sums[1] + Square_sums[4]),
                   Square_sums[2] / (Square_sums[2] + Square_sums[4]),
                   Square_sums[3] / (Square_sums[3] + Square_sums[4]))
@@ -503,7 +503,7 @@ if(length(group) == 2) {
       d_effect[j, i] <- mean_diff/pooled_sd
     }
   }
-  
+
   effects <- unlist(d_effect)
   if(!is.null(covariates_ordinal)) {
     ordinal_effects <- effect_ordinal(Data = Data,
@@ -516,7 +516,7 @@ if(length(group) == 2) {
                                                     unlist(Data[, var]))))
                           })
     }
-  
+
   if(!is.null(covariates_nominal)) {
     nominal_effects <- effect_nominal(Data = Data,
                                       group = group,
@@ -528,7 +528,7 @@ if(length(group) == 2) {
                                  unlist(Data[, var]))))
                            })
   }
-  
+
 
   d_logic <- abs(effects) < .20
   d_ratio <- sum(d_logic)/length(d_logic)
@@ -559,7 +559,7 @@ if(length(group) == 2) {
 
   effect_g <- abs(J_matrix * d_effect)
 
-  var_g <- J_matrix^2 * var_matrix 
+  var_g <- J_matrix^2 * var_matrix
 
   if(nrow(effect_g) == 1) {
     mean_g <- metafor::rma(effect_g, var_g)[["b"]]
@@ -599,16 +599,16 @@ if(length(group) == 2) {
     matrix_n <-  do.call(rbind.data.frame, matrix_n)
 
   matrix_J <- 1 - (3/(4 * (2 * rowSums(matrix_n) - 2) - 1))
-  
+
   effects_g <- abs(matrix_J * effects)
-  
+
   var_matrix <- effects_g^2 / (2 * rowSums(matrix_n)) +
     rowSums(matrix_n) / (matrix_n[, 1] * matrix_n[, 2])
 
-  var_effects_g <- matrix_J^2 * var_matrix 
+  var_effects_g <- matrix_J^2 * var_matrix
 
 
-  adj_d_ratio_raw <- purrr::map2_dbl(effects_g, sqrt(var_effects_g), stats::pnorm, q = .20) 
+  adj_d_ratio_raw <- purrr::map2_dbl(effects_g, sqrt(var_effects_g), stats::pnorm, q = .20)
   adj_d_ratio <-  sum(adj_d_ratio_raw) / length(adj_d_ratio_raw)
 
   #####################
@@ -740,7 +740,7 @@ Table_MAGMA <- function(Balance, filename = NULL, verbose = TRUE) {
               d_ratio = round(Balance$d_ratio$d_rate[index_optimal], 2),
               mean_g = round(Balance$mean_effect[index_optimal], 2),
               adjusted_d_ratio = round(Balance$adjusted_d_ratio[index_optimal], 2))
-  
+
   balance_matrix$n_per_group <- index_optimal
   # Ordering table after n per group
   balance_matrix <- balance_matrix[order(balance_matrix$n_per_group), ]
@@ -772,7 +772,7 @@ Table_MAGMA <- function(Balance, filename = NULL, verbose = TRUE) {
                 d_ratio = round(Balance$d_ratio$d_rate[index_optimal], 2),
                 mean_g = round(Balance$mean_effect[index_optimal], 2),
                 adjusted_d_ratio = round(Balance$adjusted_d_ratio[index_optimal], 2))
-                
+
     balance_matrix$n_per_group <- index_optimal
     # Ordering table after n per group
     balance_matrix <- balance_matrix[order(balance_matrix$n_per_group), ]
@@ -820,7 +820,7 @@ return(balance_matrix)
 #' @export
 #'
 #' @examples
-#' 
+#'
 #' # This function bases on a MAGMA function as well as Balance_MAGMA
 #' # To run examples, copy them into your console or script
 #' # Defining the names of the metric and binary covariates
@@ -832,11 +832,11 @@ return(balance_matrix)
 #' Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data[MAGMA_sim_data$step_gifted < 150, ],
 #'                                 group = "gifted_support",
 #'                                 covariates = covariates_vector,
-#'                                 step = "step_gifted") 
+#'                                 step = "step_gifted")
 #'
 #' Plot_MAGMA(Balance = Balance_gifted,
 #'            criterion = "Adj_d_ratio") #Using default to plot all criteria
-#' 
+#'
 #' \donttest{
 #' # 2x2 matching using the data set 'MAGMA_sim_data'
 #' # Matching variables are 'gifted_support' (received giftedness support yes
@@ -868,23 +868,26 @@ Plot_MAGMA <- function(Balance,
   if (!rlang::is_list(Balance)) {
     stop("Balance needs to be a Balance_MAGMA object!")
   }
+  out <- list()
 
 
   if (any(criterion == "Pillai")) {
 
     if(!is.matrix(Balance$Pillai)) {
-    Balance_temp <- Balance$Pillai %>%
+    Balance_Pillai <- Balance$Pillai %>%
         unlist() %>%
         tibble::as_tibble(.name_repair = "minimal")
-    Balance_temp$N <- c(1:nrow(Balance_temp))
-    
-    print(ggplot2::ggplot() +
-            ggplot2::geom_point(aes(x = Balance_temp$N, y = Balance_temp$value)) +
+    Balance_Pillai$N <- c(1:nrow(Balance_Pillai))
+
+    plot_Pillai <- ggplot2::ggplot(Balance_Pillai) +
+            ggplot2::geom_point(aes(x = N, y = value)) +
             ggplot2::theme(panel.background = element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, .5),
                                breaks = seq(0, .5, .05)) +
             ggplot2::labs(y = "Pillai`s Trace", x ="\nN per group",
-                 title = "Pillai`s Trace values for different sample sizes"))
+                 title = "Pillai`s Trace values for different sample sizes")
+    print(plot_Pillai)
+    out[["Pillai"]] <- plot_Pillai
     }
 
     if(is.matrix(Balance$Pillai)) {
@@ -892,14 +895,13 @@ Plot_MAGMA <- function(Balance,
                    "Main Effect 2",
                    "Interaction")
       for(i in 1:nrow(Balance$Pillai)) {
-        Balance_temp <- Balance$Pillai[i, ] %>%
+        Balance_Pillai <- Balance$Pillai[i, ] %>%
           unlist() %>%
           tibble::as_tibble(.name_repair = "minimal")
-        Balance_temp$N <- c(1:nrow(Balance_temp))
-        
-      print(Balance_temp %>%
-              ggplot2::ggplot() +
-              ggplot2::geom_point(aes(x = Balance_temp$N, y = Balance_temp$value))+
+        Balance_Pillai$N <- c(1:nrow(Balance_Pillai))
+
+        plot_Pillai <- ggplot2::ggplot(Balance_Pillai) +
+              ggplot2::geom_point(aes(x = N, y = value))+
               ggplot2::theme(panel.background = element_blank()) +
               ggplot2::scale_y_continuous(limits = c(0, .5),
                                  breaks = seq(0, .5, .05)) +
@@ -908,53 +910,62 @@ Plot_MAGMA <- function(Balance,
                                  effects[i],
                                  "for different sample sizes",
                                  sep = " "))
-            )
+
+      print(plot_Pillai)
+      out[["Pillai"]] <- plot_Pillai
       }
     }
 
   }
   if (any(criterion == "d_ratio")) {
-    Balance_temp <- Balance$d_ratio$d_rate %>%
+    Balance_d<- Balance$d_ratio$d_rate %>%
       unlist() %>%
       tibble::as_tibble(.name_repair = "minimal")
-    Balance_temp$N <- c(1:nrow(Balance_temp))
-    
-    print(ggplot2::ggplot() +
-            ggplot2::geom_point(aes(x = Balance_temp$N, y = Balance_temp$value)) +
+    Balance_d$N <- c(1:nrow(Balance_d))
+
+    plot_d <- ggplot2::ggplot(Balance_d) +
+            ggplot2::geom_point(aes(x = N, y = value)) +
             ggplot2::theme(panel.background = element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +
-            ggplot2::labs(y = "d`s < 0.20", x ="\nN per group",
-                 title = "Cohen`s d < .20` for different sample sizes"))
+            ggplot2::labs(y = "d's < 0.20", x ="\nN per group",
+                 title = "Cohen's d < .20` for different sample sizes")
+    print(plot_d)
+    out[["d-ratio"]] <- plot_d
   }
   if (any(criterion == "mean_g")) {
-    Balance_temp <- Balance$mean_effect %>%
+    Balance_g<- Balance$mean_effect %>%
       unlist() %>%
       tibble::as_tibble(.name_repair = "minimal")
-    Balance_temp$N <- c(1:nrow(Balance_temp))
-    
-    print(ggplot2::ggplot() +
-            ggplot2::geom_point(aes(x = Balance_temp$N, y = Balance_temp$value))+
+    Balance_g$N <- c(1:nrow(Balance_g))
+
+    plot_g <- ggplot2::ggplot(Balance_g) +
+            ggplot2::geom_point(aes(x = N, y = value))+
             ggplot2::theme(panel.background = element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +
             ggplot2::labs(y ="mean g", x ="\nN per group",
-                 title = "Mean effect for different sample sizes"))
+                 title = "Mean effect for different sample sizes")
+    print(plot_g)
+    out[["mean g"]] <- plot_g
   }
   if (any(criterion == "Adj_d_ratio")) {
-    Balance_temp <- Balance$adjusted_d_ratio %>%
+    Balance_adj_d <- Balance$adjusted_d_ratio %>%
       unlist() %>%
       tibble::as_tibble(.name_repair = "minimal")
-    Balance_temp$N <- c(1:nrow(Balance_temp))
-    
-    print(ggplot2::ggplot() +
-            ggplot2::geom_point(aes(x = Balance_temp$N, y = Balance_temp$value)) +
+    Balance_adj_d$N <- c(1:nrow(Balance_adj_d))
+
+    plot_adj_d <- ggplot2::ggplot(Balance_adj_d) +
+            ggplot2::geom_point(aes(x = N, y = value)) +
             ggplot2::theme(panel.background = element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +
             ggplot2::labs(y = "Adjusted d-ratio", x = "\nN per group",
-                 title = "Adjusted d-ratio for different sample sizes"))
+                 title = "Adjusted d-ratio for different sample sizes")
+    print(plot_adj_d)
+    out[["adj-d-ratio"]] <- plot_adj_d
   }
+  return(out)
 }
 
 
