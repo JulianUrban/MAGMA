@@ -918,7 +918,8 @@ Plot_MAGMA <- function(Balance,
                                  sep = " "))
                             })
       if(print) {
-        print(plot_Pillai)
+        lapply(plot_Pillai,
+               print)
       }
       out[["Pillai"]] <- plot_Pillai
     }
