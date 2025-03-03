@@ -809,6 +809,7 @@ return(balance_matrix)
 #' \code{\link{Balance_MAGMA}}.
 #' @param criterion A character vector specifying for which balance criteria
 #' a plot should be created. Default is all criteria.
+#' @param print TRUE or FALSE indicating whether plots should be printed.
 #'
 #'
 #' @author Julian Urban
@@ -863,7 +864,8 @@ Plot_MAGMA <- function(Balance,
                        criterion = c("Pillai",
                                      "d_ratio",
                                      "mean_g",
-                                     "Adj_d_ratio")) {
+                                     "Adj_d_ratio"),
+                       print = TRUE) {
   #Check input
   if (!rlang::is_list(Balance)) {
     stop("Balance needs to be a Balance_MAGMA object!")
@@ -880,13 +882,16 @@ Plot_MAGMA <- function(Balance,
     Balance_Pillai$N <- c(1:nrow(Balance_Pillai))
 
     plot_Pillai <- ggplot2::ggplot(Balance_Pillai) +
-            ggplot2::geom_point(aes(x = N, y = value)) +
-            ggplot2::theme(panel.background = element_blank()) +
+            ggplot2::geom_point(ggplot2::aes(x = N, y = value)) +
+            ggplot2::theme(panel.background = ggplot2::element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, .5),
                                breaks = seq(0, .5, .05)) +
             ggplot2::labs(y = "Pillai`s Trace", x ="\nN per group",
                  title = "Pillai`s Trace values for different sample sizes")
-    print(plot_Pillai)
+    if(print) {
+      print(plot_Pillai)
+    }
+
     out[["Pillai"]] <- plot_Pillai
     }
 
@@ -894,15 +899,16 @@ Plot_MAGMA <- function(Balance,
       effects <- c("Main Effect 1",
                    "Main Effect 2",
                    "Interaction")
-      for(i in 1:nrow(Balance$Pillai)) {
-        Balance_Pillai <- Balance$Pillai[i, ] %>%
+      plot_Pillai <- lapply(c(1:nrow(Balance$Pillai)),
+                            function(i) {
+                              Balance_Pillai <- Balance$Pillai[i, ] %>%
           unlist() %>%
           tibble::as_tibble(.name_repair = "minimal")
         Balance_Pillai$N <- c(1:nrow(Balance_Pillai))
 
-        plot_Pillai <- ggplot2::ggplot(Balance_Pillai) +
-              ggplot2::geom_point(aes(x = N, y = value))+
-              ggplot2::theme(panel.background = element_blank()) +
+        ggplot2::ggplot(Balance_Pillai) +
+              ggplot2::geom_point(ggplot2::aes(x = N, y = value))+
+              ggplot2::theme(panel.background = ggplot2::element_blank()) +
               ggplot2::scale_y_continuous(limits = c(0, .5),
                                  breaks = seq(0, .5, .05)) +
               ggplot2::labs(y = "Pillai`s Trace", x ="\nN per group",
@@ -910,10 +916,11 @@ Plot_MAGMA <- function(Balance,
                                  effects[i],
                                  "for different sample sizes",
                                  sep = " "))
-
-      print(plot_Pillai)
-      out[["Pillai"]] <- plot_Pillai
+                            })
+      if(print) {
+        print(plot_Pillai)
       }
+      out[["Pillai"]] <- plot_Pillai
     }
 
   }
@@ -924,13 +931,15 @@ Plot_MAGMA <- function(Balance,
     Balance_d$N <- c(1:nrow(Balance_d))
 
     plot_d <- ggplot2::ggplot(Balance_d) +
-            ggplot2::geom_point(aes(x = N, y = value)) +
-            ggplot2::theme(panel.background = element_blank()) +
+            ggplot2::geom_point(ggplot2::aes(x = N, y = value)) +
+            ggplot2::theme(panel.background = ggplot2::element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +
             ggplot2::labs(y = "d's < 0.20", x ="\nN per group",
                  title = "Cohen's d < .20` for different sample sizes")
-    print(plot_d)
+    if(print) {
+      print(plot_d)
+    }
     out[["d-ratio"]] <- plot_d
   }
   if (any(criterion == "mean_g")) {
@@ -940,13 +949,15 @@ Plot_MAGMA <- function(Balance,
     Balance_g$N <- c(1:nrow(Balance_g))
 
     plot_g <- ggplot2::ggplot(Balance_g) +
-            ggplot2::geom_point(aes(x = N, y = value))+
-            ggplot2::theme(panel.background = element_blank()) +
+            ggplot2::geom_point(ggplot2::aes(x = N, y = value))+
+            ggplot2::theme(panel.background = ggplot2::element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +
             ggplot2::labs(y ="mean g", x ="\nN per group",
                  title = "Mean effect for different sample sizes")
-    print(plot_g)
+    if(print) {
+      print(plot_g)
+    }
     out[["mean g"]] <- plot_g
   }
   if (any(criterion == "Adj_d_ratio")) {
@@ -956,13 +967,15 @@ Plot_MAGMA <- function(Balance,
     Balance_adj_d$N <- c(1:nrow(Balance_adj_d))
 
     plot_adj_d <- ggplot2::ggplot(Balance_adj_d) +
-            ggplot2::geom_point(aes(x = N, y = value)) +
-            ggplot2::theme(panel.background = element_blank()) +
+            ggplot2::geom_point(ggplot2::aes(x = N, y = value)) +
+            ggplot2::theme(panel.background = ggplot2::element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +
             ggplot2::labs(y = "Adjusted d-ratio", x = "\nN per group",
                  title = "Adjusted d-ratio for different sample sizes")
-    print(plot_adj_d)
+    if(print) {
+      print(plot_adj_d)
+    }
     out[["adj-d-ratio"]] <- plot_adj_d
   }
   return(out)
