@@ -12,7 +12,7 @@
 #'
 #' @importFrom stats median
 #' @importFrom stats IQR
-#' 
+#'
 #' @return A vector containing the adjusted d-ratio in dependency of
 #' sample size.
 #'
@@ -20,9 +20,9 @@
 row_ordinal<- function(Data,
                        group,
                        variable) {
-  
+
   class_variables <- unique(sapply(Data[, variable], class))
-                            
+
   if(class_variables != "numeric" &
      class_variables != "double" &
      class_variables != "integer") {
@@ -31,14 +31,14 @@ row_ordinal<- function(Data,
              These variables were recoded to compute descriptive statistics.
              Please check scale level of 'covariates_ordinal'.")
   }
-  
+
   group_values <- sort(unlist(unique(Data[, group])))
   table_statistics <- lapply(variable,
                              function(var) {
                                table(unlist(Data[ , group]),
                                      unlist(Data[, var]))
                              })
-  
+
   overall_stats <- sapply(c(1:length(variable)),
                           function(index) {
                             c(sum(table_statistics[[index]]),
@@ -46,7 +46,7 @@ row_ordinal<- function(Data,
                               stats::IQR(unlist(Data[, variable[index]]), na.rm = TRUE)
                             )
                           })
-  
+
   group_stats <- sapply(c(1:length(variable)),
                         function(index) {
                           sapply(group_values,
@@ -56,22 +56,22 @@ row_ordinal<- function(Data,
                                      stats::IQR(unlist(Data[unlist(Data[, group] == gr), variable[index]]), na.rm = TRUE)
                                    )
                                  })
-                          
+
                         })
-  
+
   effect_sizes <- round(sapply(variable,
                                effect_ordinal,
                                Data = Data,
                                group = group),
                         digits = 2)
-  
+
   if(length(variable) > 1) {
   output <- rbind(overall_stats, group_stats, effect_sizes) %>%
     t()
   } else {
     output <- t(c(overall_stats, group_stats, effect_sizes))
   }
-  
+
   return(output)
 }
 
@@ -90,16 +90,16 @@ row_ordinal<- function(Data,
 #'
 #' @importFrom stats qnorm
 #' @importFrom stats wilcox.test
-#' 
+#'
 #' @return A vector or matrix containing ordinal effect sizes
 #'
 #'
 effect_ordinal <- function(Data,
                            group,
                            variable) {
-  
+
   group_values <- sort(unlist(unique(Data[, group])))
-  
+
   if(length(group_values) == 2) {
     index_matrix <- matrix(data = c(1, 2),
                            ncol = 2)
@@ -110,24 +110,24 @@ effect_ordinal <- function(Data,
     index_matrix <- matrix(data = c(1, 1, 1, 2, 2, 3,
                                     2, 3, 4, 3, 4, 4),
                            ncol = 2)}
-  
+
   suppressWarnings({
   effects <- sapply(c(1:nrow(index_matrix)), function(row) {
     group_1 <- index_matrix[row, 1]
     group_2 <- index_matrix[row, 2]
     groups_temp <- group_values[c(group_1, group_2)]
-    Data_temp <- Data[unlist(Data[, group]) %in% groups_temp, 
+    Data_temp <- Data[unlist(Data[, group]) %in% groups_temp,
     ]
     Data_temp[, variable] <- sapply(Data_temp[, variable], as.numeric)
     sapply(variable, function(var) {
-      p_value <- stats::wilcox.test(unlist(Data_temp[, 
+      p_value <- stats::wilcox.test(unlist(Data_temp[,
                                                      var]) ~ unlist(Data_temp[, group]))[["p.value"]]
-      stats::qnorm(p_value/2)/sqrt(nrow(Data_temp[!is.na(Data_temp[, 
+      stats::qnorm(p_value/2)/sqrt(nrow(Data_temp[!is.na(Data_temp[,
                                                                    var]), ]))
     })
   })})
   d_effects <- (2 * effects) / sqrt(1 - effects ^2)
-  
+
   return(d_effects)
 }
 
@@ -146,7 +146,7 @@ effect_ordinal <- function(Data,
 #'
 #' @importFrom stats median
 #' @importFrom stats IQR
-#' 
+#'
 #' @return A vector containing the adjusted d-ratio in dependency of
 #' sample size.
 #'
@@ -154,14 +154,14 @@ effect_ordinal <- function(Data,
 row_nominal <- function(Data,
                        group,
                        variable) {
-  
+
   group_values <- sort(unlist(unique(Data[, group])))
   table_statistics <- lapply(variable,
                              function(var) {
                                table(unlist(Data[ , group]),
                                      unlist(Data[, var]))
                              })
-  
+
   overall_stats <- sapply(c(1:length(variable)),
                           function(index) {
                             c(sum(table_statistics[[index]]),
@@ -169,7 +169,7 @@ row_nominal <- function(Data,
                               ncol(table_statistics[[index]])
                             )
                           })
-  
+
   modi_check <- sapply(c(1:length(variable)),
                       function(index) {
                         sapply(group_values,
@@ -185,11 +185,11 @@ row_nominal <- function(Data,
                                  )
                                })
                       })
-  
+
   if(sum(modi_check > 1) != 0) {
     bimodal_variables <- which(modi_check == 2, arr.ind = TRUE)
     multimodal_variables <- which(modi_check > 2, arr.ind = TRUE)
-    
+
     group_stats <- sapply(c(1:length(variable)),
                           function(index) {
                             sapply(c(1:length(group_values)),
@@ -210,7 +210,7 @@ row_nominal <- function(Data,
                                        variable[index], "in group",
                                        gr_index,
                                        "has two modi. Both are returned, seperated by a '.'."))
-                                      
+
                                      } else if(sum(rowSums(cbind(index == multimodal_variables[, 2],
                                                                  gr_index == multimodal_variables[, 1] )) == 2) == 1) {
                                        modi <- NA
@@ -231,7 +231,7 @@ row_nominal <- function(Data,
                                       c(N, modi, num_cats)
                                       })
                             })
-    
+
   } else {
   group_stats <- sapply(c(1:length(variable)),
                         function(index) {
@@ -248,19 +248,19 @@ row_nominal <- function(Data,
                                      length(table_statistics[[index]][as.character(gr), ])
                                    )
                                  })
-                          
+
                         })
   }
-  
+
   effect_sizes <- round(effect_nominal(Data, group, variable), digits = 2)
-  
+
   if(length(variable) > 1) {
-    output <- rbind(overall_stats, group_stats, effect_sizes) %>%
+    output <- rbind(overall_stats, group_stats, t(effect_sizes)) %>%
       t()
   } else {
     output <- t(c(overall_stats, group_stats, effect_sizes))
   }
-  
+
   return(output)
 }
 
@@ -278,16 +278,16 @@ row_nominal <- function(Data,
 #' @author Julian Urban
 #'
 #' @importFrom stddiff stddiff.category
-#' 
+#'
 #' @return A vector or matrix containing nominal effect sizes
 #'
 #'
 effect_nominal <- function(Data,
                            group,
                            variable) {
-  
+
   group_values <- sort(unlist(unique(Data[, group])))
-  
+
   if(length(group_values) == 2) {
     index_matrix <- matrix(data = c(1, 2),
                            ncol = 2)
@@ -298,7 +298,7 @@ effect_nominal <- function(Data,
     index_matrix <- matrix(data = c(1, 1, 1, 2, 2, 3,
                                     2, 3, 4, 3, 4, 4),
                            ncol = 2)}
-  
+
   effects <- sapply(c(1:nrow(index_matrix)),
                     function(row) {
                       group_1 <- index_matrix[row, 1]
@@ -315,7 +315,7 @@ effect_nominal <- function(Data,
                                                          gcol = which(colnames(Data_temp) == group),
                                                          vcol= which(colnames(Data_temp) == var))[1, "stddiff"]
                              })
-                    }) 
-  
+                    })
+
   return(effects)
 }
