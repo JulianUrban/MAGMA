@@ -113,7 +113,7 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
   group_values <- unique(na.omit(da[, gr]))
   effects <- sapply(c(20:max_step),
                     function(iteration) {
-                     sapply(c(1:nrow(pairwise_matrix)),
+                     ds <- sapply(c(1:nrow(pairwise_matrix)),
                              function(index) {
                                groups <- group_values[pairwise_matrix[index, ]]
                                data_temp <- da[da[, st] <= iteration & da[, gr] %in% groups, ]  
@@ -132,27 +132,27 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
                                pooled_sds <- sqrt((group_stats[1, sds] + group_stats[2, sds]) / 2)
                                ds <- unlist(mean_diffs / pooled_sds)
                                names_effects <- co
-                               
+                               return(ds)
+                             })
                                suppressWarnings({
                                if(!is.null(co_ord)) {
-                                 ordinal_effects <- effect_ordinal(Data = data_temp,
+                                 ordinal_effects <- MAGMA.R:::effect_ordinal(Data = da,
                                                                    group = gr,
                                                                    variable = co_ord)
                                  names(ordinal_effects) <- co_ord
-                                 ds <- unlist(c(ds, ordinal_effects))
+                                 ds <- rbind(ds, ordinal_effects)
                                  
                                }
                                if(!is.null(co_nom)) {
-                                 nominal_effects <- effect_nominal(Data = data_temp,
+                                 nominal_effects <- MAGMA.R:::effect_nominal(Data = da,
                                                                    group = gr,
                                                                    variable = co_nom)
                                  names(nominal_effects) <- co_nom
-                                 ds <- c(ds, nominal_effects)
+                                 ds <- rbind(ds, nominal_effects)
                                  
                                }
                                })
-                               return(ds)
-                             })
+                               
                     }) 
   
 names_effects <- co
