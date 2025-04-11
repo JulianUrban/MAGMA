@@ -136,11 +136,16 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
                              })
                                suppressWarnings({
                                if(!is.null(co_ord)) {
-                                 data_temp <- da[da[, st] <= iteration, ]
-                                 ordinal_effects <- MAGMA.R:::effect_ordinal(Data = data_temp,
-                                                                             group = gr,
-                                                                             variable = co_ord)
-                                 names(ordinal_effects) <- co_ord
+                                 ordinal_effects <- sapply(c(1:nrow(pairwise_matrix)),
+                                                           function(index) {
+                                                             groups <- group_values[pairwise_matrix[index, ]]
+                                                             data_temp <- da[da[, st] <= iteration & da[, gr] %in% groups, ]
+                                                             ordinal_effects <- MAGMA.R:::effect_ordinal(Data = data_temp,
+                                                                                                         group = gr,
+                                                                                                         variable = co_ord)
+                                                             names(ordinal_effects) <- co_ord
+                                                             return(ordinal_effects)
+                                                           })
                                  ds <- rbind(ds, ordinal_effects)
 
                                }

@@ -116,16 +116,23 @@ effect_ordinal <- function(Data,
     group_1 <- index_matrix[row, 1]
     group_2 <- index_matrix[row, 2]
     groups_temp <- group_values[c(group_1, group_2)]
-    Data_temp <- Data[unlist(Data[, group]) %in% groups_temp,
-    ]
+    Data_temp <- Data[unlist(Data[, group]) %in% groups_temp, ]
     Data_temp[, variable] <- sapply(Data_temp[, variable], as.numeric)
     sapply(variable, function(var) {
-      p_value <- stats::wilcox.test(unlist(Data_temp[,
-                                                     var]) ~ unlist(Data_temp[, group]))[["p.value"]]
-      stats::qnorm(p_value/2)/sqrt(nrow(Data_temp[!is.na(Data_temp[,
-                                                                   var]), ]))
+      Data_eff <- Data_temp[!is.na(Data_temp[, var]), ]
+      if(length(table(Data_eff[, group])) > 1) {
+        p_value <- stats::wilcox.test(unlist(Data_eff[,
+                                                     var]) ~ unlist(Data_eff[, group]))[["p.value"]]
+        effect <- stats::qnorm(p_value/2)/sqrt(nrow(Data_eff[!is.na(Data_eff[,
+                                                                               var]), ]))
+        return(effect)
+      } else {
+        effect <- NA
+        return(effect)
+      }
     })
-  })})
+  })
+  })
   d_effects <- (2 * effects) / sqrt(1 - effects ^2)
 
   return(d_effects)
@@ -311,9 +318,17 @@ effect_nominal <- function(Data,
                       })
                       sapply(variable,
                              function(var) {
-                               stddiff::stddiff.category(data = Data_temp,
-                                                         gcol = which(colnames(Data_temp) == group),
-                                                         vcol= which(colnames(Data_temp) == var))[1, "stddiff"]
+                                 Data_eff <- Data_temp[!is.na(Data_temp[, var]), ]
+                                 if(length(table(Data_eff[, group])) > 1) {
+                                   effect <- stddiff::stddiff.category(data = Data_temp,
+                                                                       gcol = which(colnames(Data_temp) == group),
+                                                                       vcol= which(colnames(Data_temp) == var))[1, "stddiff"]
+                                   return(effect)
+                                 } else {
+                                   effect <- NA
+                                   return(effect)
+                                 }
+
                              })
                     })
 
