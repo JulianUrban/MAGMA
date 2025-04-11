@@ -10,14 +10,14 @@
 #' @param co A character vector naming the DVs.
 #' @param st A character naming the variable for iteratively inclusion
 #' @param co_ord A character vector naming the ordinal DVs.
-#' @param co_nom A character vector naming the nominal DVs. 
+#' @param co_nom A character vector naming the nominal DVs.
 #'
 #' @author Julian Urban
 #'
 #' @import tidyverse tibble tidyselect
 #' @importFrom rlang sym
 #' @importFrom stats na.omit
-#' 
+#'
 #' @return A list of length two. The first element is a matrix including all
 #' pairwise effects. The second is a vector expressing d-ratio
 #' in dependency of sample size.
@@ -116,7 +116,7 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
                      ds <- sapply(c(1:nrow(pairwise_matrix)),
                              function(index) {
                                groups <- group_values[pairwise_matrix[index, ]]
-                               data_temp <- da[da[, st] <= iteration & da[, gr] %in% groups, ]  
+                               data_temp <- da[da[, st] <= iteration & da[, gr] %in% groups, ]
                                suppressWarnings({
                                  group_stats <- data_temp %>%
                                    dplyr::select(!!rlang::sym(gr),
@@ -136,35 +136,37 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
                              })
                                suppressWarnings({
                                if(!is.null(co_ord)) {
-                                 ordinal_effects <- MAGMA.R:::effect_ordinal(Data = da,
-                                                                   group = gr,
-                                                                   variable = co_ord)
+                                 data_temp <- da[da[, st] <= iteration, ]
+                                 ordinal_effects <- MAGMA.R:::effect_ordinal(Data = data_temp,
+                                                                             group = gr,
+                                                                             variable = co_ord)
                                  names(ordinal_effects) <- co_ord
                                  ds <- rbind(ds, ordinal_effects)
-                                 
+
                                }
                                if(!is.null(co_nom)) {
-                                 nominal_effects <- MAGMA.R:::effect_nominal(Data = da,
+                                 data_temp <- da[da[, st] <= iteration, ]
+                                 nominal_effects <- MAGMA.R:::effect_nominal(Data = data_temp,
                                                                    group = gr,
                                                                    variable = co_nom)
                                  names(nominal_effects) <- co_nom
                                  ds <- rbind(ds, nominal_effects)
-                                 
+
                                }
                                })
-                               
-                    }) 
-  
+
+                    })
+
 names_effects <- co
 if(!is.null(co_ord)) {names_effects <- c(names_effects, co_ord)}
 if(!is.null(co_nom)) {names_effects <- c(names_effects, co_nom)}
 rownames(effects) <- rep(names_effects, each = nrow(pairwise_matrix))
 effects <- cbind(matrix(NA, nrow = nrow(effects), ncol = 19),
                  effects)
-  
 
 
- 
+
+
   d_logic <- abs(effects) < .20
   pairwise_effects <- list(d_rate = colSums(d_logic)/nrow(d_logic),
                          effects = effects)
@@ -188,7 +190,7 @@ effects <- cbind(matrix(NA, nrow = nrow(effects), ncol = 19),
 #' @importFrom purrr map2_dbl
 #' @importFrom rlang is_list
 #' @importFrom stats na.omit
-#' 
+#'
 #' @return A vector containing the adjusted d-ratio in dependency of
 #' sample size.
 #'
@@ -198,7 +200,7 @@ adj_d_ratio <- function(input) {
   J <- J_group_size(ncol(input))
 
 suppressMessages({
-  
+
   g <- apply(input,
              MARGIN = 1,
              FUN = function(row) {
@@ -206,7 +208,7 @@ suppressMessages({
              }) %>%
     t() %>%
     abs()
- 
+
   size_per_group <- c(1:ncol(input))
   sd_g <- apply(input,
                       MARGIN = 1,
