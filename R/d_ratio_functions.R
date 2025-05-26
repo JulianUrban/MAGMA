@@ -161,7 +161,7 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
                                })
 
                     })
-
+effects <- as.matrix(effects)
 names_effects <- co
 if(!is.null(co_ord)) {names_effects <- c(names_effects, co_ord)}
 if(!is.null(co_nom)) {names_effects <- c(names_effects, co_nom)}
