@@ -276,7 +276,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE) {
       matrix_rows <- apply(table_exact,
                            MARGIN = 1,
                            FUN = prod)
-      size_matrix_rows <- matrix_rows > 1.0e+09
+      size_matrix_rows <- matrix_rows > 1.0e+08
       if(sum(size_matrix_rows) > 0) {
         exact_list_temp <- exact_list[!size_matrix_rows]
         change_lists <- exact_list[size_matrix_rows]
@@ -353,7 +353,7 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE) {
     matrix_rows <- apply(table_exact,
                          MARGIN = 1,
                          FUN = prod)
-    size_matrix_rows <- matrix_rows > 1.0e+09
+    size_matrix_rows <- matrix_rows > 1.0e+08
     if(sum(size_matrix_rows) > 0) {
       exact_list_temp <- exact_list[!size_matrix_rows]
       change_lists <- exact_list[size_matrix_rows]
