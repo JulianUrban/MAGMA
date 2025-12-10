@@ -271,7 +271,32 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE) {
 
   } else if(length(elements) == 3) {
 
+
       exact_list <- split.data.frame(input, input$exact)
+      matrix_rows <- apply(table_exact,
+                           MARGIN = 1,
+                           FUN = prod)
+      size_matrix_rows <- matrix_rows > 1.0e+09
+      if(sum(size_matrix_rows) > 0) {
+        exact_list_temp <- exact_list[!size_matrix_rows]
+        change_lists <- exact_list[size_matrix_rows]
+        changed_lists <- lapply(change_lists,
+                                function(list_temp) {
+                                  elements_list <- prod(table(list_temp$group))
+                                  number_split_groups <- ceiling(sqrt(elements_list / 1.0e+09)) + 1
+                                  if(number_split_groups == 1) {
+                                    number_split_groups <- 2
+                                  }
+                                  list_temp$random_group = floor(stats::runif(nrow(list_temp),
+                                                                          1, number_split_groups))
+                                  random_list <- split.data.frame(list_temp, list_temp$random_group)
+                                  return(random_list)
+                                })
+        exact_list <-  c(exact_list_temp,
+                         unlist(changed_lists,
+                                recursive = FALSE))
+        
+      }
 
       for(i in 1:length(exact_list)) {
 
@@ -324,7 +349,31 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE) {
   } else if(length(elements) == 4) {
 
 
-      exact_list <- split.data.frame(input, input$exact)
+    exact_list <- split.data.frame(input, input$exact)
+    matrix_rows <- apply(table_exact,
+                         MARGIN = 1,
+                         FUN = prod)
+    size_matrix_rows <- matrix_rows > 1.0e+09
+    if(sum(size_matrix_rows) > 0) {
+      exact_list_temp <- exact_list[!size_matrix_rows]
+      change_lists <- exact_list[size_matrix_rows]
+      changed_lists <- lapply(change_lists,
+                              function(list_temp) {
+                                elements_list <- prod(table(list_temp$group))
+                                number_split_groups <- ceiling(sqrt(elements_list / 1.0e+09)) + 1
+                                if(number_split_groups == 1) {
+                                  number_split_groups <- 2
+                                }
+                                list_temp$random_group = floor(stats::runif(nrow(list_temp),
+                                                                            1, number_split_groups))
+                                random_list <- split.data.frame(list_temp, list_temp$random_group)
+                                return(random_list)
+                              })
+      exact_list <-  c(exact_list_temp,
+                       unlist(changed_lists,
+                              recursive = FALSE))
+      
+    }
 
       for(i in 1:length(exact_list)) {
 
