@@ -66,7 +66,7 @@ mean_g_meta <- function(input, number_groups) {
   })
 
   #meta-analysis can not tak NAs as input. Defining starting value for analysis
-  starting_number <- min(which(!is.na(g[1, ])))
+  starting_number <- min(which(colSums(is.na(g)) == 0))
   #Create vector to storre mean_g
   mean_g <- matrix(NA,
                    ncol =  ncol(g),
