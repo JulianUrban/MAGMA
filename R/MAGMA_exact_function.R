@@ -107,7 +107,7 @@
 #' head(MAGMA_sim_data_gift_enrich_exact)
 #' }
 #'
-MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE, covs = NULL, weights = NULL) {
+MAGMA_exact <- function(Data, group, dist = NULL, exact, cores = 1, verbose = TRUE, covs = NULL, weights = NULL) {
 
   #Check for regular input
   if(!is.data.frame(Data) && !tibble::is_tibble(Data)) {

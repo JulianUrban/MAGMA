@@ -7,7 +7,7 @@
 MAGMA_exact(
   Data,
   group,
-  dist,
+  dist = NULL,
   exact,
   cores = 1,
   verbose = TRUE,
