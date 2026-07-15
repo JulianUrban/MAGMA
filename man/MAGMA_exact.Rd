@@ -28,6 +28,15 @@ parallel computation.}
 
 \item{verbose}{TRUE or FALSE indicating whether matching information should
 be printed to the console.}
+
+\item{covs}{Only relevant for Mahalanobis distance matching. Specifies the
+names of the variables for which Mahalanobis distance matching should be
+conducted as a character vector.}
+
+\item{weights}{Optional parameter for Mahalanobis distance matching. Should
+be a numeric vector with the same length as covs. These weights are used to
+estimate a weightes Mahalanobis distance. If not specified, all covariates
+are weighted equally.}
 }
 \value{
 Your input data frame of valid cases augmented with matching

@@ -35,6 +35,13 @@
 #' parallel computation.
 #' @param verbose TRUE or FALSE indicating whether matching information should
 #' be printed to the console.
+#' @param covs Only relevant for Mahalanobis distance matching. Specifies the
+#' names of the variables for which Mahalanobis distance matching should be
+#' conducted as a character vector.
+#' @param weights Optional parameter for Mahalanobis distance matching. Should
+#' be a numeric vector with the same length as covs. These weights are used to
+#' estimate a weightes Mahalanobis distance. If not specified, all covariates
+#' are weighted equally.
 #'
 #' @author Julian Urban
 #'
@@ -121,12 +128,18 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE) {
     stop("exact needs to be a character of length 1!")
   }
 
-  if(!is.character(dist) | length(dist) > 1) {
+  if((!is.character(dist) | length(dist) > 1) & !is.null(dist)) {
     stop("dist needs to be a character of length 1!")
   }
 
   if(!is.integer(cores) & !is.numeric(cores) | length(cores) > 1) {
     stop("cores needs to be a single integer number")
+  }
+  
+  
+  if(is.null(dist)) {
+    Data$dist_dummy <- ifelse(rowSums(is.na(Data[, covs])) == 0, 1, NA)
+    dist <- "dist_dummy"
   }
 
   max_cores <- parallel::detectCores()
@@ -173,20 +186,43 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE) {
   if(nrow(data) != nrow(Data)) {
     warning("Some cases were excluded due to missing values for group or distance variable. Matching proceeds with reduced dataset.")
   }
-
-  if(length(group) == 1) {
-    input <- data.frame(ID = data["ID"],
-                        group = data[group],
-                        distance = data[dist],
-                        exact = data[exact])
+  
+  if(is.null(covs)) {
+    if(length(group) == 1) {
+      input <- data.frame(data["ID"],
+                          data[group],
+                          exact = data[exact],
+                          data[dist])
+      colnames(input) <- c("ID", "group", "exact", "distance_ps")
+    } else {
+      if(length(dist) == 1) {
+        input <- data.frame(data["ID"],
+                            data["group_long"],
+                            exact = data[exact],
+                            data[dist])
+        colnames(input) <- c("ID", "group", "exact", "distance_ps")
+      } else {
+        input <- data.frame(data["ID"],
+                            data["group_long"],
+                            exact = data[exact],
+                            data[dist[1]],
+                            data[dist[2]])
+        colnames(input) <- c("ID", "group"," exact", "distance_ps_1", "distance_ps_2")
+      }
+    }
   } else {
-    input <- data.frame(ID = data["ID"],
-                        group = data["group_long"],
-                        distance = data[dist],
-                        exact = data[exact])
+    if(length(group) == 1) {
+      group_indicator <- group
+    } else {
+      group_indicator <- "group_long"
+    }
+    input <- data.frame(data["ID"],
+                        data[group_indicator],
+                        exact = data[exact],
+                        data[, covs])
+    colnames(input) <- c("ID", "group", "exact", covs)
   }
 
-  colnames(input) <- c("ID", "group", "distance_ps","exact")
   
   table_exact <- table(input$group, input$exact)
   if(sum(table_exact == 0) > 0) {
@@ -209,7 +245,13 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE) {
   #######################
   #distance estimation##
   ######################
-  var_ma <- as.numeric(stats::var(input$distance_ps))
+  if(is.null(covs)) {
+    var_ma <- as.numeric(stats::var(input$distance_ps))
+    name_ps <- "distance_ps"
+  } else {
+    var_ma <- cov(input[, covs])
+    name_ps <- covs
+  }
 
   elements <- split(input$group_id, input$group) %>%
     sapply(FUN = max)
@@ -228,21 +270,31 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE) {
 
     value_matrix <- build_value_matrix(group_list_temp, elements_temp)
 
-    means <- rowMeans(value_matrix)
-
-
-    distance_matrix <- distance_estimator(data = value_matrix,
-                                          means = means,
-                                          variance = var_ma,
-                                          cores = cores)
-    rm(value_matrix)
-    rm(means)
-    gc()
-
-    distance_mean <- rowMeans(distance_matrix)
-    distance_array <- array(data = distance_mean, dim = elements_temp)
-
-    rm(distance_matrix)
+    if(is.null(covs)) {
+      means <- rowMeans(value_matrix)
+      
+      distance_matrix <- distance_estimator(data = value_matrix,
+                                            means = means,
+                                            variance = var_ma,
+                                            cores = cores)
+      
+      distance_mean <- rowMeans(distance_matrix)
+      
+      rm(distance_matrix)
+      rm(value_matrix)
+      rm(means)
+    } else {
+      distance_mean <- distance_estimator_MD(data = value_matrix,
+                                             variance = var_ma,
+                                             cores = cores,
+                                             rows = length(elements_temp),
+                                             weights = weights)
+      rm(value_matrix)
+    }
+    
+    distance_array <- array(data = distance_mean,
+                            dim = elements_temp)
+    
     rm(distance_mean)
     gc()
 
@@ -287,8 +339,10 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE) {
                                   if(number_split_groups == 1) {
                                     number_split_groups <- 2
                                   }
-                                  list_temp$random_group = floor(stats::runif(nrow(list_temp),
-                                                                          1, number_split_groups))
+                                  list_temp$random_group <- sample(c(1:number_split_groups),
+                                                                   size = nrow(list_temp),
+                                                                   replace = TRUE) 
+                                  
                                   random_list <- split.data.frame(list_temp, list_temp$random_group)
                                   return(random_list)
                                 })
@@ -307,21 +361,30 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE) {
 
         value_matrix <- build_value_matrix(group_list_temp, elements_temp)
 
-        means <- rowMeans(value_matrix)
-
-
-        distance_matrix <- distance_estimator(data = value_matrix,
-                                              means = means,
-                                              variance = var_ma,
-                                              cores = cores)
+        if(is.null(covs)) {
+          means <- rowMeans(value_matrix)
+          
+          distance_matrix <- distance_estimator(data = value_matrix,
+                                                means = means,
+                                                variance = var_ma,
+                                                cores = cores)
+          
+          distance_mean <- rowMeans(distance_matrix)
+          rm(distance_matrix)
+          rm(means)
+          
+        } else {
+          
+          distance_mean <- distance_estimator_MD(data = value_matrix,
+                                                 variance = var_ma,
+                                                 cores = cores,     
+                                                 rows = length(elements_temp),
+                                                 weights = weights)
+        }
         rm(value_matrix)
-        rm(means)
-        gc()
-
-        distance_mean <- rowMeans(distance_matrix)
-        distance_array <- array(data = distance_mean, dim = elements_temp)
-
-        rm(distance_matrix)
+        
+        distance_array <- array(distance_mean, dim = elements_temp)
+        
         rm(distance_mean)
         gc()
 
@@ -364,8 +427,9 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE) {
                                 if(number_split_groups == 1) {
                                   number_split_groups <- 2
                                 }
-                                list_temp$random_group = floor(stats::runif(nrow(list_temp),
-                                                                            1, number_split_groups))
+                                list_temp$random_group = sample(c(1:number_split_groups),
+                                                                size = nrow(list_temp),
+                                                                replace = TRUE)
                                 random_list <- split.data.frame(list_temp, list_temp$random_group)
                                 return(random_list)
                               })
@@ -375,44 +439,53 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE) {
       
     }
 
-      for(i in 1:length(exact_list)) {
-
-        group_list_temp <- exact_list[[i]] %>%
-          split.data.frame(f = exact_list[[i]]$group)
-
-        elements_temp <- sapply(group_list_temp, nrow)
-
-        value_matrix <- build_value_matrix(group_list_temp, elements_temp)
-
+    for(i in 1:length(exact_list)) {
+      
+      group_list_temp <- exact_list[[i]] %>%
+        split.data.frame(f = exact_list[[i]]$group)
+      
+      elements_temp <- sapply(group_list_temp, nrow)
+      
+      value_matrix <- build_value_matrix(group_list_temp, elements_temp)
+      
+      if(is.null(covs)) {
         means <- rowMeans(value_matrix)
-
-
+        
         distance_matrix <- distance_estimator(data = value_matrix,
                                               means = means,
                                               variance = var_ma,
                                               cores = cores)
-        rm(value_matrix)
-        rm(means)
-        gc()
-
+        
         distance_mean <- rowMeans(distance_matrix)
-        distance_array <- array(data = distance_mean, dim = elements_temp)
-
         rm(distance_matrix)
-        rm(distance_mean)
-        gc()
-
-        if (i == 1) {
-          if(verbose) {
-          cat("\n", "Distance computation finished. Starting matching")
-          }
-        }
-
-        group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
-        rm(distance_array)
-        gc()
-        exact_list[[i]] <- do.call(rbind.data.frame, group_list_temp)
+        rm(means)
+        
+      } else {
+        
+        distance_mean <- distance_estimator_MD(data = value_matrix,
+                                               variance = var_ma,
+                                               cores = cores,     
+                                               rows = length(elements_temp),
+                                               weights = weights)
       }
+      rm(value_matrix)
+      
+      distance_array <- array(distance_mean, dim = elements_temp)
+      
+      rm(distance_mean)
+      gc()
+      
+      if (i == 1) {
+        if(verbose) {
+          cat("\n", "Distance computation finished. Starting matching")
+        }
+      }
+      
+      group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
+      rm(distance_array)
+      gc()
+      exact_list[[i]] <- do.call(rbind.data.frame, group_list_temp)
+    }
       data_temp <- do.call(rbind.data.frame, exact_list) 
       data_temp <- data_temp[order(data_temp$distance, data_temp$step),]
       data_temp$step <- ceiling(c(1:nrow(input))/4)

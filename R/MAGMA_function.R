@@ -158,7 +158,6 @@ distance_estimator_MD <- function(data, variance, cores, rows, weights = NULL) {
 #' @import tidyverse parallel doParallel foreach dplyr tibble tidyselect
 #' @importFrom purrr set_names
 #' @importFrom stats var
-#' @importFrom stats runif
 #' @importFrom rlang sym
 #' 
 #' @return Your input data frame augmented with matching
@@ -212,6 +211,12 @@ MAGMA <- function(Data, group, dist = NULL, cores = 1, verbose = TRUE, covs = NU
 
   if(!is.character(group) | length(group) > 2) {
     stop("group needs to be a character of length 1 or a character vector of length 2!")
+  }
+  
+  if(length(group) == 2) {
+    if(length(table(Data[[group[1]]])) > 2 | length(table(Data[[group[2]]])) > 2 ) {
+      stop("For two factor designs only 2 levels per factor are currently possible!")
+    }
   }
 
   if((!is.character(dist) | length(dist) > 1) & !is.null(dist)) {
@@ -678,8 +683,10 @@ if(verbose) {
       }
 
 
-      input <- input$random_group <- floor(stats::runif(nrow(input),
-                                                        1, number_split_groups))
+      input$random_group <- sample(c(1:number_split_groups),
+                                   size = nrow(input),
+                                   replace = TRUE) 
+
       random_list <- split.data.frame(input, input$random_group)
 
       for(i in 1:length(random_list)) {
