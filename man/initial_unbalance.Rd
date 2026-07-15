@@ -10,7 +10,8 @@ initial_unbalance(
   covariates,
   verbose = TRUE,
   covariates_ordinal = NULL,
-  covariates_nominal = NULL
+  covariates_nominal = NULL,
+  round = 2
 )
 }
 \arguments{
@@ -35,6 +36,8 @@ covariates of interest.}
 
 \item{covariates_nominal}{A character vector listing the names of all nominal
 covariates of interest.}
+
+\item{round}{A integer defining the number of digits for rounding results}
 }
 \value{
 A numeric vector of length 4 containing the balance

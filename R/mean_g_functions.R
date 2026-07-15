@@ -12,7 +12,7 @@
 #' @import tidyverse
 #' @importFrom purrr set_names
 #' @return A vector of J's in dependency of sample size.
-#'
+#' @noRd
 #'
 J_group_size <- function(group_size) {
   N <- c(1:group_size)
@@ -39,7 +39,7 @@ J_group_size <- function(group_size) {
 #' @importFrom rlang is_list
 #' 
 #' @return A vector containing the mean g in dependency of sample size.
-#'
+#' @noRd
 #'
 mean_g_meta <- function(input, number_groups) {
     if (!is.numeric(number_groups) | number_groups < 2) {

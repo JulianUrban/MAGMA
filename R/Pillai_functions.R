@@ -41,6 +41,7 @@ Pillai_DV <- function(data, input) {
 #' @return A vector containing Pillai's Trace in dependency of sample size. If two
 #' grouping variables were specified, the output is a matrix containing
 #' Pillai's Trace for both IVs and their ineraction.
+#' @noRd
 #'
 #'
 Pillai_iterativ <- function(da, gr, co, st) {

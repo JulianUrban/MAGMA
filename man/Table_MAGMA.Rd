@@ -4,7 +4,7 @@
 \alias{Table_MAGMA}
 \title{Table_MAGMA}
 \usage{
-Table_MAGMA(Balance, filename = NULL, verbose = TRUE)
+Table_MAGMA(Balance, filename = NULL, verbose = TRUE, round = 2)
 }
 \arguments{
 \item{Balance}{A result of \code{\link{Balance_MAGMA}} Compare the function
@@ -15,6 +15,9 @@ the resulting Word document with the table should have.}
 
 \item{verbose}{TRUE or FALSE indicating whether matching information should
 be printed to the console.}
+
+\item{covariates_nominal}{A character vector listing the names of all nominal
+covariates of interest.}
 }
 \value{
 A 4x5 APA table showing the four balance

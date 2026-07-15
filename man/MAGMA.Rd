@@ -4,7 +4,15 @@
 \alias{MAGMA}
 \title{MAGMA}
 \usage{
-MAGMA(Data, group, dist, cores = 1, verbose = TRUE)
+MAGMA(
+  Data,
+  group,
+  dist = NULL,
+  cores = 1,
+  verbose = TRUE,
+  covs = NULL,
+  weights = NULL
+)
 }
 \arguments{
 \item{Data}{A data frame or tibble containing at least your grouping and
@@ -17,14 +25,23 @@ Design) is possible by specifying group as a character vector with a length
 of two. In this case, each or the 2 grouping variables can only have two
 levels.}
 
-\item{dist}{A character specifying the name of your distance
-variable in data.}
+\item{dist}{A character specifying the name of the propensity score
+in data.}
 
 \item{cores}{An integer defining the number of cores used for
 parallel computation.}
 
 \item{verbose}{TRUE or FALSE indicating whether matching information should
 be printed to the console.}
+
+\item{covs}{Only relevant for Mahalanobis distance matching. Specifies the
+names of the variables for which Mahalanobis distance matching should be
+conducted as a character vector.}
+
+\item{weights}{Optional parameter for Mahalanobis distance matching. Should
+be a numeric vector with the same length as covs. These weights are used to
+estimate a weightes Mahalanobis distance. If not specified, all covariates
+are weighted equally.}
 }
 \value{
 Your input data frame augmented with matching

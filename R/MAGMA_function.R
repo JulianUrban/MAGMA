@@ -18,7 +18,7 @@
 #' @importFrom stats mahalanobis
 #' 
 #' @return A matrix of distance for each case of each possible match.
-#'
+#' @noRd
 #'
 distance_estimator <- function(data, means, variance, cores, inp = NULL) {
   cl <- parallel::makeCluster(cores)
@@ -48,7 +48,7 @@ distance_estimator <- function(data, means, variance, cores, inp = NULL) {
 #' @import parallel doParallel foreach
 #' 
 #' @return A matrix of distance for each case of each possible match.
-#'
+#' @noRd
 #'
 distance_estimator_MD <- function(data, variance, cores, rows, weights = NULL) {
   if(cores > 1) {

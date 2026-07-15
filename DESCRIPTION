@@ -19,7 +19,6 @@ Imports: parallel (>= 4.2), doParallel (>= 1.0.17), foreach (>= 1.5.2), metafor 
 LazyData: true
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
 Suggests: 
     knitr,
     rmarkdown
@@ -27,5 +26,4 @@ VignetteBuilder: knitr
 Author: Julian Urban [aut, cre], Markus D. Feuchter [aut], Vsevolod Scherrer [aut], Moritz L. Breit [aut], Franzis Preckel [aut]
 Maintainer: Julian Urban <julian.urban@uni-potsdam.de>
 BugReports: https://github.com/JulianUrban/MAGMA/issues
-
-
+Config/roxygen2/version: 8.0.0

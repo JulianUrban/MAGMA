@@ -6,7 +6,8 @@
 \usage{
 Plot_MAGMA(
   Balance,
-  criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio")
+  criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio"),
+  print = TRUE
 )
 }
 \arguments{
@@ -15,6 +16,8 @@ Plot_MAGMA(
 
 \item{criterion}{A character vector specifying for which balance criteria
 a plot should be created. Default is all criteria.}
+
+\item{print}{TRUE or FALSE indicating whether plots should be printed.}
 }
 \value{
 R Plots showing the balance trend over sample size.
@@ -39,7 +42,7 @@ covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic
 Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data[MAGMA_sim_data$step_gifted < 150, ],
                                 group = "gifted_support",
                                 covariates = covariates_vector,
-                                step = "step_gifted") 
+                                step = "step_gifted")
 
 Plot_MAGMA(Balance = Balance_gifted,
            criterion = "Adj_d_ratio") #Using default to plot all criteria
