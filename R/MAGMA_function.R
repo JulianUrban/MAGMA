@@ -381,7 +381,9 @@ if(verbose) {
     } else if(length(elements) == 3) {
 
       if (prod(elements) < 1.0e+09) {
-        value_matrix <- build_value_matrix(group_list, elements)
+        value_matrix <- build_value_matrix(group_list,
+                                           elements,
+                                           name_ps = name_ps)
 
         if(is.null(covs)) {
           means <- rowMeans(value_matrix)
@@ -627,7 +629,9 @@ if(verbose) {
 
     if (prod(elements) < 1.0e+09) {
 
-      value_matrix <- build_value_matrix(group_list, elements)
+      value_matrix <- build_value_matrix(group_list,
+                                         elements,
+                                         name_ps = name_ps)
 
       means <- rowMeans(value_matrix)
 
@@ -636,7 +640,9 @@ if(verbose) {
                                               variance = var_ma[1],
                                               cores = cores)
 
-      value_matrix <- build_value_matrix(group_list, elements)
+      value_matrix <- build_value_matrix(group_list,
+                                         elements,
+                                         name_ps = name_ps)
 
       means <- rowMeans(value_matrix)
 
@@ -747,6 +753,9 @@ if(verbose) {
                     all.x = TRUE)
       if(verbose) {
       cat("\n", "Matching complete!")
+      }
+      if(is.null(dist)) {
+        data$dist_dummy <- NULL
       }
       return(data)
     }

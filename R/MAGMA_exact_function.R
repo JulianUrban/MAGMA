@@ -268,7 +268,9 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE) {
 
     elements_temp <- sapply(group_list_temp, nrow)
 
-    value_matrix <- build_value_matrix(group_list_temp, elements_temp)
+    value_matrix <- build_value_matrix(group_list_temp,
+                                       elements_temp,
+                                       name_ps = name_ps)
 
     if(is.null(covs)) {
       means <- rowMeans(value_matrix)
@@ -359,7 +361,9 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE) {
 
         elements_temp <- sapply(group_list_temp, nrow)
 
-        value_matrix <- build_value_matrix(group_list_temp, elements_temp)
+        value_matrix <- build_value_matrix(group_list_temp,
+                                           elements_temp,
+                                           name_ps = name_ps)
 
         if(is.null(covs)) {
           means <- rowMeans(value_matrix)
@@ -446,7 +450,9 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE) {
       
       elements_temp <- sapply(group_list_temp, nrow)
       
-      value_matrix <- build_value_matrix(group_list_temp, elements_temp)
+      value_matrix <- build_value_matrix(group_list_temp,
+                                         elements_temp,
+                                         name_ps = name_ps)
       
       if(is.null(covs)) {
         means <- rowMeans(value_matrix)
@@ -499,6 +505,10 @@ MAGMA_exact <- function(Data, group, dist, exact, cores = 1, verbose = TRUE) {
   }
   if(verbose) {
   cat("\n", "Matching complete!")
+  }
+  
+  if(is.null(dist)) {
+    data$dist_dummy <- NULL
   }
   return(data)
 }
