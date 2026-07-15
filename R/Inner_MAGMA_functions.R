@@ -94,7 +94,7 @@ match_iterative <- function(distance_input, output_list, rep_elements) {
 #'
 #' @param input_list Data with PS
 #' @param rep_element sample sizes per group
-#' @param name_ps names of PS in data
+#' @param name_ps names of PS or covariates in data
 #'
 #' @import tidyverse dplyr 
 #' @importFrom purrr map
@@ -103,34 +103,64 @@ match_iterative <- function(distance_input, output_list, rep_elements) {
 #'
 #'
 build_value_matrix <- function(input_list, rep_element, name_ps = "distance_ps") {
-  value_matrix <- matrix(NA, nrow = prod(rep_element), ncol = length(rep_element))
-  if(length(rep_element) == 2) {
-
-    value_matrix[, 1] <- rep(input_list[[1]][[name_ps]], rep_element[2])
-    value_matrix[, 2] <- purrr::map(input_list[[2]][[name_ps]], rep, rep_element[1]) %>%
-      unlist()
-
-  } else if(length(rep_element) == 3) {
-
-    value_matrix[, 1] <- rep(input_list[[1]][[name_ps]], rep_element[2] * rep_element[3])
-    value_matrix[, 2] <- purrr::map(input_list[[2]][[name_ps]], rep, rep_element[1]) %>%
-      unlist() %>%
-      rep(times = rep_element[3])
-    value_matrix[, 3] <- purrr::map(input_list[[3]][[name_ps]], rep, rep_element[1] * rep_element[2]) %>%
-      unlist()
-
-  } else if(length(rep_element) == 4) {
-
-    value_matrix[, 1] <- rep(input_list[[1]][[name_ps]], rep_element[2] * rep_element[3] * rep_element[4])
-    value_matrix[, 2] <- purrr::map(input_list[[2]][[name_ps]], rep, rep_element[1]) %>%
-      unlist() %>%
-      rep(times = rep_element[3] * rep_element[4])
-    value_matrix[, 3] <- purrr::map(input_list[[3]][[name_ps]], rep, rep_element[1] * rep_element[2]) %>%
-      unlist() %>%
-      rep(times = rep_element[4])
-    value_matrix[, 4] <- purrr::map(input_list[[4]][[name_ps]], rep, rep_element[1] * rep_element[2] * rep_element[3]) %>%
-      unlist()
-
+  if(length(name_ps) == 1) {
+    value_matrix <- matrix(NA, nrow = prod(rep_element), ncol = length(rep_element))
+    if(length(rep_element) == 2) {
+      
+      value_matrix[, 1] <- rep(input_list[[1]][[name_ps]], rep_element[2])
+      value_matrix[, 2] <- purrr::map(input_list[[2]][[name_ps]], rep, rep_element[1]) %>%
+        unlist()
+      
+    } else if(length(rep_element) == 3) {
+      
+      value_matrix[, 1] <- rep(input_list[[1]][[name_ps]], rep_element[2] * rep_element[3])
+      value_matrix[, 2] <- purrr::map(input_list[[2]][[name_ps]], rep, rep_element[1]) %>%
+        unlist() %>%
+        rep(times = rep_element[3])
+      value_matrix[, 3] <- purrr::map(input_list[[3]][[name_ps]], rep, rep_element[1] * rep_element[2]) %>%
+        unlist()
+      
+    } else if(length(rep_element) == 4) {
+      
+      value_matrix[, 1] <- rep(input_list[[1]][[name_ps]], rep_element[2] * rep_element[3] * rep_element[4])
+      value_matrix[, 2] <- purrr::map(input_list[[2]][[name_ps]], rep, rep_element[1]) %>%
+        unlist() %>%
+        rep(times = rep_element[3] * rep_element[4])
+      value_matrix[, 3] <- purrr::map(input_list[[3]][[name_ps]], rep, rep_element[1] * rep_element[2]) %>%
+        unlist() %>%
+        rep(times = rep_element[4])
+      value_matrix[, 4] <- purrr::map(input_list[[4]][[name_ps]], rep, rep_element[1] * rep_element[2] * rep_element[3]) %>%
+        unlist()
+      
+    }
+  } else {
+    value_matrix <- matrix(NA, nrow = prod(rep_element), ncol = length(name_ps) * length(rep_element))
+    if(length(rep_element) == 2) {
+      
+      value_matrix[, c(1:length(name_ps))] <- as.matrix(input_list[[1]][, name_ps][rep(seq_len(nrow(input_list[[1]][, name_ps])), times = rep_element[2]), ])
+      
+      value_matrix[, c((length(name_ps) + 1):(2 * length(name_ps)))] <- as.matrix(input_list[[2]][, name_ps][rep(seq_len(nrow(input_list[[2]][, name_ps])), each = rep_element[1]), ])
+      
+    } else if(length(rep_element) == 3) {
+      
+      value_matrix[, c(1:length(name_ps))] <- as.matrix(input_list[[1]][, name_ps][rep(seq_len(nrow(input_list[[1]][, name_ps])), times = rep_element[2] * rep_element[3]), ])
+      
+      value_matrix[, c((length(name_ps) + 1):(2 * length(name_ps)))] <- as.matrix(input_list[[2]][, name_ps][rep(seq_len(nrow(input_list[[2]][name_ps])), each = rep_element[1], times = rep_element[3]), ])
+      
+      value_matrix[, c((2 * length(name_ps) + 1):(3 * length(name_ps)))] <- as.matrix(input_list[[3]][, name_ps][rep(seq_len(nrow(input_list[[3]][, name_ps])), each = rep_element[1] * rep_element[2]), ])
+      
+    } else if(length(rep_element) == 4) {
+      
+      value_matrix[, c(1:length(name_ps))] <- as.matrix(input_list[[1]][, name_ps][rep(seq_len(nrow(input_list[[1]][, name_ps])), times = rep_element[2] * rep_element[3] * rep_element[4]), ])
+      
+      value_matrix[, c((length(name_ps) + 1):(2 * length(name_ps)))] <- as.matrix(input_list[[2]][, name_ps][rep(seq_len(nrow(input_list[[2]][, name_ps])), each = rep_element[1], times = rep_element[3] * rep_element[4]), ])
+      
+      value_matrix[, c((2 * length(name_ps) + 1):(3 * length(name_ps)))] <- as.matrix(input_list[[3]][, name_ps][rep(seq_len(nrow(input_list[[3]][, name_ps])), each = rep_element[1] * rep_element[2], times = rep_element[4]), ])
+      
+      value_matrix[, c((3 * length(name_ps) + 1):(4 * length(name_ps)))] <- as.matrix(input_list[[4]][, name_ps][rep(seq_len(nrow(input_list[[4]][, name_ps])), each = rep_element[1] * rep_element[2] * rep_element[3]), ])
+      
+    }
   }
+  
   return(value_matrix)
 }
