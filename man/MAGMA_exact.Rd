@@ -4,7 +4,16 @@
 \alias{MAGMA_exact}
 \title{MAGMA_exact}
 \usage{
-MAGMA_exact(Data, group, dist, exact, cores = 1, verbose = TRUE)
+MAGMA_exact(
+  Data,
+  group,
+  dist,
+  exact,
+  cores = 1,
+  verbose = TRUE,
+  covs = NULL,
+  weights = NULL
+)
 }
 \arguments{
 \item{Data}{A data frame or tibble containing at least your grouping and
