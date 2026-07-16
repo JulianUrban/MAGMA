@@ -76,8 +76,6 @@ distance_estimator_MD <- function(data, variance, cores, rows, weights = NULL) {
                                                         }
                                                         weight_mat <- diag(weights)
                                                         
-                                                        centered_temp %*% solve(variance) * centered_temp
-                                                        
                                                         mean(sqrt(rowSums(centered_temp %*% weight_mat %*% solve(variance) %*% weight_mat * centered_temp)))
                                                       })
                                         }
@@ -96,8 +94,6 @@ distance_estimator_MD <- function(data, variance, cores, rows, weights = NULL) {
                                   weights <- rep(1, length(means))
                                 }
                                 weight_mat <- diag(weights)
-                                
-                                centered_temp %*% solve(variance) * centered_temp
                                 
                                 mean(sqrt(rowSums(centered_temp %*% weight_mat %*% solve(variance) %*% weight_mat * centered_temp)))
                                 
