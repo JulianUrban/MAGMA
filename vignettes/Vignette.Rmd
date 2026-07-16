@@ -51,7 +51,7 @@ str(MAGMA_sim_data)
 
 # Two-Group Example
 
-  This is a fictitious two-group example. The independent variable (i.e., the treatment) is `gifted_support`. We are interested in how receiving giftedness support affects college GPA. However, other variables, such as intelligence, previous achievement, and motivation are associated with both giftedness support and college GPA. This is because gifted students were chosen to participate in this support program based on their previous achievement or intelligence test results. Therefore, we aim to reduce differences on these covariates between the two groups by PSM. For this example, the covariates are *high school GPA*, *intelligence*, *motivation*, *gender*, and whether at least one parent has an *academic background*. Note that MAGMA can only consider metric and binary variables for balance estimation.
+  This is a fictitious two-group example. The independent variable (i.e., the treatment) is `gifted_support`. We are interested in how receiving giftedness support affects college GPA. However, other variables, such as intelligence, previous achievement, and motivation are associated with both giftedness support and college GPA. This is because gifted students were chosen to participate in this support program based on their previous achievement or intelligence test results. Therefore, we aim to reduce differences on these covariates between the two groups by PSM. For this example, the covariates are *high school GPA*, *intelligence*, *motivation*, *gender*, and whether at least one parent has an *academic background*. Note that MAGMA can theoretically also consider ordinal and categorical variables for balance estimation.
 
 ```{r covariates_gifted}
 covariates_gifted <- c("GPA_school",
@@ -61,9 +61,9 @@ covariates_gifted <- c("GPA_school",
                        "gender")
 ```
 
-  Defining all covariates beforehand (see above)nfacilitates estimations of descriptive statistics, standardized mean differences, and hence, the initial unbalance across all cases of our dataset. To do this we can use the functions `MAGMA_desc ` and `initial_unbalance`. The first function – `MAGMA_desc ` – computes sample size, mean, and standard deviation of all covariates for the overall sample and the two groups. Moreover, it estimates the standardized mean differences using the pooled standard deviation (i.e., Cohen’s *d*) between the two groups. This function needs the dataset (`MAGMA_sim_data`), the grouping variable (`gifted_support`), and all binary and metric covariates of interest (`covariates_gifted`). The function results in a table that contains these statistics for each covariate.
+  Defining all covariates beforehand (see above) facilitates estimations of descriptive statistics, standardized mean differences, and hence, the initial unbalance across all cases of our dataset. To do this we can use the functions `MAGMA_desc ` and `initial_unbalance`. The first function – `MAGMA_desc ` – computes sample size, mean, and standard deviation of all covariates for the overall sample and the two groups. Moreover, it estimates the standardized mean differences using the pooled standard deviation (i.e., Cohen’s *d*) between the two groups. This function needs the dataset (`MAGMA_sim_data`), the grouping variable (`gifted_support`), and all binary and metric covariates of interest (`covariates_gifted`). If ordinal and nominal covariates should also be considered, they need to be specified using the arguments `covariates_ordinal` and `covariates_nominal`respectively. In that case, statistics for the central tendency, dispersion, and the effect sizes are estimated respecting the scale level of the variables. The function results in a table that contains these statistics for each covariate.
   
-  The second function – `initial_unbalance` - estimates the four balance criteria of our balance framework. These criteria are (1) *Pillai's Trace*, which estimates group differences across all variables, (2) *d-ratio*, which expresses the percentage of how many pairwise effects are negligible, (3) *mean g*, which specifies the average pariwise effect using meta-analytical techniques, and (4) *adjusted d-ratio*, an adjusted version of (2) that respects that effects are point estimates. For more information, see Feuchter et al. (2022). The function `initial_unbalance` indicates the unbalance in the sample before matching. To this end, it is necessary to define the dataset (`MAGMA_sim_data`), the grouping variable (`gifted_support`), and all binary and metric covariates of interest (`covariates_gifted`). This results in a vector of length four - the four balance criteria.
+  The second function – `initial_unbalance` - estimates the four balance criteria of our balance framework. These criteria are (1) *Pillai's Trace*, which estimates group differences across all variables, (2) *d-ratio*, which expresses the percentage of how many pairwise effects are negligible, (3) *mean g*, which specifies the average pariwise effect using meta-analytical techniques, and (4) *adjusted d-ratio*, an adjusted version of (2) that respects that effects are point estimates. For more information, see Feuchter et al. (2022). The function `initial_unbalance` indicates the unbalance in the sample before matching. To this end, it is necessary to define the dataset (`MAGMA_sim_data`), the grouping variable (`gifted_support`), and all binary and metric covariates of interest (`covariates_gifted`). If ordinal and nominal covariates should also be considered, they need to be specified using the arguments `covariates_ordinal` and `covariates_nominal`respectively.  This results in a vector of length four - the four balance criteria.
 
 ```{r unbalance_gifted}
 # Estimate overall and group specific descriptive statistics and Cohen’s d 
@@ -115,7 +115,7 @@ str(MAGMA_sim_data_gifted)
   
   `Balance_MAGMA` returns a list of length four. In the case of a univariate grouping variable, this list contains three numeric vectors and one list of length two. The three vectors comprise Pillai's Trace, mean *g*, and adjusted *d*-ratio over the iteratively increased sample size. The list of length two includes one numeric vector, *d*-ratio, and one matrix. The matrix gives all pairwise *d*'s for all covariates. Both *d*-ratio and pairwise *d*'s are also estimated iteratively over the increasing sample sizes. The example below estimates the balance for the matching solution and shows the balance criteria and pairwise effects for a group sample size of *n* = 100.
   
-  This function is augmented by the function `Balance_extract`. This function extracts the balance criteria (`effects = FALSE`) or the pairwise effects (`effects = TRUE`) for a specific sample size per group (`samplesize`) from the results of `Balance_MAGMA`. It returns a vector containing the balance criteria or the pairwise effects respectively.
+  This function is augmented by the function `Balance_extract`. This function extracts the balance criteria (`effects = FALSE`) or the pairwise effects (`effects = TRUE`) for a specific sample size per group (`samplesize`) from the results of `Balance_MAGMA`. If ordinal and nominal covariates should also be considered, they need to be specified using the arguments `covariates_ordinal` and `covariates_nominal`respectively. It returns a vector containing the balance criteria or the pairwise effects respectively.
 
 ```{r Balance_standard_2_group_matching}
 # Estimating the four balance criteria iteratively over possible sample sizes
@@ -147,7 +147,8 @@ Balance_100_effects
 ```{r Plots_standard_2_group_matching, fig.height = 5, fig.width = 7.5}
 # Plotting balance trend over sample size
 Plot_MAGMA(Balance = Balance_gifted,
-           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio"))
+           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio"),
+           print = FALSE)
 ```
 
   Besides the trend over sample size, the "optimized" values for each criterion are of interest. We interpret a criterions as optimized as it takes its lowest (Pillai's Trace and mean *g*) or highest (*d*-ratio and adjusted *d*-ratio) value and having the highest sample size with this value. The function `Table_MAGMA` extracts these values. With the optional argument `filename` the function can return these values in a table in an extra file. More specifically it returns a 4x5 table. In each of the four rows one balance criterion has its "optimal" value. The five columns present the sample size per group for the matching solution where the respective criterion is optimal, and the four balance criteria values for this sample size per group. In addition to creating a file with a table, the table is printed to the console, too.
@@ -160,7 +161,7 @@ Table_MAGMA(Balance = Balance_gifted,
 ```
 
 ### Post-Matching Statistics
-  After the decision for a final matching model, we suggest reporting the descriptive statistics and pairwise effects of the selected model. To do this, we can use the same function as we used for reporting pre-matching statistics (`MAGMA_desc`). Additional to the parameters we specified above (`Data`, `covariates`, and `group`), we need to name the step variable (`step_var`) and the desired sample size per group (`step_num`). As above, this function results in a table with descriptive statistics and pairwise effects (Cohen’s d) of all covariates.
+  After the decision for a final matching model, we suggest reporting the descriptive statistics and pairwise effects of the selected model. To do this, we can use the same function as we used for reporting pre-matching statistics (`MAGMA_desc`). Additional to the parameters we specified above (`Data`, `covariates`, and `group`), we need to name the step variable (`step_var`) and the desired sample size per group (`step_num`). If ordinal and nominal covariates should also be considered, they need to be specified using the arguments `covariates_ordinal` and `covariates_nominal`respectively. As above, this function results in a table with descriptive statistics and pairwise effects (Cohen’s d) of all covariates.
 
 ```{r post_matching_standard_2}
 # Computing descriptive statistics and pairwise effects for 100 cases per group
@@ -215,7 +216,8 @@ Balance_100_effects_exact
 
 # Plotting trend over increasing sample size
 Plot_MAGMA(Balance = Balance_gifted_exact,
-           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio")) 
+           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio"),
+           print = FALSE) 
 
 # Creating table
 Table_MAGMA(Balance = Balance_gifted_exact,
@@ -318,7 +320,8 @@ Balance_100_tar_effects
 
 # Plotting trend over increasing sample size
 Plot_MAGMA(Balance = Balance_tar,
-           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio")) 
+           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio"),
+           print = FALSE) 
 
 # Creating table
 Table_MAGMA(Balance = Balance_tar,
@@ -382,7 +385,8 @@ Balance_100_tar_effects_exact
 
 # Plotting trend over increasing sample size
 Plot_MAGMA(Balance = Balance_tar_exact,
-           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio")) #Could be omitted
+           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio"),
+           print = FALSE) 
 
 # Creating table
 Table_MAGMA(Balance = Balance_tar_exact,
@@ -494,7 +498,8 @@ Balance_100_2x2_effects
 
 # Plotting trend over increasing sample size
 Plot_MAGMA(Balance = Balance_2x2,
-           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio")) 
+           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio"),
+           print = FALSE) 
 
 # Creating table
 Table_MAGMA(Balance = Balance_2x2,
@@ -558,7 +563,8 @@ Balance_100_2x2_effects_exact
 
 # Plotting trend over increasing sample size
 Plot_MAGMA(Balance = Balance_2x2_exact,
-           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio")) #Could be omitted
+           criterion = c("Pillai", "d_ratio", "mean_g", "Adj_d_ratio"),
+           print = FALSE) 
 
 # Creating table
 Table_MAGMA(Balance = Balance_2x2_exact,
@@ -587,37 +593,37 @@ descs_2x2_post %>%
 
 
 # References
-Austin, P. C. (2014). A comparison of 12 algorithms for matching on the propensity score. Statistics in Medicine, 33(6), 1057–1069. <https://doi.org/10.1002/sim.6004>
+Austin, P. C. (2014). A comparison of 12 algorithms for matching on the propensity score. *Statistics in Medicine, 33*(6), 1057–1069. <https://doi.org/10.1002/sim.6004>
 
-Feuchter, M. D., Urban, J., Scherrer, V., Breit, M. L., & Preckel, F. (2022). Introduction and Demonstration of the Many-Group Matching (MAGMA)-Algorithm: Matching Solutions for Two or More Groups. <https://doi.org/10.17605/OSF.IO/AEDXB>
+Feuchter, M. D., Urban, J., Scherrer, V., Breit, M. L., & Preckel, F. (2022). *Introduction and Demonstration of the Many-Group Matching (MAGMA)-Algorithm: Matching Solutions for Two or More Groups*. <https://doi.org/10.17605/OSF.IO/AEDXB>
 
 Fisher, Z., Tipton, E., & Zhipeng, H. (2023). _robumeta: Robust Variance Meta-Regression_. R package version 2.1,
   <https://CRAN.R-project.org/package=robumeta>.
 
-Imai, K., & van Dyk, D. A. (2004). Causal Inference With General Treatment Regimes. Journal of the American Statistical Association, 99(467), 854–866. <https://doi.org/10.1198/016214504000001187>
+Imai, K., & van Dyk, D. A. (2004). Causal Inference With General Treatment Regimes. *Journal of the American Statistical Association, 99*(467), 854–866. <https://doi.org/10.1198/016214504000001187>
 
-Jacovidis, J. N. (2017). Evaluating the performance of propensity score matching methods: A simulation study [Doctoral Dissertation]. James Madison University.
+Jacovidis, J. N. (2017). *Evaluating the performance of propensity score matching methods: A simulation study* [Doctoral Dissertation]. James Madison University.
 
-Li, M. (2013). Using the Propensity Score Method to Estimate Causal Effects. Organizational Research Methods, 16(2), 188–226. <https://doi.org/10.1177/1094428112447816>
+Li, M. (2013). Using the Propensity Score Method to Estimate Causal Effects. *Organizational Research Methods, 16*(2), 188–226. <https://doi.org/10.1177/1094428112447816>
 
-McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., & Burgette, L. F. (2013). A tutorial on propensity score estimation for multiple treatments using generalized boosted models. Statistics in Medicine, 32(19), 3388–3414. <https://doi.org/10.1002/sim.5753>
+McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., & Burgette, L. F. (2013). A tutorial on propensity score estimation for multiple treatments using generalized boosted models. *Statistics in Medicine, 32*(19), 3388–3414. <https://doi.org/10.1002/sim.5753>
 
 Pastore, M., Loro, P.A.D., Mingione, M., Calcagni, A. (2022). _overlapping: Estimation of Overlapping in Empirical Distributions_. R package version
  2.1. <https://CRAN.R-project.org/package=overlapping>
  
-Powell, M. G., Hull, D. M., & Beaujean, A. A. (2020). Propensity Score Matching for Education Data: Worked Examples. The Journal of Experimental Education, 88(1), 145–164. <https://doi.org/10.1080/00220973.2018.1541850>
+Powell, M. G., Hull, D. M., & Beaujean, A. A. (2020). Propensity Score Matching for Education Data: Worked Examples. The *Journal of Experimental Education, 88*(1), 145–164. <https://doi.org/10.1080/00220973.2018.1541850>
 
-Ridgeway, G., McCaffrey, D. F., Morral, A. R., Cefalu, M., Burgette, L. F., Pane, J. D., & Griffin, B. A. (2015). Toolkit for Weighting and Analysis of Nonequivalent Groups: A tutorial for the twang package. Rand. 
+Ridgeway, G., McCaffrey, D. F., Morral, A. R., Cefalu, M., Burgette, L. F., Pane, J. D., & Griffin, B. A. (2015). *Toolkit for Weighting and Analysis of Nonequivalent Groups: A tutorial for the twang package.* Rand. 
 
-Rosenbaum, P. R., & Rubin, D. B. (1983). The central role of the propensity score in observational studies for causal effects. Biometrika, 70(1), 41–55. <https://doi.org/10.1093/biomet/70.1.41>
+Rosenbaum, P. R., & Rubin, D. B. (1983). The central role of the propensity score in observational studies for causal effects. *Biometrika, 70*(1), 41–55. <https://doi.org/10.1093/biomet/70.1.41>
 
-Rosenbaum, P. R., & Rubin, D. B. (1985). Constructing a Control Group Using Multivariate Matched Sampling Methods That Incorporate the Propensity Score. The American Statistician, 39(1), 33–38.
+Rosenbaum, P. R., & Rubin, D. B. (1985). Constructing a Control Group Using Multivariate Matched Sampling Methods That Incorporate the Propensity Score. *The American Statistician, 39*(1), 33–38.
 
-Stuart, E. A. (2010). Matching methods for causal inference: A review and a look forward. Statistical Science : A Review Journal of the Institute of Mathematical Statistics, 25(1), 1–21. <https://doi.org/10.1214/09-STS313>
+Stuart, E. A. (2010). Matching methods for causal inference: A review and a look forward. Statistical Science : A Review *Journal of the Institute of Mathematical Statistics, 25*(1), 1–21. <https://doi.org/10.1214/09-STS313>
 
-Thoemmes, F. J., & Kim, E. S. (2011). A Systematic Review of Propensity Score Methods in the Social Sciences. Multivariate Behavioral Research, 46(1), 90–118. <https://doi.org/10.1080/00273171.2011.540475>
+Thoemmes, F. J., & Kim, E. S. (2011). A Systematic Review of Propensity Score Methods in the Social Sciences. *Multivariate Behavioral Research, 46*(1), 90–118. <https://doi.org/10.1080/00273171.2011.540475>
 
-Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. Journal of Statistical Software, 36(3), 1-48.
+Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. *Journal of Statistical Software, 36*(3), 1-48.
   <https://doi.org/10.18637/jss.v036.i03>
 
 

@@ -441,7 +441,6 @@ if(verbose) {
         
         random_list <- lapply(seq_along(random_list),
                               function(i) {
-                                cat("i\n")
                                 group_list_temp <- split(random_list[[i]], random_list[[i]]$group)
                                 
                                 elements_temp <- sapply(group_list_temp, nrow)
@@ -555,7 +554,6 @@ if(verbose) {
         
         random_list <- lapply(seq_along(random_list),
                               function(i) {
-                                cat("i\n")
                                 group_list_temp <- split(random_list[[i]], random_list[[i]]$group)
                                 
                                 elements_temp <- sapply(group_list_temp, nrow)
