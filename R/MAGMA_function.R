@@ -42,6 +42,7 @@ distance_estimator <- function(data, means, variance, cores, inp = NULL) {
 #' parallel computation.
 #' @param rows An integer defining the number of groups
 #' @param weights Possible weights for estimating the Mahalanobis distance.
+#' @param chunk input parameter for parallel distance computation.
 #'
 #' @author Julian Urban
 #'
@@ -50,7 +51,7 @@ distance_estimator <- function(data, means, variance, cores, inp = NULL) {
 #' @return A matrix of distance for each case of each possible match.
 #' @noRd
 #'
-distance_estimator_MD <- function(data, variance, cores, rows, weights = NULL) {
+distance_estimator_MD <- function(data, variance, cores, rows, weights = NULL, chunk = NULL) {
   if(cores > 1) {
     cl <- parallel::makeCluster(cores)
     doParallel::registerDoParallel(cl)
@@ -154,6 +155,7 @@ distance_estimator_MD <- function(data, variance, cores, rows, weights = NULL) {
 #' @import tidyverse parallel doParallel foreach dplyr tibble tidyselect
 #' @importFrom purrr set_names
 #' @importFrom stats var
+#' @importFrom stats cov
 #' @importFrom rlang sym
 #' 
 #' @return Your input data frame augmented with matching
@@ -334,7 +336,7 @@ if(verbose) {
       var_ma <- as.numeric(stats::var(input$distance_ps))
       name_ps <- "distance_ps"
     } else {
-      var_ma <- cov(input[, covs])
+      var_ma <- stats::cov(input[, covs])
       name_ps <- covs
     }
 
@@ -523,7 +525,7 @@ if(verbose) {
           distance_mean <- distance_estimator_MD(data = value_matrix,
                                                  variance = var_ma,
                                                  cores = cores,
-                                                 rwos = length(elements),
+                                                 rows = length(elements),
                                                  weights = weights)
         }
         

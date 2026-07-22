@@ -16,8 +16,7 @@ the resulting Word document with the table should have.}
 \item{verbose}{TRUE or FALSE indicating whether matching information should
 be printed to the console.}
 
-\item{covariates_nominal}{A character vector listing the names of all nominal
-covariates of interest.}
+\item{round}{A integer defining the number of digits for rounding results}
 }
 \value{
 A 4x5 APA table showing the four balance

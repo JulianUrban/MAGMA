@@ -663,8 +663,7 @@ if(length(group) == 2) {
 #' the resulting Word document with the table should have.
 #' @param verbose TRUE or FALSE indicating whether matching information should
 #' be printed to the console.
-#' @param covariates_nominal A character vector listing the names of all nominal
-#' covariates of interest.
+#' @param round A integer defining the number of digits for rounding results
 #'
 #'
 #' @author Julian Urban
@@ -820,6 +819,7 @@ return(balance_matrix)
 #'
 #' @import tidyverse ggplot2
 #' @importFrom rlang is_list
+#' @importFrom rlang .data
 #'
 #' @return R Plots showing the balance trend over sample size.
 #' @export
@@ -886,7 +886,7 @@ Plot_MAGMA <- function(Balance,
     Balance_Pillai$N <- c(1:nrow(Balance_Pillai))
 
     plot_Pillai <- ggplot2::ggplot(Balance_Pillai) +
-            ggplot2::geom_point(ggplot2::aes(x = N, y = value)) +
+            ggplot2::geom_point(ggplot2::aes(x = .data$N, y = .data$value)) +
             ggplot2::theme(panel.background = ggplot2::element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, .5),
                                breaks = seq(0, .5, .05)) +
@@ -911,7 +911,7 @@ Plot_MAGMA <- function(Balance,
         Balance_Pillai$N <- c(1:nrow(Balance_Pillai))
 
         ggplot2::ggplot(Balance_Pillai) +
-              ggplot2::geom_point(ggplot2::aes(x = N, y = value))+
+              ggplot2::geom_point(ggplot2::aes(x = .data$N, y = .data$value))+
               ggplot2::theme(panel.background = ggplot2::element_blank()) +
               ggplot2::scale_y_continuous(limits = c(0, .5),
                                  breaks = seq(0, .5, .05)) +
@@ -936,7 +936,7 @@ Plot_MAGMA <- function(Balance,
     Balance_d$N <- c(1:nrow(Balance_d))
 
     plot_d <- ggplot2::ggplot(Balance_d) +
-            ggplot2::geom_point(ggplot2::aes(x = N, y = value)) +
+            ggplot2::geom_point(ggplot2::aes(x = .data$N, y = .data$value)) +
             ggplot2::theme(panel.background = ggplot2::element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +
@@ -954,7 +954,7 @@ Plot_MAGMA <- function(Balance,
     Balance_g$N <- c(1:nrow(Balance_g))
 
     plot_g <- ggplot2::ggplot(Balance_g) +
-            ggplot2::geom_point(ggplot2::aes(x = N, y = value))+
+            ggplot2::geom_point(ggplot2::aes(x = .data$N, y = .data$value))+
             ggplot2::theme(panel.background = ggplot2::element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +
@@ -972,7 +972,7 @@ Plot_MAGMA <- function(Balance,
     Balance_adj_d$N <- c(1:nrow(Balance_adj_d))
 
     plot_adj_d <- ggplot2::ggplot(Balance_adj_d) +
-            ggplot2::geom_point(ggplot2::aes(x = N, y = value)) +
+            ggplot2::geom_point(ggplot2::aes(x = .data$N, y = .data$value)) +
             ggplot2::theme(panel.background = ggplot2::element_blank()) +
             ggplot2::scale_y_continuous(limits = c(0, 1),
                                breaks = seq(0, 1, .2)) +

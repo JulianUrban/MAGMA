@@ -140,9 +140,9 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
                                                     function(index) {
                                                       groups <- group_values[pairwise_matrix[index, ]]
                                                       data_temp <- da[da[, st] <= iteration & da[, gr] %in% groups, ]
-                                                      ordinal_effects <- MAGMA.R:::effect_ordinal(Data = data_temp,
-                                                                                                  group = gr,
-                                                                                                  variable = co_ord)
+                                                      ordinal_effects <- effect_ordinal(Data = data_temp,
+                                                                                        group = gr,
+                                                                                        variable = co_ord)
                                                       names(ordinal_effects) <- co_ord
                                                       return(ordinal_effects)
                                                     })
@@ -151,9 +151,9 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
                         }
                         if(!is.null(co_nom)) {
                           data_temp <- da[da[, st] <= iteration, ]
-                          nominal_effects <- MAGMA.R:::effect_nominal(Data = data_temp,
-                                                                      group = gr,
-                                                                      variable = co_nom)
+                          nominal_effects <- effect_nominal(Data = data_temp,
+                                                            group = gr,
+                                                            variable = co_nom)
                           names(nominal_effects) <- co_nom
                           ds <- rbind(ds, nominal_effects)
 

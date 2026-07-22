@@ -49,6 +49,7 @@
 #' @importFrom stats var
 #' @importFrom stats ave
 #' @importFrom rlang sym
+#' @importFrom stats cov
 #' 
 #' @return Your input data frame of valid cases augmented with matching
 #' relevant variables, namely *weight*, *step*, *distance*, and *ID*. In case
@@ -66,7 +67,7 @@
 #' # Exact matching for 'enrichment' (participated in enrichment or not)
 #' # Students that participated can only be matched with other
 #' # students that participated and vice versa
-#' MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data[c(1:100 ), ],
+#' MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data[c(1:70 ), ],
 #'                                            group = "gifted_support",
 #'                                            dist = "ps_gifted",
 #'                                            exact = "enrichment",
@@ -260,7 +261,7 @@ MAGMA_exact <- function(Data, group, dist = NULL, exact, cores = 1, verbose = TR
     var_ma <- as.numeric(stats::var(input$distance_ps))
     name_ps <- "distance_ps"
   } else {
-    var_ma <- cov(input[, covs])
+    var_ma <- stats::cov(input[, covs])
     name_ps <- covs
   }
 
