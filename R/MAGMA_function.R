@@ -223,6 +223,18 @@ MAGMA <- function(Data, group, dist = NULL, cores = 1, verbose = TRUE, covs = NU
     stop("cores needs to be a single integer number")
   }
   
+  if(!is.null(covs) & !is.character(covs)) {
+    stop("covs needs to be a character vector!")
+  }
+  
+  if(!is.null(weights) & !is.numeric(weights)) {
+    stop("weights needs to be a numeric vector!")
+  }
+  if(!is.null(weights) & length(weights) != length(covs)) {
+    stop("covs and weights need to have the same length!")
+  }
+  
+  
   if(is.null(dist)) {
     Data$dist_dummy <- ifelse(rowSums(is.na(Data[, covs])) == 0, 1, NA)
     dist <- "dist_dummy"
