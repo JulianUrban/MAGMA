@@ -13,6 +13,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   warning = FALSE)
+options(tibble.width = Inf)
 ```
 
 ```{r setup, include = FALSE}
@@ -40,11 +41,11 @@ This vignette complements the main MAGMA.R vignette by introducing Mahalanobis D
 
 PSM offers several advantages. Propensity scores can incorporate covariates measured on different scale levels, can account for nonlinear relationships and interactions between covariates and - depending on the method with which Propensity Scores are estimated - cases with missing values can be kept in the data set (Ridgeway et al., 2015). However, because a propensity score summarizes information from multiple covariates into a single value, individuals with identical propensity scores may still differ in their observed covariate values (Guo et al., 2020). This limitation is often less problematic, as comparisons take place at the sample level, where the joint distribution of covariates is independent of the treatment assignment after conducting PSM (Guo et al., 2020). However, when the matched sample size is small, differences between groups may remain. As MDM directly optimizes similarity across covariates, it can provide closer matches at the individual level and may therefore be advantageous in small samples. 
 
-Despite this advantage, MDM has several limitations. First, standard MDM cannot directly handle categorical covariates or missing data. Second, its performance may decrease when covariates deviate from normality (Gu & Rosenbaum, 1993). Third, MDM can become less effective when many covariates are included, partly because all covariates contribute equally to the distance calculation (Stuart, 2010). To address this issue, weighted MDM can be used to assign greater importance to selected covariates. Nevertheless, computational demands increase with the number of covariates and are typically higher for MDM than for PSM.
+Despite this advantage, MDM has several limitations. First, standard MDM cannot directly handle categorical covariates or missing data. Second, its performance may decrease when covariates deviate from normality (Gu & Rosenbaum, 1993). Third, MDM can become less effective when many covariates are included, partly because all covariates contribute equally to the distance calculation (Stuart, 2010). To address this issue, weighted MDM can be used to assign greater importance to selected covariates. Nevertheless, computational demands increase with the number of covariates and are typically higher for MDM than for PSM. In summary, MDM may be advantagous when PSM fails to achieve sufficient balance, the number of (metric) covariates is not too high, and the amount of missing data on the covariates is low.
 
 # Two-Group Example
 
-This example illustrates MDM for two groups using the simulated data set `MAGMA_sim_data` included in this package. The grouping variable is `gifted_support`. The covariates used for MDM are `GPA_school`, `IQ_score`, and `Motivation`. o facilitate later estimations, we define a vector containing these covariates:
+This example illustrates MDM for two groups using the simulated data set `MAGMA_sim_data` included in this package. The grouping variable is `gifted_support`. The covariates used for MDM are `GPA_school`, `IQ_score`, and `Motivation`. To facilitate later estimations, we define a vector containing these covariates:
 
 ```{r covariates}
 covariates <- c("GPA_school",
@@ -70,11 +71,12 @@ descs_gifted_pre %>%
 # Estimating the four balance criteria
 unbalance_gifted <- initial_unbalance(Data = MAGMA_sim_data,
                                       group = "gifted_support",
-                                      covariates = covariates)
+                                      covariates = covariates,
+                                      round = 3)
 unbalance_gifted
 ```
 
-As evident from the descriptive statistics - particulary Cohen's *d* - and the initial imbalance assessment, the two groups differ with respect to the covariates. Therefore, we conduct two MDM matchings. First, a standard matching in which all cases from group one can be matched to all cases from group two. Second, an exact matching in which only cases sharing the same value on the variable `gender` can be matched.
+As evident from the descriptive statistics - particulary Cohen's *d* - and the initial imbalance assessment, the two groups differ with respect to the covariates. Therefore, we conduct two MDM matchings. First, a *standard matching* in which all cases from group one can be matched to all cases from group two. Second, an *exact matching* in which only cases sharing the same value on the variable `gender` can be matched (for more details on exact matching, see the main MAGMA.R vignette).
 
 ## Standard Matching
 
@@ -86,7 +88,8 @@ MAGMA_sim_data_gifted <- MAGMA(Data = MAGMA_sim_data,
                                group = "gifted_support",
                                covs = covariates,
                                weights = c(1, 1.5, 0.5),
-                               cores = 2)
+                               cores = 2,
+                               verbose = TRUE)
 
 ```
 
@@ -101,7 +104,7 @@ Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data_gifted,
                                 covariates = covariates,
                                 step = "step") 
 ```
-```{r Balance_standard_2_group_matching_out}
+```{r Balance_standard_2_group_matching_out,fig.width=6, fig.height=4}
 # Extracting balance criteria for 100 cases per group
 Balance_100_criteria <- Balance_extract(Balance = Balance_gifted,
                                         samplesize = 100,
@@ -138,6 +141,9 @@ descs_gifted_post %>%
                      "d"))
 ```
 
+The post-matching balance and descriptive statistics show that the initial imbalance between the groups was substantially reduced. In the solution with the best adjusted *d*-ratio (*n* = 255 cases per group), Pillai's Trace decreased from .129 to < .001, *d*-ratio increased from .333 to 1, mean *g* decreased from 0.427 to 0.018, and adjusted *d*-ratio increased from .331 to .979. Thus, MDM was able to identify a solution in which the distributions of the covariates were comparable between the two groups.
+
+
 ## Exact Matching
 
 In exact matching, only cases sharing the same value on a variable - here `gender` can be matched. The function `MAGMA_exact()` enables standard MDM. This function has an additional argument, where the name of the exact variable must be defined as a character.
@@ -166,7 +172,7 @@ Balance_gifted_exact <- Balance_MAGMA(Data = MAGMA_sim_data_gifted_exact,
 
 ```
 
-```{r Balance_sexact2_group_matching_out}
+```{r Balance_sexact2_group_matching_out,fig.width=6, fig.height=4}
 
 # Extracting balance criteria for 100 cases per group
 Balance_100_criteria_exact <- Balance_extract(Balance = Balance_gifted_exact,
@@ -203,9 +209,12 @@ descs_gifted_post_exact %>%
                      "Support N", "Support Mean", "Support SD",
                      "d"))
 ```
+
+The post-matching balance and descriptive statistics show that the initial imbalance between the groups was substantially reduced. In the solution with the best adjusted *d*-ratio (*n* = 179 cases per group), Pillai's Trace decreased from .129 to < .001, *d*-ratio increased from .333 to 1, mean *g* decreased from 0.427 to 0.016, and adjusted *d*-ratio increased from .331 to .96. Thus, exact MDM was also able to identify a solution in which the distributions of the covariates were comparable between the two groups.
+
 # Three-Group Example
 
-This example illustrates MDM for three groups using the same data set (`MAGMA_sim_data`) and covariates (`GPA_school`, `IQ_score`, and `Motivation`) as the two-group example. As the grouping variable changes to `teacher_ability_rating`, we start by estimating descriptive statistics and initial unbalance.
+This example illustrates MDM for three groups using the same data set (`MAGMA_sim_data`) and covariates (`GPA_school`, `IQ_score`, and `Motivation`) as the two-group example. As the grouping variable changes to `teacher_ability_rating` (below average[BA], average [A], above average[AA]), we start by estimating descriptive statistics and initial unbalance.
 
 ```{r unbalance_tar}
 # Computing descriptive statistics and all pairwise effects for three groups
@@ -223,7 +232,8 @@ descs_tar_pre %>%
 # Estimating and printing initial unbalance for teacher rated ability
 unbalance_tar <- initial_unbalance(Data = MAGMA_sim_data,
                                    group = "teacher_ability_rating",
-                                   covariates = covariates)
+                                   covariates = covariates,
+                                   round = 3)
 unbalance_tar
 ```
 
@@ -255,7 +265,7 @@ Balance_tar <- Balance_MAGMA(Data = MAGMA_sim_data_tar,
                                 covariates = covariates,
                                 step = "step") 
 ```
-```{r Balance_standard_3_group_matching_out}
+```{r Balance_standard_3_group_matching_out,fig.width=6, fig.height=4}
 # Extracting balance criteria for 100 cases per group
 Balance_100_criteria_tar <- Balance_extract(Balance = Balance_tar,
                                             samplesize = 100,
@@ -293,6 +303,8 @@ descs_tar_post %>%
                      "d BA-A", "d BA-AA", "d A-AA"))
 ```
 
+The post-matching balance and descriptive statistics show that the initial imbalance between the groups was substantially reduced. In the solution with the best adjusted *d*-ratio (*n* = 120 cases per group), Pillai's Trace decreased from .215 to .002, *d*-ratio increased from .111 to 1, mean *g* decreased from 0.537 to 0.043, and adjusted *d*-ratio increased from .158 to .882. Thus, MDM was able to identify a solution in which the distributions of the covariates were comparable between the three groups.
+
 ## Exaxt Matching
 
 Similar as for the two-group example, we need to use the function `MAGMA_exact()` for exact MDM and specify the argument `exact`.
@@ -320,7 +332,7 @@ Balance_tar_exact <- Balance_MAGMA(Data = MAGMA_sim_data_tar_exact,
                                    covariates = covariates,
                                    step = "step") 
 ```
-```{r Balance_exact_3_group_matching_out}
+```{r Balance_exact_3_group_matching_out,fig.width=6, fig.height=4}
 # Extracting balance criteria for 100 cases per group
 Balance_100_criteria_tar_exact <- Balance_extract(Balance = Balance_tar_exact,
                                                   samplesize = 100,
@@ -358,6 +370,8 @@ descs_tar_post_exact %>%
                      "d BA-A", "d BA-AA", "d A-AA"))
 ```
 
+The post-matching balance and descriptive statistics show that the initial imbalance between the groups was substantially reduced. In the solution with the best adjusted *d*-ratio (*n* = 116 cases per group), Pillai's Trace decreased from .215 to .002, *d*-ratio increased from .111 to 1, mean *g* decreased from 0.537 to 0.041, and adjusted *d*-ratio increased from .158 to .882. Thus, exact MDM was also able to identify a solution in which the distributions of the covariates were comparable between the three groups.
+
 # 2x2-design Example
 
 This example illustrates MDM for a 2x2 designs using the same data set (`MAGMA_sim_data`) and covariates (`GPA_school`, `IQ_score`, and `Motivation`) as the previous examples. The major change is that now both `gifted_support` and `enrichment` are used as grouping variable.
@@ -382,7 +396,8 @@ descs_2x2  %>%
 # Estimating and printing initial unbalance for teacher rated ability
 unbalance_2x2 <- initial_unbalance(Data = MAGMA_sim_data,
                                    group = c("gifted_support", "enrichment"),
-                                   covariates = covariates)
+                                   covariates = covariates,
+                                   round = 3)
 unbalance_2x2
 ```
 
@@ -414,7 +429,7 @@ Balance_2x2 <- Balance_MAGMA(Data = MAGMA_sim_data_2x2,
                                 covariates = covariates,
                                 step = "step") 
 ```
-```{r Balance_standard_2x2_group_matching_out}
+```{r Balance_standard_2x2_group_matching_out,fig.width=6, fig.height=4}
 # Extracting balance criteria for 100 cases per group
 Balance_100_criteria_2x2 <- Balance_extract(Balance = Balance_2x2,
                                             samplesize = 100,
@@ -456,6 +471,8 @@ descs_2x2_post %>%
                      "d NoNo-NoYes"))
 ```
 
+The post-matching balance and descriptive statistics show that the initial imbalance between the groups was substantially reduced. In the solution with the best adjusted *d*-ratio (*n* = 112 cases per group), Pillai's Trace (gifted_support) decreased from .133 to .001, Pillai's Trace (enrichment) decreased from .044 to .002, Pillai's Trace (interaction) remained at < .001, *d*-ratio increased from .389 to 1, mean *g* decreased from 0.391 to 0.055, and adjusted *d*-ratio increased from .314 to .855. Thus, MDM was able to identify a solution in which the distributions of the covariates were comparable for the 2x2 design.
+
 ## Exaxt Matching
 
 Similar as for the previous examples, we need to use the function `MAGMA_exact()` for exact MDM and specify the argument `exact`.
@@ -483,7 +500,7 @@ Balance_2x2_exact <- Balance_MAGMA(Data = MAGMA_sim_data_2x2_exact,
                                    covariates = covariates,
                                    step = "step") 
 ```
-```{r Balance_exact_2x2_group_matching_out}
+```{r Balance_exact_2x2_group_matching_out,fig.width=6, fig.height=4}
 # Extracting balance criteria for 100 cases per group
 Balance_100_criteria_2x2_exact <- Balance_extract(Balance = Balance_2x2_exact,
                                                   samplesize = 100,
@@ -524,6 +541,8 @@ descs_2x2_post_exact %>%
                      "d YesYes-NoNo", "d YesYes-YNoYes",
                      "d NoNo-NoYes"))
 ```
+
+The post-matching balance and descriptive statistics show that the initial imbalance between the groups was substantially reduced. In the solution with the best adjusted *d*-ratio (*n* = 112 cases per group), Pillai's Trace (gifted_support) decreased from .133 to .001, Pillai's Trace (enrichment) decreased from .044 to < .001, Pillai's Trace (interaction) remained low at .002, *d*-ratio increased from .389 to 1, mean *g* decreased from 0.391 to 0.046, and adjusted *d*-ratio increased from .314 to .845. Thus, exact MDM was also able to identify a solution in which the distributions of the covariates were comparable for the 2x2 design.
 
 # References
 
