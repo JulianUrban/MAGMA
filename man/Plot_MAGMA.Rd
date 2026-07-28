@@ -34,18 +34,18 @@ sample size.
 # This function bases on a MAGMA function as well as Balance_MAGMA
 # To run examples, copy them into your console or script
 # Defining the names of the metric and binary covariates
-covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "gender")
+covariates_vector <- c("GPA_school", "IQ_score", "Motivation")
 
 #  Estimating balance of a two-group matching using the data set
 # 'MAGMA_sim_data'.
 # Matching variable 'gifted_support' (received giftedness support yes or no)
-Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data[MAGMA_sim_data$step_gifted < 150, ],
+Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data[MAGMA_sim_data$step_gifted < 50, ],
                                 group = "gifted_support",
                                 covariates = covariates_vector,
                                 step = "step_gifted")
 
 Plot_MAGMA(Balance = Balance_gifted,
-           criterion = "Adj_d_ratio") #Using default to plot all criteria
+           criterion = "Adj_d_ratio") 
 
 \donttest{
 # 2x2 matching using the data set 'MAGMA_sim_data'

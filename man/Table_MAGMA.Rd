@@ -40,13 +40,13 @@ save a the APA table in Word.
 \examples{
 # This function bases on a MAGMA function as well as Balance_MAGMA
 # Defining the names of the metric and binary covariates
-covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "gender")
+covariates_vector <- c("GPA_school", "IQ_score", "Motivation")
 
 
 # Estimating balance of a two-group matching using the data set
 # 'MAGMA_sim_data'.
 # Matching variable 'gifted_support' (received giftedness support yes or no)
-Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data[MAGMA_sim_data$step_gifted < 200, ],
+Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data[MAGMA_sim_data$step_gifted < 50, ],
                                 group = "gifted_support",
                                 covariates = covariates_vector,
                                 step = "step_gifted")
