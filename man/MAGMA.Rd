@@ -11,7 +11,11 @@ MAGMA(
   cores = 1,
   verbose = TRUE,
   covs = NULL,
-  weights = NULL
+  weights = NULL,
+  large_method = "subgroup",
+  reference_group = NULL,
+  number_candidates = 10L,
+  combination_threshold = 1e+09
 )
 }
 \arguments{
@@ -42,6 +46,23 @@ conducted as a character vector.}
 be a numeric vector with the same length as covs. These weights are used to
 estimate a weightes Mahalanobis distance. If not specified, all covariates
 are weighted equally.}
+
+\item{large_method}{A character that handles how matching is conducted for
+three or four groups with large sample sizes. The default "subgroup" uses
+complete matching below \emph{combination_threshold} and random subgroup matching
+above it. The option "reference" uses reference-group matching independently
+of the threshold.}
+
+\item{reference_group}{A value defining which group is the reference group
+for large_method = "reference". If NULL, the smallest group is used.}
+
+\item{number_candidates}{An integer for large_method = "reference" defining
+the number of candidates per non-reference group that are considered when
+searching for the locally best complete match.}
+
+\item{combination_threshold}{A positive number defining the maximum number
+of possible combinations for complete matching when large_method =
+"subgroup".}
 }
 \value{
 Your input data frame augmented with matching
@@ -64,11 +85,25 @@ iteration in which a case was matched. It also shows which cases were matched
 together. Distance indicates the mean difference within a match. Since
 matches with a lower distance are matched in an earlier iteration, step and
 distance are strongly correlated.
-This function has some CPU and RAM load. In most four-group applications and
-three-group applications with large sample size, RAM may be not sufficient.
-Therefore MAGMA switches to random quasi-systematic matching. If this is the
-case, MAGMA informs you. The output of the function does not change, but
-balance might be slightly affected.
+Matching can require substantial CPU time and memory because the number of
+possible matches increases with the product of the group sample sizes. For
+three- and four-group matching, the computational procedure is controlled by
+\emph{large_method}. With the default \emph{large_method = "subgroup"}, MAGMA evaluates
+all possible matches while their number is below \emph{combination_threshold}. If
+the threshold is exceeded, MAGMA switches to random quasi-systematic matching
+within subgroups and informs the user. Because subgroup assignment is random,
+results can depend on the random seed and balance may vary slightly between
+runs.
+Alternatively, \emph{large_method = "reference"} conducts reference-group
+matching independently of \emph{combination_threshold}. For every case in the
+specified reference group, MAGMA considers the nearest
+\emph{number_candidates} cases from each non-reference group and iteratively
+selects the currently best complete match. If \emph{reference_group} is not
+specified, the smallest group is used. This procedure avoids constructing
+the complete array of all possible matches and does not depend on random
+subgroup assignment.
+Both procedures return the input data augmented by the same matching
+variables, but the resulting matches can differ between procedures.
 }
 \examples{
 

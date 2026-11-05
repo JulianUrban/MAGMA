@@ -51,7 +51,8 @@ distance_estimator <- function(data, means, variance, cores, inp = NULL) {
 #' @return A matrix of distance for each case of each possible match.
 #' @noRd
 #'
-distance_estimator_MD <- function(data, variance, cores, rows, weights = NULL, chunk = NULL) {
+distance_estimator_MD <- function(data, 
+                                  variance, cores, rows, weights = NULL, chunk = NULL) {
   if(cores > 1) {
     cl <- parallel::makeCluster(cores)
     doParallel::registerDoParallel(cl)
@@ -106,6 +107,190 @@ distance_estimator_MD <- function(data, variance, cores, rows, weights = NULL, c
   return(distance_matrix)
 }
 
+
+#' reference_matching
+#'
+#' Conducts reference-group matching for three or four groups.
+#'
+#' @param input Matching input data.
+#' @param reference_group Value identifying the reference group. If NULL, the
+#' smallest group is used.
+#' @param number_candidates Number of nearest candidates retained per
+#' non-reference group.
+#' @param cores Number of cores used to evaluate reference cases.
+#' @param variance Variance of the propensity score.
+#'
+#' @return Matching variables for all successfully matched cases.
+#' @noRd
+#'
+reference_matching <- function(input,
+                               reference_group = NULL,
+                               number_candidates = 10L,
+                               cores = 1L,
+                               variance) {
+  group_values <- unique(input$group)
+  group_sizes <- vapply(group_values,
+                        function(group_value) {
+                          sum(input$group == group_value)
+                        },
+                        integer(1))
+
+  if(is.null(reference_group)) {
+    reference_group <- group_values[which.min(group_sizes)]
+  }
+
+  if(length(reference_group) != 1L || !reference_group %in% group_values) {
+    stop("reference_group needs to identify one existing group!")
+  }
+
+  reference_indices <- which(input$group == reference_group)
+  other_groups <- setdiff(group_values, reference_group)
+  remaining_references <- reference_indices
+  used_indices <- integer(0)
+
+  input$match_id <- NA_integer_
+  match_counter <- 0L
+
+  find_best_match <- function(i) {
+    reference_ps <- input$distance_ps[i]
+
+    candidates <- lapply(other_groups,
+                         function(group_index) {
+                           group_indices <- which(
+                             input$group == group_index &
+                               !(seq_len(nrow(input)) %in% used_indices)
+                           )
+
+                           if(length(group_indices) == 0) {
+                             return(integer(0))
+                           }
+
+                           group_ps <- input$distance_ps[group_indices]
+                           differences <- abs(group_ps - reference_ps)
+
+                           sorted_indices <- group_indices[order(differences,
+                                                                 group_ps,
+                                                                 input$ID[group_indices])]
+
+                           head(sorted_indices, number_candidates)
+                         })
+
+    if(any(lengths(candidates) == 0L)) {
+      return(NULL)
+    }
+
+    candidate_group_list <- c(list(input[i, , drop = FALSE]),
+                              lapply(candidates,
+                                     function(candidate_indices) {
+                                       input[candidate_indices, , drop = FALSE]
+                                     }))
+
+    elements_temp <- vapply(candidate_group_list,
+                            nrow,
+                            integer(1))
+
+    value_matrix <- build_value_matrix(input_list = candidate_group_list,
+                                       rep_element = elements_temp,
+                                       name_ps = "distance_ps")
+
+    combination_means <- rowMeans(value_matrix)
+    centered_values <- sweep(value_matrix,
+                             MARGIN = 1L,
+                             STATS = combination_means,
+                             FUN = "-")
+
+    combination_distances <- rowMeans(centered_values^2) / variance
+    best_combination <- which.min(combination_distances)
+
+    best_positions <- arrayInd(best_combination,
+                               .dim = elements_temp)[1, ]
+
+    selected_indices <- c(i,
+                          vapply(seq_along(candidates),
+                                 function(group_number) {
+                                   candidate_position <- best_positions[group_number + 1L]
+                                   candidates[[group_number]][candidate_position]
+                                 },
+                                 integer(1)))
+
+    return(list(reference_index = i,
+                selected_indices = selected_indices,
+                distance = combination_distances[best_combination]))
+  }
+
+  old_plan <- future::plan()
+  on.exit(future::plan(old_plan), add = TRUE)
+
+  number_workers <- min(cores,
+                        length(reference_indices),
+                        future::availableCores())
+
+  if(number_workers > 1L) {
+    future::plan(future::multisession,
+                 workers = number_workers)
+  }
+
+  while(length(remaining_references) > 0) {
+    if(number_workers > 1L) {
+      possible_matches <- future.apply::future_lapply(
+        remaining_references,
+        find_best_match,
+        future.seed = FALSE,
+        future.scheduling = 1
+      )
+    } else {
+      possible_matches <- lapply(remaining_references,
+                                 find_best_match)
+    }
+
+    possible_matches <- Filter(Negate(is.null),
+                               possible_matches)
+
+    if(length(possible_matches) == 0) {
+      warning("No further complete matches are possible.")
+      break
+    }
+
+    possible_distances <- vapply(possible_matches,
+                                 function(match) match$distance,
+                                 numeric(1))
+
+    best_match <- possible_matches[[which.min(possible_distances)]]
+    match_counter <- match_counter + 1L
+    selected_indices <- best_match$selected_indices
+
+    input$match_id[selected_indices] <- match_counter
+    input$weight[selected_indices] <- 1L
+    input$distance[selected_indices] <- best_match$distance
+
+    used_indices <- c(used_indices,
+                      selected_indices)
+
+    remaining_references <- setdiff(remaining_references,
+                                    best_match$reference_index)
+  }
+
+  matched <- !is.na(input$match_id)
+
+  if(any(matched)) {
+    match_distances <- tapply(input$distance[matched],
+                              input$match_id[matched],
+                              mean)
+
+    step_lookup <- setNames(rank(match_distances,
+                                 ties.method = "first"),
+                            names(match_distances))
+
+    input$step[matched] <- unname(
+      step_lookup[as.character(input$match_id[matched])]
+    )
+  }
+
+  return(input[matched,
+               c("ID", "step", "weight", "distance")])
+}
+
+
 #' MAGMA
 #'
 #' This function conducts many group matching for 2 to 4 groups. It augments
@@ -120,11 +305,25 @@ distance_estimator_MD <- function(data, variance, cores, rows, weights = NULL, c
 #' together. Distance indicates the mean difference within a match. Since
 #' matches with a lower distance are matched in an earlier iteration, step and
 #' distance are strongly correlated.
-#' This function has some CPU and RAM load. In most four-group applications and
-#' three-group applications with large sample size, RAM may be not sufficient.
-#' Therefore MAGMA switches to random quasi-systematic matching. If this is the
-#' case, MAGMA informs you. The output of the function does not change, but
-#' balance might be slightly affected.
+#' Matching can require substantial CPU time and memory because the number of
+#' possible matches increases with the product of the group sample sizes. For
+#' three- and four-group matching, the computational procedure is controlled by
+#' *large_method*. With the default *large_method = "subgroup"*, MAGMA evaluates
+#' all possible matches while their number is below *combination_threshold*. If
+#' the threshold is exceeded, MAGMA switches to random quasi-systematic matching
+#' within subgroups and informs the user. Because subgroup assignment is random,
+#' results can depend on the random seed and balance may vary slightly between
+#' runs.
+#' Alternatively, *large_method = "reference"* conducts reference-group
+#' matching independently of *combination_threshold*. For every case in the
+#' specified reference group, MAGMA considers the nearest
+#' *number_candidates* cases from each non-reference group and iteratively
+#' selects the currently best complete match. If *reference_group* is not
+#' specified, the smallest group is used. This procedure avoids constructing
+#' the complete array of all possible matches and does not depend on random
+#' subgroup assignment. 
+#' Both procedures return the input data augmented by the same matching
+#' variables, but the resulting matches can differ between procedures.
 #'
 #'
 #' @param Data A data frame or tibble containing at least your grouping and
@@ -148,6 +347,19 @@ distance_estimator_MD <- function(data, variance, cores, rows, weights = NULL, c
 #' be a numeric vector with the same length as covs. These weights are used to
 #' estimate a weightes Mahalanobis distance. If not specified, all covariates
 #' are weighted equally.
+#' @param large_method A character that handles how matching is conducted for
+#' three or four groups with large sample sizes. The default "subgroup" uses 
+#' complete matching below *combination_threshold* and random subgroup matching 
+#' above it. The option "reference" uses reference-group matching independently 
+#' of the threshold.
+#' @param reference_group A value defining which group is the reference group
+#' for large_method = "reference". If NULL, the smallest group is used.
+#' @param number_candidates An integer for large_method = "reference" defining
+#' the number of candidates per non-reference group that are considered when
+#' searching for the locally best complete match.
+#' @param combination_threshold A positive number defining the maximum number
+#' of possible combinations for complete matching when large_method =
+#' "subgroup".
 #' 
 #'
 #' @author Julian Urban
@@ -200,7 +412,17 @@ distance_estimator_MD <- function(data, variance, cores, rows, weights = NULL, c
 #' head(MAGMA_sim_data_gift_enrich)
 #' }
 #'
-MAGMA <- function(Data, group, dist = NULL, cores = 1, verbose = TRUE, covs = NULL, weights = NULL) {
+MAGMA <- function(Data, 
+                  group, 
+                  dist = NULL, 
+                  cores = 1, 
+                  verbose = TRUE, 
+                  covs = NULL, 
+                  weights = NULL,
+                  large_method = "subgroup",
+                  reference_group = NULL,
+                  number_candidates = 10L,
+                  combination_threshold = 1.0e+09) {
 
   #Check for regular input
   if(!is.data.frame(Data) && !tibble::is_tibble(Data)) {
@@ -229,17 +451,45 @@ MAGMA <- function(Data, group, dist = NULL, cores = 1, verbose = TRUE, covs = NU
     stop("covs needs to be a character vector!")
   }
   
+  if(is.null(dist) == is.null(covs)) {
+    stop("Specify exactly one of dist or covs!")
+  }
+  
   if(!is.null(weights) & !is.numeric(weights)) {
     stop("weights needs to be a numeric vector!")
   }
   if(!is.null(weights) & length(weights) != length(covs)) {
     stop("covs and weights need to have the same length!")
   }
+  if(!is.character(large_method) ||
+     length(large_method) != 1L ||
+     is.na(large_method) ||
+     !large_method %in% c("subgroup", "reference")) {
+    stop("large_method needs to be either subgroup or reference!")
+  }
+
+  if(!is.numeric(number_candidates) ||
+     length(number_candidates) != 1L ||
+     !is.finite(number_candidates) ||
+     number_candidates < 1 ||
+     number_candidates != floor(number_candidates)) {
+    stop("number_candidates needs to be one positive integer!")
+  }
+  number_candidates <- as.integer(number_candidates)
+
+  if(!is.numeric(combination_threshold) ||
+     length(combination_threshold) != 1L ||
+     !is.finite(combination_threshold) ||
+     combination_threshold <= 0) {
+    stop("combination_threshold needs to be one positive number!")
+  }
   
   
+  use_covariate_distance <- FALSE
   if(is.null(dist)) {
     Data$dist_dummy <- ifelse(rowSums(is.na(Data[, covs])) == 0, 1, NA)
     dist <- "dist_dummy"
+    use_covariate_distance <- TRUE
   }
 
   max_cores <- parallel::detectCores()
@@ -260,18 +510,10 @@ MAGMA <- function(Data, group, dist = NULL, cores = 1, verbose = TRUE, covs = NU
     values_1 <- unlist(unique(Data[group[1]]))
     values_2 <- unlist(unique(Data[group[2]]))
 
-    if(length(dist) == 1) {
-      data <- Data %>%
-        dplyr::filter(!is.na(!!rlang::sym(group[1])),
-                      !is.na(!!rlang::sym(group[2])),
-                      !is.na(!!rlang::sym(dist))) 
-    } else {
-      data <- Data %>%
-        dplyr::filter(!is.na(!!rlang::sym(group[1])),
-                      !is.na(!!rlang::sym(group[2])),
-                      !is.na(!!rlang::sym(dist[1])),
-                      !is.na(!!rlang::sym(dist[2])))
-    }
+    data <- Data %>%
+      dplyr::filter(!is.na(!!rlang::sym(group[1])),
+                    !is.na(!!rlang::sym(group[2])),
+                    !is.na(!!rlang::sym(dist)))
     data$ID <- c(1:nrow(data))
     data$group_long <- ifelse(data[[group[1]]] == values_1[1] & data[[group[2]]] == values_2[1], 1,
                               ifelse(data[[group[1]]] == values_1[1] & data[[group[2]]] == values_2[2], 2,
@@ -292,18 +534,10 @@ MAGMA <- function(Data, group, dist = NULL, cores = 1, verbose = TRUE, covs = NU
                           data[dist])
       colnames(input) <- c("ID", "group", "distance_ps")
     } else {
-      if(length(dist) == 1) {
-        input <- data.frame(data["ID"],
-                            data["group_long"],
-                            data[dist])
-        colnames(input) <- c("ID", "group", "distance_ps")
-      } else {
-        input <- data.frame(data["ID"],
-                            data["group_long"],
-                            data[dist[1]],
-                            data[dist[2]])
-        colnames(input) <- c("ID", "group", "distance_ps_1", "distance_ps_2")
-      }
+      input <- data.frame(data["ID"],
+                          data["group_long"],
+                          data[dist])
+      colnames(input) <- c("ID", "group", "distance_ps")
     }
   } else {
     if(length(group) == 1) {
@@ -331,14 +565,13 @@ if(verbose) {
   #######################
   #distance estimation##
   ######################
-  if(length(dist) == 1 | is.null(dist)) {
-    if(is.null(covs)) {
+  if(is.null(covs)) {
       var_ma <- as.numeric(stats::var(input$distance_ps))
       name_ps <- "distance_ps"
-    } else {
-      var_ma <- stats::cov(input[, covs])
-      name_ps <- covs
-    }
+  } else {
+    var_ma <- stats::cov(input[, covs])
+    name_ps <- covs
+  }
 
 
     group_list <- split.data.frame(input, input$group)
@@ -390,7 +623,22 @@ if(verbose) {
                     by = "ID")
     } else if(length(elements) == 3) {
 
-      if (prod(elements) < 1.0e+09) {
+      if(large_method == "reference") {
+        if(!is.null(covs)) {
+          stop("The reference method currently supports propensity-score matching only.")
+        }
+
+        data_temp <- reference_matching(input = input,
+                                        reference_group = reference_group,
+                                        number_candidates = number_candidates,
+                                        cores = cores,
+                                        variance = var_ma)
+
+        data <- merge(data,
+                      data_temp,
+                      by = "ID",
+                      all.x = TRUE)
+      } else if (prod(as.double(elements)) < combination_threshold) {
         value_matrix <- build_value_matrix(group_list,
                                            elements,
                                            name_ps = name_ps)
@@ -440,7 +688,8 @@ if(verbose) {
         cat("\n", "Large number of groups with large group sizes. Computing quasi-systematic matching. Cores were reduced to 2 to simplify node communication despite high RAM usage.")
         }
         
-        number_split_groups <- ceiling(sqrt(prod(elements) / 1.0e+09)) + 1
+        number_split_groups <- ceiling(sqrt(prod(as.double(elements)) /
+                                                    combination_threshold)) + 1
 
 
         input$random_group = sample(c(1:number_split_groups),
@@ -496,7 +745,7 @@ if(verbose) {
 
         
         data_temp <- do.call(rbind.data.frame, random_list)
-        data_temp <- data_temp[order(data_temp$step, data_temp$distance),]
+        data_temp <- data_temp[order(data_temp$distance, data_temp$step),]
         data_temp$step <- ceiling(c(1:nrow(input))/3)
         data_temp <- data_temp[!is.na(data_temp$weight), c("ID", "step", "weight", "distance")] 
         
@@ -508,7 +757,25 @@ if(verbose) {
       }
     } else if(length(elements) == 4) {
 
-      if (prod(elements) < 1.0e+09) {
+      if(large_method == "reference") {
+        if(!is.null(covs)) {
+          stop("The reference method currently supports propensity-score matching only.")
+        }
+
+        data_temp <- reference_matching(input = input,
+                                        reference_group = reference_group,
+                                        number_candidates = number_candidates,
+                                        cores = cores,
+                                        variance = var_ma)
+
+        data <- merge(data,
+                      data_temp,
+                      by = "ID",
+                      all.x = TRUE)
+      } else if (prod(as.double(elements)) < combination_threshold) {
+        value_matrix <- build_value_matrix(group_list,
+                                           elements,
+                                           name_ps = name_ps)
 
         if(is.null(covs)) {
           means <- rowMeans(value_matrix)
@@ -548,224 +815,86 @@ if(verbose) {
                       by = "ID",
                       all.x = TRUE)
       } else {
-        cores <- 2
-        if(verbose) {
-        cat("\n", "Large number of groups with large group sizes. Computing quasi-systematic matching. Cores were reduced to 2 to simplify node communication despite high RAM usage.")
+          cores <- 2
+          if(verbose) {
+            cat("\n", "Large number of groups with large group sizes. Computing quasi-systematic matching. Cores were reduced to 2 to simplify node communication despite high RAM usage.")
+          }
+          
+          
+          number_split_groups <- ceiling(sqrt(prod(as.double(elements)) /
+                                                      combination_threshold)) + 1
+          
+          
+          input$random_group = sample(c(1:number_split_groups),
+                                      size = nrow(input),
+                                      replace = TRUE) 
+          
+          random_list <- split.data.frame(input, input$random_group)
+          
+          random_list <- lapply(seq_along(random_list),
+                                function(i) {
+                                  group_list_temp <- split(random_list[[i]], random_list[[i]]$group)
+                                  
+                                  elements_temp <- sapply(group_list_temp, nrow)
+                                  
+                                  value_matrix <- build_value_matrix(group_list_temp,
+                                                                     elements_temp,
+                                                                     name_ps = name_ps)
+                                  
+                                  if (is.null(covs)) {
+                                    means <- rowMeans(value_matrix)
+                                    
+                                    distance_matrix <- distance_estimator(data = value_matrix,
+                                                                          means = means,
+                                                                          variance = var_ma,
+                                                                          cores = cores)
+                                    
+                                    distance_mean <- rowMeans(distance_matrix)
+                                    rm(distance_matrix)
+                                    rm(means)
+                                    
+                                  } else {
+                                    
+                                    distance_mean <- distance_estimator_MD(data = value_matrix,
+                                                                           variance = var_ma,
+                                                                           cores = cores,     
+                                                                           rows = length(elements_temp),
+                                                                           weights = weights)
+                                  }
+                                  rm(value_matrix)
+                                  
+                                  distance_array <- array(distance_mean, dim = elements_temp)
+                                  
+                                  rm(distance_mean)
+                                  
+                                  group_list_temp <- match_iterative(distance_array,
+                                                                     group_list_temp,
+                                                                     elements_temp)
+                                  rm(distance_array)
+                                  gc()
+                                  
+                                  do.call(rbind.data.frame, group_list_temp)
+                                })
+          
+          
+          data_temp <- do.call(rbind.data.frame, random_list)
+          data_temp <- data_temp[order(data_temp$distance, data_temp$step),]
+          data_temp$step <- ceiling(c(1:nrow(input))/4)
+          data_temp <- data_temp[!is.na(data_temp$weight), c("ID", "step", "weight", "distance")] 
+          
+          data <- merge(data,
+                        data_temp,
+                        by = "ID",
+                        all.x = TRUE)
         }
-        
-        number_split_groups <- ceiling(sqrt(prod(elements) / 1.0e+09)) + 1
-        
-        
-        input$random_group = sample(c(1:number_split_groups),
-                                    size = nrow(input),
-                                    replace = TRUE) 
-        
-        random_list <- split.data.frame(input, input$random_group)
-        
-        random_list <- lapply(seq_along(random_list),
-                              function(i) {
-                                group_list_temp <- split(random_list[[i]], random_list[[i]]$group)
-                                
-                                elements_temp <- sapply(group_list_temp, nrow)
-                                
-                                value_matrix <- build_value_matrix(group_list_temp,
-                                                                   elements_temp,
-                                                                   name_ps = name_ps)
-                                
-                                if (is.null(covs)) {
-                                  means <- rowMeans(value_matrix)
-                                  
-                                  distance_matrix <- distance_estimator(data = value_matrix,
-                                                                        means = means,
-                                                                        variance = var_ma,
-                                                                        cores = cores)
-                                  
-                                  distance_mean <- rowMeans(distance_matrix)
-                                  rm(distance_matrix)
-                                  rm(means)
-                                  
-                                } else {
-                                  
-                                  distance_mean <- distance_estimator_MD(data = value_matrix,
-                                                                         variance = var_ma,
-                                                                         cores = cores,     
-                                                                         rows = length(elements_temp),
-                                                                         weights = weights)
-                                }
-                                rm(value_matrix)
-                                
-                                distance_array <- array(distance_mean, dim = elements_temp)
-                                
-                                rm(distance_mean)
-                                
-                                group_list_temp <- match_iterative(distance_array,
-                                                                   group_list_temp,
-                                                                   elements_temp)
-                                rm(distance_array)
-                                gc()
-                                
-                                do.call(rbind.data.frame, group_list_temp)
-                              })
-        
-        
-        data_temp <- do.call(rbind.data.frame, random_list)
-        data_temp <- data_temp[order(data_temp$step, data_temp$distance),]
-        data_temp$step <- ceiling(c(1:nrow(input))/3)
-        data_temp <- data_temp[!is.na(data_temp$weight), c("ID", "step", "weight", "distance")] 
-        
-        data <- merge(data,
-                      data_temp,
-                      by = "ID",
-                      all.x = TRUE)
-      }
     } else {
       stop("Specify a grouping variable that distinguishes 2, 3, or 4 groups or represent a 2x2 Design!")
     }
     if(verbose) {
     cat("\n", "Matching complete!")
     }
-    return(data)
-  } else {
-    var_ma <- input[c("distance_ps_1", "distance_ps_2")] %>%
-      sapply(FUN = stats::var)
-
-
-    group_list <- split.data.frame(input, input$group)
-
-    elements <- split(input$group_id, input$group) %>%
-      sapply(FUN = max)
-
-    if (prod(elements) < 1.0e+09) {
-
-      value_matrix <- build_value_matrix(group_list,
-                                         elements,
-                                         name_ps = name_ps)
-
-      means <- rowMeans(value_matrix)
-
-      distance_matrix_1 <- distance_estimator(data = value_matrix,
-                                              means = means,
-                                              variance = var_ma[1],
-                                              cores = cores)
-
-      value_matrix <- build_value_matrix(group_list,
-                                         elements,
-                                         name_ps = name_ps)
-
-      means <- rowMeans(value_matrix)
-
-      distance_matrix_2 <- distance_estimator(data = value_matrix,
-                                              means = means,
-                                              variance = var_ma[2],
-                                              cores = cores)
-      rm(means)
-      rm(value_matrix)
-      distance_array <- array(data = (distance_matrix_1 +
-                                        distance_matrix_2 +
-                                        distance_matrix_1 * distance_matrix_2),
-                              dim = elements)
-      rm(distance_matrix)
-      rm(distance_matrix_2)
-      gc()
-
-      group_list <- match_iterative(distance_array, group_list, elements)
-
-      rm(distance_array)
-      gc()
-
-      output_temp <- do.call(rbind.data.frame, group_list)
-      output_temp <- output_temp[c("ID", "step", "weight", "distance")] 
-
-      data <- merge(data,
-                    output_temp,
-                    by = "ID",
-                    all.x = TRUE)
-      if(verbose) {
-      cat("\n", "matching complete!")
-      }
-      return(data)
-
-    } else {
-      cores <- 2
-      if(verbose) {
-      cat("\n", "Large number of groups with large group sizes. Computing quasi-systematic matching. Cores were reduced to 2 to simplify node communication despite high RAM usage.")
-      }
-      
-      number_split_groups <- ceiling(sqrt(prod(elements) / 1.0e+09)) + 1
-      if(number_split_groups == 1) {
-        number_split_groups <- 2
-      }
-
-
-      input$random_group <- sample(c(1:number_split_groups),
-                                   size = nrow(input),
-                                   replace = TRUE) 
-
-      random_list <- split.data.frame(input, input$random_group)
-
-      for(i in 1:length(random_list)) {
-
-        group_list_temp <- random_list[[i]] %>%
-          split.data.frame(f = random_list[[i]]$group)
-
-        elements_temp <- sapply(group_list_temp, nrow)
-
-        value_matrix <- build_value_matrix(group_list_temp,
-                                           elements_temp,
-                                           name_ps = "distance_ps_1")
-
-        means <- rowMeans(value_matrix)
-
-
-        distance_matrix_1 <- distance_estimator(data = value_matrix,
-                                                means = means,
-                                                variance = var_ma[1],
-                                                cores = cores)
-
-        value_matrix <- build_value_matrix(group_list_temp,
-                                           elements_temp,
-                                           name_ps = "distance_ps_2")
-
-        means <- rowMeans(value_matrix)
-
-        distance_matrix_2 <- distance_estimator(data = value_matrix,
-                                                means = means,
-                                                variance = var_ma[2],
-                                                cores = cores)
-        rm(means)
-        rm(value_matrix)
-        distance_array <- array(data = ((distance_matrix_1 +
-                                           distance_matrix_2 +
-                                           distance_matrix_1 * distance_matrix_2)),
-                                dim = elements_temp)
-        rm(distance_matrix_1)
-        rm(distance_matrix_2)
-        gc()
-
-        group_list_temp <- match_iterative(distance_array, group_list_temp, elements_temp)
-
-        rm(distance_array)
-        gc()
-
-        random_list[[i]] <- do.call(rbind.data.frame, group_list_temp)
-      }
-      data_temp <- do.call(rbind.data.frame, random_list)
-      data_temp <- data_temp[order(data_temp$step, data_temp$distance),]
-      data_temp$step <- ceiling(c(1:nrow(input))/4)
-      data_temp <- data_temp[!is.na(data_temp$weight), c("ID", "step", "weight", "distance")] 
-      
-
-      data <- merge(data,
-                    data_temp,
-                    by = "ID",
-                    all.x = TRUE)
-      if(verbose) {
-      cat("\n", "Matching complete!")
-      }
-      if(is.null(dist)) {
-        data$dist_dummy <- NULL
-      }
-      return(data)
+    if(use_covariate_distance) {
+      data$dist_dummy <- NULL
     }
-  }
+    return(data)
 }

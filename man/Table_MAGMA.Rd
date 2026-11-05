@@ -4,7 +4,7 @@
 \alias{Table_MAGMA}
 \title{Table_MAGMA}
 \usage{
-Table_MAGMA(Balance, filename = NULL, verbose = TRUE, round = 2)
+Table_MAGMA(Balance, filename = NULL, verbose = TRUE)
 }
 \arguments{
 \item{Balance}{A result of \code{\link{Balance_MAGMA}} Compare the function
@@ -15,8 +15,6 @@ the resulting Word document with the table should have.}
 
 \item{verbose}{TRUE or FALSE indicating whether matching information should
 be printed to the console.}
-
-\item{round}{A integer defining the number of digits for rounding results}
 }
 \value{
 A 4x5 APA table showing the four balance
@@ -40,13 +38,13 @@ save a the APA table in Word.
 \examples{
 # This function bases on a MAGMA function as well as Balance_MAGMA
 # Defining the names of the metric and binary covariates
-covariates_vector <- c("GPA_school", "IQ_score", "Motivation")
+covariates_vector <- c("GPA_school", "IQ_score", "Motivation", "parents_academic", "gender")
 
 
 # Estimating balance of a two-group matching using the data set
 # 'MAGMA_sim_data'.
 # Matching variable 'gifted_support' (received giftedness support yes or no)
-Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data[MAGMA_sim_data$step_gifted < 50, ],
+Balance_gifted <- Balance_MAGMA(Data = MAGMA_sim_data[MAGMA_sim_data$step_gifted < 200, ],
                                 group = "gifted_support",
                                 covariates = covariates_vector,
                                 step = "step_gifted")

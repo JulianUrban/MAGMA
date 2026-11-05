@@ -11,7 +11,7 @@ initial_unbalance(
   verbose = TRUE,
   covariates_ordinal = NULL,
   covariates_nominal = NULL,
-  round = 2
+  d_threshold = 0.2
 )
 }
 \arguments{
@@ -37,7 +37,8 @@ covariates of interest.}
 \item{covariates_nominal}{A character vector listing the names of all nominal
 covariates of interest.}
 
-\item{round}{A integer defining the number of digits for rounding results}
+\item{d_threshold}{A non-negative numeric indicating the threshold for
+evaluting effect sizes as negligible. Default ist 0.20.}
 }
 \value{
 A numeric vector of length 4 containing the balance

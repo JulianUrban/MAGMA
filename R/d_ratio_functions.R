@@ -11,6 +11,8 @@
 #' @param st A character naming the variable for iteratively inclusion
 #' @param co_ord A character vector naming the ordinal DVs.
 #' @param co_nom A character vector naming the nominal DVs.
+#' @param d_threshold A non-negative numeric indicating the threshold for
+#' evaluting effect sizes as negligible. Default ist 0.20.
 #'
 #' @author Julian Urban
 #'
@@ -21,34 +23,37 @@
 #' @return A list of length two. The first element is a matrix including all
 #' pairwise effects. The second is a vector expressing d-ratio
 #' in dependency of sample size.
+#'
 #' @noRd
 #'
-inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
-
+inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL, d_threshold = 0.20) {
+  
   if(!is.data.frame(da) && !tibble::is_tibble(da)) {
     stop("da needs to be an object of class dataframe or tibble!")
   }
-
+  
   if(!is.character(gr)) {
     stop("gr needs to be a character of maximum length 1!")
   }
-
+  
   if(!is.character(co)) {
     stop("co needs to be a character or a character vector!")
   }
-
+  
   if(!is.character(st) | length(st) > 1) {
     stop("st needs to be a character of length 1!")
   }
-  #helpful: coding group variable as integers from 1 up
-  #calculating factor for number of pairwise effects for nrow of effect matrix
-  #function for pyramid numbers that are multplied with number of covariates
-  #1/2*( (x-1)^2+(x-1)) with x being number of groups
-
+  
+  if (!is.numeric(d_threshold) || length(d_threshold) != 1L ||
+      !is.finite(d_threshold) || d_threshold < 0) {
+    stop("d_threshold needs to be one finite, non-negative number!")
+  }
+  
+  
   if(length(gr) == 2) {
     values_1 <- unlist(unique(da[gr[1]]))
     values_2 <- unlist(unique(da[gr[2]]))
-
+    
     da <- da %>%
       dplyr::mutate(group_d = dplyr::case_when(
         !!rlang::sym(gr[1]) == values_1[1] &
@@ -60,15 +65,15 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
         !!rlang::sym(gr[1]) == values_1[2] &
           !!rlang::sym(gr[2]) == values_2[2] ~ 4
       ))
-
+    
     gr <- "group_d"
   }
-
+  
   group_factor <- da %>%
     dplyr::select(tidyselect::all_of(gr)) %>%
     table() %>%
     length()
-
+  
   #max step calculated equivalent to above
   max_step <- da %>%
     dplyr::select(tidyselect::all_of(st)) %>%
@@ -78,7 +83,7 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
                      ncol = max_step,
                      nrow = (length(co) * (.5 * ((group_factor - 1)^2 +
                                                    (group_factor - 1)))))
-
+  
   #defining pairwise comparisons depending on number of group
   #current version: only some predefined matrices (load reduction): add additiona function if number group exceeds max
   if (group_factor == 2) {
@@ -91,25 +96,25 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
                               ncol = 2,
                               nrow = 3)
     names_covariates <- purrr::map2(pairwise_matrix[, 1],
-                                     pairwise_matrix[, 2],
-                                     function(group_1, group_2)
-                                       paste(co, group_1, group_2, sep = "_")) %>%
+                                    pairwise_matrix[, 2],
+                                    function(group_1, group_2)
+                                      paste(co, group_1, group_2, sep = "_")) %>%
       unlist()
-      } else if (group_factor == 4) {
+  } else if (group_factor == 4) {
     pairwise_matrix <- matrix(c(1, 1, 1, 2, 2, 3, 2, 3, 4, 3, 4, 4),
                               ncol = 2,
                               nrow = 6)
     names_covariates <- purrr::map2(pairwise_matrix[, 1],
-                                     pairwise_matrix[, 2],
-                                     function(group_1, group_2)
-                                       paste(co, group_1, group_2, sep = "_")) %>%
+                                    pairwise_matrix[, 2],
+                                    function(group_1, group_2)
+                                      paste(co, group_1, group_2, sep = "_")) %>%
       unlist()
   } else { #function independent of group number. Currently breaking algorithm
     pairwise_matrix <- NA
     stop("To many groups (maximum possible 4) for current package version!")
   }
-
-
+  
+  
   group_values <- unique(na.omit(da[, gr]))
   effects <- sapply(c(20:max_step),
                     function(iteration) {
@@ -147,7 +152,7 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
                                                       return(ordinal_effects)
                                                     })
                           ds <- rbind(ds, ordinal_effects)
-
+                          
                         }
                         if(!is.null(co_nom)) {
                           data_temp <- da[da[, st] <= iteration, ]
@@ -156,26 +161,26 @@ inner_d <- function(da, gr, co, st, co_ord = NULL, co_nom = NULL) {
                                                             variable = co_nom)
                           names(nominal_effects) <- co_nom
                           ds <- rbind(ds, nominal_effects)
-
+                          
                         }
-
+                        
                       })
                       return(ds)
                     })
-names_effects <- co
-if(!is.null(co_ord)) {names_effects <- c(names_effects, co_ord)}
-if(!is.null(co_nom)) {names_effects <- c(names_effects, co_nom)}
-rownames(effects) <- rep(names_effects, each = nrow(pairwise_matrix))
-effects <- cbind(matrix(NA, nrow = nrow(effects), ncol = 19),
-                 effects)
-
-
-
-
-  d_logic <- abs(effects) < .20
+  names_effects <- co
+  if(!is.null(co_ord)) {names_effects <- c(names_effects, co_ord)}
+  if(!is.null(co_nom)) {names_effects <- c(names_effects, co_nom)}
+  rownames(effects) <- rep(names_effects, each = nrow(pairwise_matrix))
+  effects <- cbind(matrix(NA, nrow = nrow(effects), ncol = 19),
+                   effects)
+  
+  
+  
+  
+  d_logic <- abs(effects) < d_threshold
   pairwise_effects <- list(d_rate = colSums(d_logic)/nrow(d_logic),
-                         effects = effects)
-
+                           effects = effects)
+  
   return(pairwise_effects)
 }
 
@@ -187,6 +192,8 @@ effects <- cbind(matrix(NA, nrow = nrow(effects), ncol = 19),
 #' This function computed the adjusted d_ratio with respect to sample size.
 #'
 #' @param input An inner d object
+#' @param d_threshold A non-negative numeric indicating the threshold for
+#' evaluting effect sizes as negligible. Default ist 0.20.
 #'
 #' @author Julian Urban
 #'
@@ -198,33 +205,34 @@ effects <- cbind(matrix(NA, nrow = nrow(effects), ncol = 19),
 #'
 #' @return A vector containing the adjusted d-ratio in dependency of
 #' sample size.
+#'
 #' @noRd
 #'
-adj_d_ratio <- function(input) {
-
+adj_d_ratio <- function(input, d_threshold = 0.20) {
+  
   J <- J_group_size(ncol(input))
-
-suppressMessages({
-
-  g <- apply(input,
-             MARGIN = 1,
-             FUN = function(row) {
-               row * J
-             }) %>%
-    t() %>%
-    abs()
-
-  size_per_group <- c(1:ncol(input))
-  sd_g <- apply(input,
-                      MARGIN = 1,
-                      FUN = function(row) {
-                        (row^2 / (4 * size_per_group) + 2 * size_per_group/size_per_group^2) * J^2
-                      }) %>%
-    t() %>%
-    sqrt()
-    })
-
-  likelihood <- purrr::map2_dbl(g, sd_g, stats::pnorm, q = .20) %>%
+  
+  suppressMessages({
+    
+    g <- apply(input,
+               MARGIN = 1,
+               FUN = function(row) {
+                 row * J
+               }) %>%
+      t() %>%
+      abs()
+    
+    size_per_group <- c(1:ncol(input))
+    sd_g <- apply(input,
+                  MARGIN = 1,
+                  FUN = function(row) {
+                    (row^2 / (4 * size_per_group) + 2 * size_per_group/size_per_group^2) * J^2
+                  }) %>%
+      t() %>%
+      sqrt()
+  })
+  
+  likelihood <- purrr::map2_dbl(g, sd_g, stats::pnorm, q = d_threshold) %>%
     matrix(ncol = ncol(input), nrow = nrow(input)) %>%
     colSums()/nrow(input)
   return(likelihood)

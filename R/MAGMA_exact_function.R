@@ -67,7 +67,7 @@
 #' # Exact matching for 'enrichment' (participated in enrichment or not)
 #' # Students that participated can only be matched with other
 #' # students that participated and vice versa
-#' MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data[c(1:50 ), ],
+#' MAGMA_sim_data_gifted_exact <- MAGMA_exact(Data = MAGMA_sim_data[c(1:10 ), ],
 #'                                            group = "gifted_support",
 #'                                            dist = "ps_gifted",
 #'                                            exact = "enrichment",
@@ -148,10 +148,11 @@ MAGMA_exact <- function(Data, group, dist = NULL, exact, cores = 1, verbose = TR
     stop("covs and weights need to have the same length!")
   }
   
-  
+  use_covariate_distance <- FALSE
   if(is.null(dist)) {
     Data$dist_dummy <- ifelse(rowSums(is.na(Data[, covs])) == 0, 1, NA)
     dist <- "dist_dummy"
+    use_covariate_distance <- TRUE
   }
 
   max_cores <- parallel::detectCores()
@@ -159,6 +160,7 @@ MAGMA_exact <- function(Data, group, dist = NULL, exact, cores = 1, verbose = TR
   if(cores > max_cores) {
     warning("Specified cores exceeds available cores. Proceeding with all available cores.")
     cores <- max_cores
+    
   }
   
 
@@ -511,7 +513,8 @@ MAGMA_exact <- function(Data, group, dist = NULL, exact, cores = 1, verbose = TR
 
       data <- merge(data,
                     data_temp,
-                    by = "ID")
+                    by = "ID",
+                    all.x = TRUE)
   } else {
     stop("Specify a grouping variable that distinguishes 2, 3, or 4 groups or represent a 2x2 Design!")
   }
@@ -519,7 +522,7 @@ MAGMA_exact <- function(Data, group, dist = NULL, exact, cores = 1, verbose = TR
   cat("\n", "Matching complete!")
   }
   
-  if(is.null(dist)) {
+  if(use_covariate_distance) {
     data$dist_dummy <- NULL
   }
   return(data)

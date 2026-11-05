@@ -11,7 +11,8 @@ Balance_MAGMA(
   step = "step",
   verbose = TRUE,
   covariates_ordinal = NULL,
-  covariates_nominal = NULL
+  covariates_nominal = NULL,
+  d_threshold = 0.2
 )
 }
 \arguments{
@@ -41,6 +42,9 @@ covariates of interest.}
 
 \item{covariates_nominal}{A character vector listing the names of all nominal
 covariates of interest.}
+
+\item{d_threshold}{A non-negative numeric indicating the threshold for
+evaluting effect sizes as negligible. Default ist 0.20.}
 }
 \value{
 A list of length four containing all balance criteria and all
