@@ -758,10 +758,10 @@ Table_MAGMA <- function(Balance, filename = NULL, verbose = TRUE, round = 2) {
                                                  "Best mean g",
                                                  "Best adj. d-ratio"), #Row names for table
                          #Extractig vakues for all three "optimal" models as well as their n er group
-                         Pillai_Trace = round(Balance$Pillai[index_optimal], 2),
-                         d_ratio = round(Balance$d_ratio$d_rate[index_optimal], 2),
-                         mean_g = round(Balance$mean_effect[index_optimal], 2),
-                         adjusted_d_ratio = round(Balance$adjusted_d_ratio[index_optimal], 2))
+                         Pillai_Trace = round(Balance$Pillai[index_optimal], digits = round),
+                         d_ratio = round(Balance$d_ratio$d_rate[index_optimal], digits = round),
+                         mean_g = round(Balance$mean_effect[index_optimal], digits = round),
+                         adjusted_d_ratio = round(Balance$adjusted_d_ratio[index_optimal], digits = round))
       
       balance_matrix$n_per_group <- index_optimal
       # Ordering table after n per group
