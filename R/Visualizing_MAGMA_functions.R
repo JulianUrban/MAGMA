@@ -327,7 +327,8 @@ initial_unbalance <- function(Data,
                               covariates,
                               verbose = TRUE,
                               covariates_ordinal = NULL,
-                              covariates_nominal = NULL, 
+                              covariates_nominal = NULL,
+                              round = 2,
                               d_threshold = 0.20) {
   if (!is.data.frame(Data) && !tibble::is_tibble(Data)) {
     stop("Data needs to be a data frame, or tibble!")
