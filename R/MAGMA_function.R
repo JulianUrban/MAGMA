@@ -118,7 +118,11 @@ distance_estimator_MD <- function(data,
 #' @param number_candidates Number of nearest candidates retained per
 #' non-reference group.
 #' @param cores Number of cores used to evaluate reference cases.
-#' @param variance Variance of the propensity score.
+#' @param variance Variance of the propensity score or covariance matrix of the
+#' covariates.
+#' @param covariates Optional character vector naming the covariates used for
+#' Mahalanobis distance matching.
+#' @param weights Optional numeric vector containing covariate weights.
 #'
 #' @return Matching variables for all successfully matched cases.
 #' @noRd
@@ -127,19 +131,20 @@ reference_matching <- function(input,
                                reference_group = NULL,
                                number_candidates = 10L,
                                cores = 1L,
-                               variance) {
+                               variance,
+                               covariates = NULL,
+                               weights = NULL) {
   group_values <- unique(input$group)
   group_sizes <- vapply(group_values,
                         function(group_value) {
-                          sum(input$group == group_value)
-                        },
+                          sum(input$group == group_value)},
                         integer(1))
 
   if(is.null(reference_group)) {
     reference_group <- group_values[which.min(group_sizes)]
   }
 
-  if(length(reference_group) != 1L || !reference_group %in% group_values) {
+  if(length(reference_group) != 1 || !reference_group %in% group_values) {
     stop("reference_group needs to identify one existing group!")
   }
 
@@ -151,9 +156,34 @@ reference_matching <- function(input,
   input$match_id <- NA_integer_
   match_counter <- 0L
 
-  find_best_match <- function(i) {
-    reference_ps <- input$distance_ps[i]
+  use_mahalanobis <- !is.null(covariates)
 
+  if(use_mahalanobis) {
+    number_covariates <- length(covariates)
+    variance_matrix <- as.matrix(variance)
+
+    if(nrow(variance_matrix) != number_covariates ||
+       ncol(variance_matrix) != number_covariates) {
+      stop("variance needs to be a square covariance matrix matching the number of covariates!")
+    }
+
+    if(qr(variance_matrix)$rank < number_covariates) {
+      stop("The covariance matrix is singular!")
+    }
+
+    if(is.null(weights)) {
+      weights <- rep(1, number_covariates)
+    }
+
+    weight_matrix <- diag(weights,
+                          nrow = number_covariates)
+
+    weighted_precision <- weight_matrix %*%
+      solve(variance_matrix) %*%
+      weight_matrix
+  }
+
+  find_best_match <- function(i) {
     candidates <- lapply(other_groups,
                          function(group_index) {
                            group_indices <- which(
@@ -165,12 +195,32 @@ reference_matching <- function(input,
                              return(integer(0))
                            }
 
-                           group_ps <- input$distance_ps[group_indices]
-                           differences <- abs(group_ps - reference_ps)
+                           if(!use_mahalanobis) {
+                             reference_value <- input$distance_ps[i]
+                             group_values <- input$distance_ps[group_indices]
+                             candidate_distances <- abs(group_values - reference_value)
 
-                           sorted_indices <- group_indices[order(differences,
-                                                                 group_ps,
-                                                                 input$ID[group_indices])]
+                             candidate_order <- order(candidate_distances,
+                                                      group_values,
+                                                      input$ID[group_indices])
+                           } else {
+                             reference_values <- as.numeric(unlist(input[i, covariates, drop = FALSE],
+                                                                   use.names = FALSE))
+
+                             candidate_values <- as.matrix(input[group_indices, covariates, drop = FALSE])
+
+                             centered_values <- sweep(candidate_values,
+                                                      MARGIN = 2L,
+                                                      STATS = reference_values,
+                                                      FUN = "-")
+
+                             candidate_distances <- sqrt(pmax(rowSums((centered_values %*% weighted_precision) * centered_values), 0))
+
+                             candidate_order <- order(candidate_distances,
+                                                      input$ID[group_indices])
+                           }
+
+                           sorted_indices <- group_indices[candidate_order]
 
                            head(sorted_indices, number_candidates)
                          })
@@ -189,17 +239,49 @@ reference_matching <- function(input,
                             nrow,
                             integer(1))
 
+    if(use_mahalanobis) {
+      name_ps <- covariates
+    } else {
+      name_ps <- "distance_ps"
+    }
+
     value_matrix <- build_value_matrix(input_list = candidate_group_list,
                                        rep_element = elements_temp,
-                                       name_ps = "distance_ps")
+                                       name_ps = name_ps)
 
-    combination_means <- rowMeans(value_matrix)
-    centered_values <- sweep(value_matrix,
-                             MARGIN = 1L,
-                             STATS = combination_means,
-                             FUN = "-")
+    if(!use_mahalanobis) {
+      combination_means <- rowMeans(value_matrix)
+      centered_values <- sweep(value_matrix,
+                               MARGIN = 1L,
+                               STATS = combination_means,
+                               FUN = "-")
 
-    combination_distances <- rowMeans(centered_values^2) / variance
+      combination_distances <- rowMeans(centered_values^2) / variance
+    } else {
+      number_groups <- length(elements_temp)
+
+      combination_distances <- vapply(seq_len(nrow(value_matrix)),
+                                      function(row_index) {
+                                        match_values <- matrix(value_matrix[row_index, ],
+                                                               nrow = number_groups,
+                                                               byrow = TRUE)
+
+                                        match_means <- colMeans(match_values)
+                                        centered_match <- sweep(match_values,
+                                                                MARGIN = 2L,
+                                                                STATS = match_means,
+                                                                FUN = "-")
+
+                                        individual_distances <- sqrt(pmax(
+                                          rowSums((centered_match %*% weighted_precision) *
+                                                    centered_match),
+                                          0
+                                        ))
+
+                                        mean(individual_distances)
+                                      },
+                                      numeric(1))
+    }
     best_combination <- which.min(combination_distances)
 
     best_positions <- arrayInd(best_combination,
@@ -232,12 +314,10 @@ reference_matching <- function(input,
 
   while(length(remaining_references) > 0) {
     if(number_workers > 1L) {
-      possible_matches <- future.apply::future_lapply(
-        remaining_references,
-        find_best_match,
-        future.seed = FALSE,
-        future.scheduling = 1
-      )
+      possible_matches <- future.apply::future_lapply(remaining_references,
+                                                      find_best_match,
+                                                      future.seed = FALSE,
+                                                      future.scheduling = 1)
     } else {
       possible_matches <- lapply(remaining_references,
                                  find_best_match)
@@ -281,9 +361,7 @@ reference_matching <- function(input,
                                  ties.method = "first"),
                             names(match_distances))
 
-    input$step[matched] <- unname(
-      step_lookup[as.character(input$match_id[matched])]
-    )
+    input$step[matched] <- unname(step_lookup[as.character(input$match_id[matched])])
   }
 
   return(input[matched,
@@ -307,18 +385,19 @@ reference_matching <- function(input,
 #' distance are strongly correlated.
 #' Matching can require substantial CPU time and memory because the number of
 #' possible matches increases with the product of the group sample sizes. For
-#' three- and four-group matching, the computational procedure is controlled by
-#' *large_method*. With the default *large_method = "subgroup"*, MAGMA evaluates
-#' all possible matches while their number is below *combination_threshold*. If
-#' the threshold is exceeded, MAGMA switches to random quasi-systematic matching
-#' within subgroups and informs the user. Because subgroup assignment is random,
-#' results can depend on the random seed and balance may vary slightly between
-#' runs.
+#' three- and four-group matching, MAGMA evaluates all possible matches while
+#' their number is below *combination_threshold*. If the threshold is exceeded,
+#' the computational procedure is controlled by *large_method*. With the default
+#' *large_method = "subgroup"*, MAGMA switches to random quasi-systematic
+#' matching within subgroups and informs the user. Because subgroup assignment
+#' is random, results can depend on the random seed and balance may vary slightly
+#' between runs.
 #' Alternatively, *large_method = "reference"* conducts reference-group
-#' matching independently of *combination_threshold*. For every case in the
+#' matching when *combination_threshold* is exceeded. For every case in the
 #' specified reference group, MAGMA considers the nearest
-#' *number_candidates* cases from each non-reference group and iteratively
-#' selects the currently best complete match. If *reference_group* is not
+#' *number_candidates* cases from each non-reference group according to the
+#' selected distance measure and iteratively selects the currently best complete
+#' match. If *reference_group* is not
 #' specified, the smallest group is used. This procedure avoids constructing
 #' the complete array of all possible matches and does not depend on random
 #' subgroup assignment. 
@@ -348,18 +427,17 @@ reference_matching <- function(input,
 #' estimate a weightes Mahalanobis distance. If not specified, all covariates
 #' are weighted equally.
 #' @param large_method A character that handles how matching is conducted for
-#' three or four groups with large sample sizes. The default "subgroup" uses 
-#' complete matching below *combination_threshold* and random subgroup matching 
-#' above it. The option "reference" uses reference-group matching independently 
-#' of the threshold.
+#' three or four groups when *combination_threshold* is exceeded. The default
+#' "subgroup" uses random subgroup matching, whereas "reference" uses
+#' reference-group matching. Below the threshold, complete systematic matching 
+#' is always used.
 #' @param reference_group A value defining which group is the reference group
 #' for large_method = "reference". If NULL, the smallest group is used.
 #' @param number_candidates An integer for large_method = "reference" defining
 #' the number of candidates per non-reference group that are considered when
 #' searching for the locally best complete match.
 #' @param combination_threshold A positive number defining the maximum number
-#' of possible combinations for complete matching when large_method =
-#' "subgroup".
+#' of possible combinations for complete matching.
 #' 
 #'
 #' @author Julian Urban
@@ -421,7 +499,7 @@ MAGMA <- function(Data,
                   weights = NULL,
                   large_method = "subgroup",
                   reference_group = NULL,
-                  number_candidates = 10L,
+                  number_candidates = 10,
                   combination_threshold = 1.0e+09) {
 
   #Check for regular input
@@ -462,7 +540,7 @@ MAGMA <- function(Data,
     stop("covs and weights need to have the same length!")
   }
   if(!is.character(large_method) ||
-     length(large_method) != 1L ||
+     length(large_method) != 1 ||
      is.na(large_method) ||
      !large_method %in% c("subgroup", "reference")) {
     stop("large_method needs to be either subgroup or reference!")
@@ -623,22 +701,7 @@ if(verbose) {
                     by = "ID")
     } else if(length(elements) == 3) {
 
-      if(large_method == "reference") {
-        if(!is.null(covs)) {
-          stop("The reference method currently supports propensity-score matching only.")
-        }
-
-        data_temp <- reference_matching(input = input,
-                                        reference_group = reference_group,
-                                        number_candidates = number_candidates,
-                                        cores = cores,
-                                        variance = var_ma)
-
-        data <- merge(data,
-                      data_temp,
-                      by = "ID",
-                      all.x = TRUE)
-      } else if (prod(as.double(elements)) < combination_threshold) {
+      if(prod(as.double(elements)) < combination_threshold) {
         value_matrix <- build_value_matrix(group_list,
                                            elements,
                                            name_ps = name_ps)
@@ -682,6 +745,22 @@ if(verbose) {
                       output_temp,
                       by = "ID",
                       all.x = TRUE)
+      } else if(large_method == "reference") {
+        if(verbose) {
+          cat("\n", "Large number of groups with large group sizes. Using large method: reference")
+        }
+
+        data_temp <- reference_matching(input = input,
+                                        reference_group = reference_group,
+                                        number_candidates = number_candidates,
+                                        cores = cores,
+                                        variance = var_ma,
+                                        covariates = covs,
+                                        weights = weights)
+        data <- merge(data,
+                      data_temp,
+                      by = "ID",
+                      all.x = TRUE)
       } else {
         cores <- 2
         if(verbose) {
@@ -692,7 +771,7 @@ if(verbose) {
                                                     combination_threshold)) + 1
 
 
-        input$random_group = sample(c(1:number_split_groups),
+        input$random_group <- sample(c(1:number_split_groups),
                                     size = nrow(input),
                                     replace = TRUE) 
         
@@ -757,22 +836,7 @@ if(verbose) {
       }
     } else if(length(elements) == 4) {
 
-      if(large_method == "reference") {
-        if(!is.null(covs)) {
-          stop("The reference method currently supports propensity-score matching only.")
-        }
-
-        data_temp <- reference_matching(input = input,
-                                        reference_group = reference_group,
-                                        number_candidates = number_candidates,
-                                        cores = cores,
-                                        variance = var_ma)
-
-        data <- merge(data,
-                      data_temp,
-                      by = "ID",
-                      all.x = TRUE)
-      } else if (prod(as.double(elements)) < combination_threshold) {
+      if(prod(as.double(elements)) < combination_threshold) {
         value_matrix <- build_value_matrix(group_list,
                                            elements,
                                            name_ps = name_ps)
@@ -812,6 +876,23 @@ if(verbose) {
 
         data <- merge(data,
                       output_temp,
+                      by = "ID",
+                      all.x = TRUE)
+      } else if(large_method == "reference") {
+        if(verbose) {
+          cat("\n", "Large number of groups with large group sizes. Using large method: reference")
+        }
+
+        data_temp <- reference_matching(input = input,
+                                        reference_group = reference_group,
+                                        number_candidates = number_candidates,
+                                        cores = cores,
+                                        variance = var_ma,
+                                        covariates = covs,
+                                        weights = weights)
+
+        data <- merge(data,
+                      data_temp,
                       by = "ID",
                       all.x = TRUE)
       } else {

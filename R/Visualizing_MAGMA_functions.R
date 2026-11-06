@@ -265,8 +265,10 @@ Balance_MAGMA <- function(Data,
 #' covariates of interest.
 #' @param covariates_nominal A character vector listing the names of all nominal
 #'covariates of interest.
+#' @param round An integer defining the number of digits for rounding results.
 #' @param d_threshold A non-negative numeric indicating the threshold for
 #' evaluting effect sizes as negligible. Default ist 0.20.
+#' 
 #'
 #' @author Julian Urban
 #'
@@ -633,17 +635,17 @@ initial_unbalance <- function(Data,
   ###Output creation###
   ######################
   if(length(group_test) == 1) {
-    output <- cbind(round(Pillai, 2),
-                    round(d_ratio, 2),
-                    round(mean_g, 2),
-                    round(adj_d_ratio, 2))
+    output <- cbind(round(Pillai, digits = round),
+                    round(d_ratio, digits = round),
+                    round(mean_g, digits = round),
+                    round(adj_d_ratio, digits = round))
     rownames(output) <- "Unbalance"
     colnames(output) <- c("Pillai's Trace", "d-ratio", "Mean g", "adj. d-ratio")
   } else {
-    output <- c(round(Pillai, 2),
-                round(d_ratio, 2),
-                round(mean_g, 2),
-                round(adj_d_ratio, 2)) %>%
+    output <- c(round(Pillai, digits = round),
+                round(d_ratio, digits = round),
+                round(mean_g, digits = round),
+                round(adj_d_ratio, digits = round)) %>%
       as.matrix() %>%
       t()
     rownames(output) <- "Unbalance"
@@ -679,6 +681,7 @@ initial_unbalance <- function(Data,
 #' the resulting Word document with the table should have.
 #' @param verbose TRUE or FALSE indicating whether matching information should
 #' be printed to the console.
+#' @param round An integer defining the number of digits for rounding results.
 #'
 #'
 #' @author Julian Urban
@@ -733,7 +736,7 @@ initial_unbalance <- function(Data,
 #' Table_MAGMA(Balance_2x2)
 #' }
 #'
-Table_MAGMA <- function(Balance, filename = NULL, verbose = TRUE) {
+Table_MAGMA <- function(Balance, filename = NULL, verbose = TRUE, round = 2) {
   #Check input
   if (!rlang::is_list(Balance)) {
     stop("Balance needs to be a Balance_MAGMA object!")
@@ -784,12 +787,12 @@ Table_MAGMA <- function(Balance, filename = NULL, verbose = TRUE) {
                                                  "Best mean g",
                                                  "Best adj. d-ratio"), #Row names for table
                          #Extractig vakues for all three "optimal" models as well as their n er group
-                         Pillai_Trace_ME1 = round(Balance$Pillai[1, index_optimal], 2),
-                         Pillai_Trace_ME2 = round(Balance$Pillai[2, index_optimal], 2),
-                         Pillai_Trace_IA = round(Balance$Pillai[3, index_optimal], 2),
-                         d_ratio = round(Balance$d_ratio$d_rate[index_optimal], 2),
-                         mean_g = round(Balance$mean_effect[index_optimal], 2),
-                         adjusted_d_ratio = round(Balance$adjusted_d_ratio[index_optimal], 2))
+                         Pillai_Trace_ME1 = round(Balance$Pillai[1, index_optimal], digits = round),
+                         Pillai_Trace_ME2 = round(Balance$Pillai[2, index_optimal], digits = round),
+                         Pillai_Trace_IA = round(Balance$Pillai[3, index_optimal], digits = round),
+                         d_ratio = round(Balance$d_ratio$d_rate[index_optimal], digits = round),
+                         mean_g = round(Balance$mean_effect[index_optimal], digits = round),
+                         adjusted_d_ratio = round(Balance$adjusted_d_ratio[index_optimal], digits = round))
       
       balance_matrix$n_per_group <- index_optimal
       # Ordering table after n per group

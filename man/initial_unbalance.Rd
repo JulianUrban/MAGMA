@@ -39,6 +39,8 @@ covariates of interest.}
 
 \item{d_threshold}{A non-negative numeric indicating the threshold for
 evaluting effect sizes as negligible. Default ist 0.20.}
+
+\item{round}{An integer defining the number of digits for rounding results.}
 }
 \value{
 A numeric vector of length 4 containing the balance
